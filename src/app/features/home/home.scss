@@ -470,7 +470,7 @@ $max-width: 1200px;
     line-height: 1.15;
     letter-spacing: -0.025em;
     color: $c-text-dark;
-    margin-bottom: 24px;
+    margin-bottom: 24px; max-width: 550px;
 
     @media (max-width: 768px) {
       font-size: 2.7rem;
@@ -1017,7 +1017,7 @@ $max-width: 1200px;
     font-size: 0.95rem;
     line-height: 1.65;
     color: $c-text-muted;
-    margin-bottom: 24px;
+    margin-bottom: 24px; max-width: 550px;
   }
 }
 
