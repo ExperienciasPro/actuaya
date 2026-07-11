@@ -90,9 +90,9 @@ interface ModuleCategory {
               <span class="gradient-pink">Sin pagar de más.</span>
             </h1>
             <p class="hero-desc">
-              ACTUAYA es la app web multipropósito que se adapta a ti. Elige solo los módulos que usas
-              (ventas, finanzas, proyectos), planifica desde tu computador y deja que nuestro coach en tu
-              celular te guíe día a día para cumplir tus objetivos.
+              ACTUAYA se adapta a ti. Elige tus módulos, planifica desde tu computador y recibe guía diaria en tu celular para alcanzar tus objetivos.
+              
+              
             </p>
             <div class="hero-actions">
               <a class="btn-primary-lg" routerLink="/welcome">
