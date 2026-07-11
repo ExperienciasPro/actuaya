@@ -82,7 +82,7 @@ interface ModuleCategory {
           <span class="particle p7"></span>
           <span class="particle p8"></span>
         </div>
-        <div class="hero-inner">
+        <div class="hero-inner-one-col">
           <div class="hero-content reveal">
             <span class="hero-badge pulse-anim">✨ App web multipropósito</span>
             <h1>
@@ -109,110 +109,9 @@ interface ModuleCategory {
             </div>
           </div>
 
-          <!-- ═══ COMPOSITED SCENE ═══ -->
-          <div class="hero-scene reveal-scale delay-2">
-            <!-- Connection lines (SVG background layer) -->
-            <svg class="scene-connections" viewBox="0 0 480 520" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path class="conn-line c1" d="M80 160 Q180 160 240 260" stroke-width="1.5" stroke-linecap="round"/>
-              <path class="conn-line c2" d="M400 120 Q320 160 240 260" stroke-width="1.5" stroke-linecap="round"/>
-              <path class="conn-line c3" d="M60 380 Q160 340 240 260" stroke-width="1.5" stroke-linecap="round"/>
-              <path class="conn-line c4" d="M420 400 Q340 340 240 260" stroke-width="1.5" stroke-linecap="round"/>
-              <path class="conn-line c5" d="M240 260 L240 400" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-
-            <!-- Dashboard (middle layer) -->
-            <div class="scene-dashboard">
-              <div class="dash-topbar">
-                <div class="dash-dots">
-                  <span class="dd red"></span>
-                  <span class="dd yellow"></span>
-                  <span class="dd green"></span>
-                </div>
-                <span class="dash-title-bar">Dashboard</span>
-              </div>
-              <div class="dash-body">
-                <div class="dash-metric-row">
-                  <div class="dash-metric">
-                    <span class="dm-label">Ingresos</span>
-                    <span class="dm-value">$24.5M</span>
-                    <span class="dm-change up">↑ 12%</span>
-                  </div>
-                  <div class="dash-metric">
-                    <span class="dm-label">Clientes</span>
-                    <span class="dm-value">1,240</span>
-                    <span class="dm-change up">↑ 8%</span>
-                  </div>
-                </div>
-                <div class="dash-chart">
-                  <div class="dash-bar" style="height: 40%"></div>
-                  <div class="dash-bar" style="height: 65%"></div>
-                  <div class="dash-bar" style="height: 45%"></div>
-                  <div class="dash-bar" style="height: 80%"></div>
-                  <div class="dash-bar" style="height: 55%"></div>
-                  <div class="dash-bar" style="height: 92%"></div>
-                  <div class="dash-bar" style="height: 70%"></div>
-                </div>
-                <div class="dash-progress">
-                  <span class="dp-label">Metas cumplidas</span>
-                  <div class="dp-track">
-                    <div class="dp-fill"></div>
-                  </div>
-                  <span class="dp-pct">75%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Phone (foreground layer) -->
-            <div class="scene-phone">
-              <div class="phone-notch"></div>
-              <div class="phone-screen">
-                <div class="phone-status-bar">
-                  <span>9:41</span>
-                  <span>●●●</span>
-                </div>
-                <div class="phone-header">🧠 Tu Coach</div>
-                <div class="phone-greeting">¡Buenos días! 👋</div>
-                <div class="phone-tasks">
-                  <div class="phone-task done">
-                    <span class="pt-check">✓</span>
-                    <span>Revisar pipeline</span>
-                  </div>
-                  <div class="phone-task active">
-                    <span class="pt-dot"></span>
-                    <span>Llamar a 3 clientes</span>
-                  </div>
-                  <div class="phone-task">
-                    <span class="pt-dot"></span>
-                    <span>Actualizar inventario</span>
-                  </div>
-                </div>
-                <div class="phone-progress-ring">
-                  <span class="pr-num">3</span><span class="pr-sep">/</span><span class="pr-den">5</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Floating Modules -->
-            <div class="scene-module mod-ventas">
-              <span class="mod-icon">📈</span>
-              <span class="mod-label">Ventas</span>
-            </div>
-            <div class="scene-module mod-finanzas">
-              <span class="mod-icon">💰</span>
-              <span class="mod-label">Finanzas</span>
-            </div>
-            <div class="scene-module mod-inventario">
-              <span class="mod-icon">📦</span>
-              <span class="mod-label">Inventario</span>
-            </div>
-            <div class="scene-module mod-proyectos">
-              <span class="mod-icon">🏗️</span>
-              <span class="mod-label">Proyectos</span>
-            </div>
-            <div class="scene-module mod-crm">
-              <span class="mod-icon">🤝</span>
-              <span class="mod-label">CRM</span>
-            </div>
+          <!-- Imagen de Ilustración Integrada como banner inferior de la columna -->
+          <div class="hero-visual-one-col reveal-scale delay-2">
+            <img src="/assets/images/ilustracion-actuaya.png" alt="ActuaYa Dashboard Inteligente" class="hero-banner-img"/>
           </div>
         </div>
 
