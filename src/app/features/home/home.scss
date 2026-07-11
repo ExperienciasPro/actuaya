@@ -862,7 +862,7 @@ $max-width: 1200px;
 
   &.active {
     background: $gradient-purple;
-    color: #ffffff;
+    color: #ffffff !important;
     border-color: transparent;
     box-shadow: 0 4px 14px rgba($c-purple, 0.25);
   }
