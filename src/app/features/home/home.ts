@@ -106,39 +106,6 @@ interface ModuleCategory {
           <div class="hero-spacer"></div>
         </div>
 
-        <!-- Value bar -->
-        <div class="hero-values">
-          <div class="hero-values-inner">
-            <div class="value-item">
-              <span class="value-icon">⚡</span>
-              <div class="value-text">
-                <strong>Flexible</strong>
-                <span>Crea tu app, a tu medida</span>
-              </div>
-            </div>
-            <div class="value-item">
-              <span class="value-icon">📈</span>
-              <div class="value-text">
-                <strong>Escalable</strong>
-                <span>Crece sin límites</span>
-              </div>
-            </div>
-            <div class="value-item">
-              <span class="value-icon">✨</span>
-              <div class="value-text">
-                <strong>Intuitivo</strong>
-                <span>Fácil de usar</span>
-              </div>
-            </div>
-            <div class="value-item">
-              <span class="value-icon">💬</span>
-              <div class="value-text">
-                <strong>Soporte real</strong>
-                <span>Acompañamiento humano</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       <!-- ══════════════════════════════════════ -->
