@@ -362,26 +362,30 @@ $max-width: 1200px;
 }
 
 // ═══════════════════════════════════════════
-// 2. HERO SECTION (Banner de Una Columna con Imagen Integrada)
+// 2. HERO SECTION (Layout con Imagen de Fondo Integrada a la Derecha)
 // ═══════════════════════════════════════════
 .hero {
   position: relative;
-  padding: 120px 24px 80px;
-  background: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #eef7ff 45%,
-    #f3eeff 75%,
-    #ffffff 100%
-  );
+  padding: 140px 24px 120px;
+  background: 
+    url('/assets/images/ilustracion-actuaya.png') no-repeat right 35% center / 55% auto,
+    linear-gradient(180deg, #ffffff 0%, #eef7ff 45%, #f3eeff 75%, #ffffff 100%);
   overflow: hidden;
+
+  @media (max-width: 968px) {
+    padding: 100px 24px 80px;
+    background: 
+      radial-gradient(circle at bottom, rgba(#ffffff, 0.9) 0%, rgba(#ffffff, 0.3) 100%),
+      url('/assets/images/ilustracion-actuaya.png') no-repeat bottom 40px center / 85% auto,
+      linear-gradient(180deg, #ffffff 0%, #eef7ff 45%, #f3eeff 75%, #ffffff 100%);
+  }
 
   .hero-bg {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba($c-purple, 0.05) 0%, transparent 60%),
-      radial-gradient(circle 500px at 50% 80%, rgba($c-pink, 0.03) 0%, transparent 70%);
+      radial-gradient(ellipse 60% 50% at 10% 20%, rgba($c-purple, 0.04) 0%, transparent 60%),
+      radial-gradient(circle 400px at 50% 80%, rgba($c-pink, 0.02) 0%, transparent 70%);
     pointer-events: none;
     z-index: 1;
   }
@@ -400,14 +404,14 @@ $max-width: 1200px;
     background: linear-gradient(135deg, rgba($c-purple, 0.15), rgba($c-purple-light, 0.05));
     animation: particle-float infinite ease-in-out;
 
-    &.p1 { width: 12px; height: 12px; left: 10%; top: 20%; animation-duration: 14s; }
-    &.p2 { width: 8px; height: 8px; left: 25%; top: 15%; animation-duration: 18s; animation-delay: -3s; }
-    &.p3 { width: 16px; height: 16px; left: 85%; top: 25%; animation-duration: 22s; animation-delay: -5s; }
-    &.p4 { width: 10px; height: 10px; left: 75%; top: 40%; animation-duration: 16s; animation-delay: -2s; }
-    &.p5 { width: 14px; height: 14px; left: 15%; top: 50%; animation-duration: 20s; animation-delay: -8s; }
-    &.p6 { width: 6px; height: 6px; left: 35%; top: 30%; animation-duration: 12s; }
-    &.p7 { width: 18px; height: 18px; left: 55%; top: 45%; animation-duration: 25s; animation-delay: -10s; }
-    &.p8 { width: 9px; height: 9px; left: 90%; top: 50%; animation-duration: 15s; }
+    &.p1 { width: 12px; height: 12px; left: 5%; top: 25%; animation-duration: 14s; }
+    &.p2 { width: 8px; height: 8px; left: 35%; top: 15%; animation-duration: 18s; animation-delay: -3s; }
+    &.p3 { width: 16px; height: 16px; left: 45%; top: 30%; animation-duration: 22s; animation-delay: -5s; }
+    &.p4 { width: 10px; height: 10px; left: 40%; top: 70%; animation-duration: 16s; animation-delay: -2s; }
+    &.p5 { width: 14px; height: 14px; left: 8%; top: 75%; animation-duration: 20s; animation-delay: -8s; }
+    &.p6 { width: 6px; height: 6px; left: 22%; top: 60%; animation-duration: 12s; }
+    &.p7 { width: 18px; height: 18px; left: 15%; top: 85%; animation-duration: 25s; animation-delay: -10s; }
+    &.p8 { width: 9px; height: 9px; left: 3%; top: 60%; animation-duration: 15s; }
   }
 }
 
@@ -416,23 +420,37 @@ $max-width: 1200px;
   50% { transform: translateY(-20px) translateX(10px) scale(1.1); }
 }
 
-.hero-inner-one-col {
-  max-width: 960px;
+.hero-inner {
+  max-width: $max-width;
   margin: 0 auto;
   position: relative;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
   align-items: center;
-  text-align: center;
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 300px; /* Espacio para que se vea la imagen de fondo abajo del texto en mobile */
+  }
+
+  @media (max-width: 576px) {
+    gap: 220px;
+  }
 }
 
 .hero-content {
-  max-width: 800px;
-  margin: 0 auto 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: left;
+  max-width: 100%;
+  margin: 0;
+
+  @media (max-width: 968px) {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto;
+  }
 
   .hero-badge {
     display: inline-block;
@@ -443,12 +461,11 @@ $max-width: 1200px;
     font-weight: 700;
     letter-spacing: 0.02em;
     border-radius: $radius-pill;
-    margin-bottom: 24px;
-    width: fit-content;
+    margin-bottom: 28px;
   }
 
   h1 {
-    font-size: 3.8rem;
+    font-size: 3.5rem;
     font-weight: 800;
     line-height: 1.15;
     letter-spacing: -0.025em;
@@ -456,28 +473,46 @@ $max-width: 1200px;
     margin-bottom: 24px;
 
     @media (max-width: 768px) {
-      font-size: 2.8rem;
+      font-size: 2.7rem;
     }
 
     @media (max-width: 480px) {
-      font-size: 2.3rem;
+      font-size: 2.1rem;
     }
   }
 
   .hero-desc {
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     line-height: 1.75;
     color: $c-text-muted;
-    margin-bottom: 36px;
-    max-width: 680px;
+    margin-bottom: 40px;
+    max-width: 580px;
+
+    @media (max-width: 968px) {
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
 
   .hero-actions {
     display: flex;
     gap: 16px;
-    justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 24px;
+    margin-bottom: 36px;
+
+    @media (max-width: 968px) {
+      justify-content: center;
+    }
+  }
+}
+
+.hero-spacer {
+  height: 100%;
+  min-height: 400px;
+  pointer-events: none;
+
+  @media (max-width: 968px) {
+    display: none;
   }
 }
 
@@ -496,29 +531,6 @@ $max-width: 1200px;
     background-color: $c-green;
     border-radius: 50%;
     box-shadow: 0 0 10px rgba($c-green, 0.6);
-  }
-}
-
-// --- Nueva Sección de la Ilustración Centrada ---
-.hero-visual-one-col {
-  width: 100%;
-  max-width: 860px;
-  margin-top: 16px;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  .hero-banner-img {
-    width: 100%;
-    height: auto;
-    border-radius: 16px;
-    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.06));
-    transition: transform 0.4s ease;
-
-    &:hover {
-      transform: translateY(-4px);
-    }
   }
 }
 

@@ -82,7 +82,7 @@ interface ModuleCategory {
           <span class="particle p7"></span>
           <span class="particle p8"></span>
         </div>
-        <div class="hero-inner-one-col">
+        <div class="hero-inner">
           <div class="hero-content reveal">
             <span class="hero-badge pulse-anim">✨ App web multipropósito</span>
             <h1>
@@ -91,8 +91,6 @@ interface ModuleCategory {
             </h1>
             <p class="hero-desc">
               ACTUAYA se adapta a ti. Elige tus módulos, planifica desde tu computador y recibe guía diaria en tu celular para alcanzar tus objetivos.
-              
-              
             </p>
             <div class="hero-actions">
               <a class="btn-primary-lg" routerLink="/welcome">
@@ -108,11 +106,8 @@ interface ModuleCategory {
               No necesitas tarjeta de crédito
             </div>
           </div>
-
-          <!-- Imagen de Ilustración Integrada como banner inferior de la columna -->
-          <div class="hero-visual-one-col reveal-scale delay-2">
-            <img src="/assets/images/ilustracion-actuaya.png" alt="ActuaYa Dashboard Inteligente" class="hero-banner-img"/>
-          </div>
+          <!-- La ilustración de fondo se maneja directamente en el CSS del hero container para fundirse e integrarse a la derecha -->
+          <div class="hero-spacer"></div>
         </div>
 
         <!-- Value bar -->
