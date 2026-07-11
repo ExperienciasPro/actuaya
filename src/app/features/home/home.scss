@@ -369,7 +369,7 @@ $max-width: 1200px;
   padding: 140px 24px 120px;
   background: 
     url('/assets/images/ilustracion-actuaya.png') no-repeat center / cover,
-    linear-gradient(180deg, #ffffff 0%, #eef7ff 45%, #f3eeff 75%, #ffffff 100%);
+    linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
   overflow: hidden;
 
   @media (max-width: 968px) {
@@ -377,7 +377,7 @@ $max-width: 1200px;
     background: 
       radial-gradient(circle at bottom, rgba(#ffffff, 0.9) 0%, rgba(#ffffff, 0.3) 100%),
       url('/assets/images/ilustracion-actuaya.png') no-repeat center / cover,
-      linear-gradient(180deg, #ffffff 0%, #eef7ff 45%, #f3eeff 75%, #ffffff 100%);
+      linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
   }
 
   .hero-bg {
