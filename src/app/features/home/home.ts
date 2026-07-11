@@ -86,8 +86,8 @@ interface ModuleCategory {
           <div class="hero-content reveal">
             <span class="hero-badge pulse-anim">✨ App web multipropósito</span>
             <h1>
-              Construye la plataforma que tu negocio realmente necesita.
-              <span class="gradient-pink">Sin pagar de más.</span>
+              Desarrollo a medida.
+              <span class="gradient-pink">Sin sobrecostos.</span>
             </h1>
             <p class="hero-desc">
               ACTUAYA es la app web multipropósito que se adapta a ti. Elige solo los módulos que usas
