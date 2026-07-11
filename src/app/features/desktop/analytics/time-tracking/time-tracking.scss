@@ -1,0 +1,40 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.time-page { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: $spacing-xl; h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; } }
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+
+// — Summary —
+.summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-md; margin-bottom: $spacing-xl; }
+.summary-card {
+  @include card($spacing-lg); @include flex-column-center; gap: $spacing-xs;
+  &.highlight { border-left: 3px solid $color-accent-primary; }
+}
+.sum-icon { font-size: 1.5rem; }
+.sum-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: $color-text-primary; }
+.sum-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; }
+
+// — Distribution —
+.distribution-section { @include card($spacing-xl); margin-bottom: $spacing-xl; h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: $spacing-lg; } }
+.dist-bars { display: flex; flex-direction: column; gap: $spacing-md; }
+.dist-item { display: flex; flex-direction: column; gap: $spacing-xs; }
+.dist-header { display: flex; align-items: center; gap: $spacing-sm; }
+.dist-icon { font-size: 0.875rem; }
+.dist-name { flex: 1; font-size: 0.875rem; font-weight: 500; @include text-truncate; }
+.dist-hours { font-family: 'Space Grotesk', sans-serif; font-size: 0.875rem; font-weight: 600; }
+.dist-pct { font-size: 0.75rem; color: $color-text-muted; min-width: 36px; text-align: right; }
+.dist-track { height: 6px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; }
+.dist-fill { height: 100%; border-radius: $radius-full; transition: width 600ms ease; }
+
+// — Heatmap —
+.heatmap-section { @include card($spacing-xl); h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: $spacing-lg; } }
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: $spacing-sm; }
+.heatmap-cell { @include flex-column-center; gap: 4px; }
+.cell-block {
+  width: 100%; aspect-ratio: 1; border-radius: $radius-md;
+  background: $color-accent-primary; transition: opacity 400ms ease;
+  &.today { box-shadow: 0 0 10px rgba($color-accent-primary, 0.4); border: 1px solid $color-accent-primary-light; }
+}
+.cell-label { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; color: $color-text-muted; }
+.cell-value { font-size: 0.625rem; color: $color-text-muted; }

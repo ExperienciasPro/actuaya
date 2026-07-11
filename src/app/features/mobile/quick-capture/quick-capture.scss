@@ -1,0 +1,66 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.capture-screen { padding: $spacing-lg; @include flex-column; gap: $spacing-lg; position: relative; min-height: 100%; }
+
+// — Header —
+.capture-header { text-align: center; padding-top: $spacing-md; }
+.capture-icon { font-size: 2rem; display: block; margin-bottom: $spacing-xs; }
+.capture-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.capture-subtitle { font-size: 0.8125rem; color: $color-text-muted; }
+
+// — Capture Card —
+.capture-card { @include card($spacing-lg); display: flex; flex-direction: column; gap: $spacing-md; }
+.capture-input { @include input-base; }
+.main-input { font-size: 1rem; padding: $spacing-md; font-weight: 500; }
+.desc-input { resize: none; min-height: 52px; }
+.select-input { width: 100%; }
+
+// — Options —
+.expanded-options { display: flex; flex-direction: column; gap: $spacing-md; }
+.option-row { display: flex; flex-direction: column; gap: $spacing-xs; }
+.option-label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.06em; }
+
+// — Priority —
+.priority-selector { display: flex; gap: $spacing-xs; }
+.priority-btn {
+  flex: 1; padding: 6px 0; font-size: 0.75rem; font-weight: 600; border-radius: $radius-md;
+  background: $color-bg-tertiary; color: $color-text-muted; @include smooth;
+  &.active {
+    &.low { background: rgba(#54a0ff, 0.15); color: #54a0ff; }
+    &.medium { background: rgba($color-accent-warning, 0.15); color: $color-accent-warning; }
+    &.high { background: rgba(#ff6348, 0.15); color: #ff6348; }
+    &.critical { background: rgba($color-accent-danger, 0.15); color: $color-accent-danger; }
+  }
+}
+
+// — Time —
+.time-selector { display: flex; gap: $spacing-xs; }
+.time-btn {
+  flex: 1; padding: 6px 0; font-size: 0.75rem; font-weight: 600; border-radius: $radius-md;
+  background: $color-bg-tertiary; color: $color-text-muted; @include smooth;
+  &.active { background: rgba($color-accent-primary, 0.15); color: $color-accent-primary-light; }
+}
+
+// — Save —
+.save-btn {
+  @include button-primary; width: 100%; padding: $spacing-md; font-size: 0.9375rem;
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// — Recent —
+.recent-section { h3 { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; } }
+.recent-item { display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-sm 0; border-bottom: 1px solid $color-border-subtle; &:last-child { border-bottom: none; } }
+.recent-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  &.low { background: #54a0ff; } &.medium { background: $color-accent-warning; }
+  &.high { background: #ff6348; } &.critical { background: $color-accent-danger; }
+}
+.recent-name { font-size: 0.875rem; color: $color-text-secondary; }
+
+// — Toast —
+.success-toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: $color-accent-secondary; color: #fff; padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-full; font-size: 0.875rem; font-weight: 600;
+  box-shadow: $shadow-lg; z-index: 100;
+}

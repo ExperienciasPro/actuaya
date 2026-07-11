@@ -1,0 +1,387 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Mobile — Today Screen (Asistente Táctico)
+// ═══════════════════════════════════════════
+
+.today-screen {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+// — Greeting —
+.today-greeting {
+  text-align: center;
+  padding: $spacing-sm 0;
+}
+
+.greeting-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.greeting-emoji {
+  font-size: 1.5rem;
+}
+
+.greeting-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #1a2e35;
+}
+
+.greeting-date {
+  font-size: 0.8125rem;
+  color: $color-text-secondary;
+  text-transform: capitalize;
+  margin-top: 2px;
+}
+
+// — Focus Card —
+.focus-card {
+  @include card($spacing-xl);
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  border-radius: 20px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6c3ce9, #00d2ff, #00e676);
+  }
+}
+
+.focus-header {
+  margin-bottom: $spacing-md;
+}
+
+.focus-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: $radius-full;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: rgba($color-accent-primary, 0.15);
+  color: $color-accent-primary-light;
+}
+
+.focus-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.focus-description {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  margin-bottom: $spacing-lg;
+}
+
+.focus-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: $spacing-md;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $radius-lg;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+.progress-stat {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.complete-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: $radius-lg;
+  background: $color-accent-primary;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: $shadow-glow-primary;
+  @include smooth;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// — Focus Empty —
+.focus-empty {
+  @include flex-column-center;
+  padding: $spacing-lg;
+  gap: $spacing-sm;
+
+  .empty-emoji {
+    font-size: 3.5rem;
+    margin-bottom: $spacing-sm;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1a2e35;
+    margin-bottom: 2px;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #8c9ea6;
+  }
+}
+
+// — Stats Row —
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+}
+
+.stat-pill {
+  @include card($spacing-md);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 16px 12px;
+}
+
+.stat-icon {
+  font-size: 1.4rem;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1a2e35;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #8c9ea6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// — Upcoming Section —
+.upcoming-section {
+  padding-top: $spacing-sm;
+}
+
+.section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $color-text-muted;
+  margin-bottom: $spacing-sm;
+}
+
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 10px $spacing-sm;
+  border-radius: $radius-md;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.task-priority-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.critical { background: $color-accent-danger; }
+  &.high { background: $color-accent-warning; }
+  &.medium { background: $color-accent-info; }
+  &.low { background: $color-text-muted; }
+}
+
+.task-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  @include text-truncate;
+}
+
+.task-time {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+}
+
+.no-tasks {
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+// — Mis Metas Mobile Section —
+.goals-section {
+  padding-top: $spacing-xs;
+}
+
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-goal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &.completed {
+    opacity: 0.85;
+    background: #fcfdfe;
+  }
+}
+
+.goal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goal-mode-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &.leader {
+    background: rgba(108, 60, 233, 0.1);
+    color: #6c3ce9;
+  }
+  &.business {
+    background: rgba(0, 40, 30, 0.08);
+    color: #1a2e35;
+  }
+}
+
+.goal-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+
+  &.in_progress {
+    background: #ede9fe;
+    color: #6d28d9;
+  }
+  &.completed {
+    background: #d1fae5;
+    color: #059669;
+  }
+}
+
+.goal-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a2e35;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.goal-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.goal-progress-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1a2e35;
+  min-width: 38px;
+}
+
+.goal-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #eef2f4;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6c3ce9, #00cec9);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+
+  &.completed {
+    background: #00cec9;
+  }
+}

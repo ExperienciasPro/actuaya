@@ -1,0 +1,156 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.analytics-page { max-width: 1280px; margin: 0 auto; }
+
+.page-header { @include flex-between; margin-bottom: $spacing-xl; flex-wrap: wrap; gap: $spacing-md;
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
+}
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+
+.period-toggle {
+  display: flex; border: 1px solid $color-border-subtle;
+  border-radius: $radius-md; overflow: hidden;
+}
+.period-btn {
+  @include button-base; padding: 6px 16px; font-size: 0.75rem;
+  border-radius: 0; background: transparent; color: $color-text-muted;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+  &.active { background: rgba($color-accent-primary, 0.15); color: $color-accent-primary-light; }
+}
+
+// — Metrics Grid —
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+
+  @include mobile-only { grid-template-columns: 1fr 1fr; }
+}
+
+.metric-card {
+  @include card($spacing-lg);
+  display: flex; flex-direction: column; gap: $spacing-xs;
+
+  &.highlight {
+    grid-row: span 1;
+    border-left: 3px solid $color-accent-primary;
+    background: linear-gradient(135deg, $color-bg-secondary, rgba($color-accent-primary, 0.04));
+  }
+}
+
+.metric-top { @include flex-between; }
+.metric-icon { font-size: 1.25rem; }
+.metric-trend {
+  font-size: 0.75rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif;
+  &.up { color: $color-accent-secondary; }
+  &.down { color: $color-accent-danger; }
+}
+
+.metric-big-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem; font-weight: 700; color: $color-text-primary; line-height: 1;
+}
+
+.metric-label {
+  font-size: 0.75rem; color: $color-text-muted;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+}
+
+.metric-bar { height: 4px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; margin-top: $spacing-xs; }
+.metric-bar-fill { height: 100%; background: linear-gradient(90deg, $color-accent-primary, $color-accent-primary-light); border-radius: $radius-full; transition: width 600ms ease; }
+
+// — Charts Row —
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.8fr;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+
+  @include mobile-only { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+  @include card($spacing-lg);
+  h3 { font-size: 0.9375rem; font-weight: 600; margin-bottom: $spacing-lg; }
+  &.compact { h3 { margin-bottom: $spacing-md; } }
+}
+
+// — Donut Chart —
+.donut-chart-area {
+  @include flex-center; padding: $spacing-md 0;
+}
+
+.legend { display: flex; flex-direction: column; gap: $spacing-xs; margin-top: $spacing-md; }
+.legend-item { display: flex; align-items: center; gap: $spacing-sm; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { flex: 1; font-size: 0.8125rem; color: $color-text-secondary; }
+.legend-value { font-family: 'Space Grotesk', sans-serif; font-size: 0.875rem; font-weight: 600; color: $color-text-primary; }
+
+// — Bar Chart —
+.bar-chart {
+  display: flex; align-items: flex-end; gap: $spacing-sm;
+  height: 160px; padding-top: $spacing-md;
+}
+
+.bar-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end;
+}
+
+.bar {
+  width: 100%; border-radius: $radius-sm $radius-sm 0 0;
+  background: rgba($color-accent-primary, 0.3); transition: height 400ms ease;
+  min-height: 4px;
+  &.today { background: $color-accent-primary; box-shadow: 0 0 10px rgba($color-accent-primary, 0.3); }
+}
+
+.bar-label { font-size: 0.625rem; color: $color-text-muted; font-weight: 600; text-transform: uppercase; }
+
+// — Streaks —
+.streaks-list { display: flex; flex-direction: column; gap: $spacing-md; }
+
+.streak-item { display: flex; align-items: center; gap: $spacing-md; }
+.streak-emoji { font-size: 1.5rem; }
+.streak-info { display: flex; flex-direction: column; gap: 1px; }
+.streak-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: $color-text-primary; line-height: 1; }
+.streak-label { font-size: 0.6875rem; color: $color-text-muted; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+// — Goal Snapshots —
+.snapshots-section {
+  h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: $spacing-lg; }
+}
+
+.snapshots-grid {
+  @include grid-auto-fill(260px, $spacing-md);
+}
+
+.snapshot-card {
+  @include card($spacing-md);
+  display: flex; flex-direction: column; gap: $spacing-sm;
+  text-decoration: none; color: inherit;
+  @include smooth;
+  &:hover { border-color: $color-border-default; transform: translateY(-1px); }
+}
+
+.snap-header { @include flex-between; }
+.snap-mode { font-size: 1rem; }
+.snap-trend {
+  font-size: 0.75rem; font-weight: 700;
+  &.improving { color: $color-accent-secondary; }
+  &.declining { color: $color-accent-danger; }
+  &.stable { color: $color-text-muted; }
+}
+
+.snap-title { font-size: 0.875rem; font-weight: 600; @include text-truncate; }
+
+.snap-progress { display: flex; align-items: center; gap: $spacing-sm; }
+.snap-track { flex: 1; height: 4px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; }
+.snap-fill { height: 100%; border-radius: $radius-full; transition: width 400ms ease; }
+.snap-pct { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; font-family: 'Space Grotesk', sans-serif; min-width: 28px; text-align: right; }
+
+.snap-meta {
+  display: flex; justify-content: space-between; font-size: 0.6875rem; color: $color-text-muted;
+  .on-track { color: $color-accent-secondary; font-weight: 600; }
+  .off-track { color: $color-accent-danger; font-weight: 600; }
+}

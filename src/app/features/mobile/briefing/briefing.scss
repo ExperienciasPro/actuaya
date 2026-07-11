@@ -1,0 +1,49 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.briefing-screen { padding: $spacing-lg; @include flex-column; gap: $spacing-lg; }
+
+// — Header —
+.briefing-header { text-align: center; padding-top: $spacing-md; }
+.briefing-emoji { font-size: 2rem; display: block; margin-bottom: $spacing-xs; }
+.briefing-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.briefing-date { font-size: 0.8125rem; color: $color-text-muted; text-transform: capitalize; }
+
+// — Overview —
+.overview-card { @include card($spacing-lg); display: flex; align-items: center; gap: $spacing-lg; }
+.overview-info { display: flex; flex-direction: column; gap: 2px; }
+.overview-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; }
+.overview-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: $color-text-primary; }
+.overview-meta { font-size: 0.75rem; color: $color-text-muted; }
+
+// — Sections —
+.section-card { @include card($spacing-lg); display: flex; flex-direction: column; gap: $spacing-sm; }
+.section-head { font-size: 0.9375rem; font-weight: 600; margin-bottom: $spacing-xs; }
+
+// —Task Items —
+.briefing-item { display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-xs 0; }
+.item-priority { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  &.critical { background: $color-accent-danger; } &.high { background: #ff6348; }
+  &.medium { background: $color-accent-warning; } &.low { background: #54a0ff; }
+}
+.item-content { flex: 1; display: flex; justify-content: space-between; align-items: center; }
+.item-title { font-size: 0.875rem; color: $color-text-primary; }
+.item-time { font-size: 0.6875rem; color: $color-text-muted; font-family: 'Space Grotesk', sans-serif; }
+
+// — Goals —
+.goal-brief { display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-xs 0; }
+.goal-icon { font-size: 0.875rem; flex-shrink: 0; }
+.goal-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.goal-name { font-size: 0.8125rem; font-weight: 500; color: $color-text-primary; @include text-truncate; }
+.goal-mini-bar { height: 4px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; }
+.goal-mini-fill { height: 100%; border-radius: $radius-full; transition: width 600ms ease; }
+.goal-pct { font-size: 0.75rem; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: $color-text-muted; min-width: 32px; text-align: right; }
+
+// — Quick Stats —
+.quick-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-sm; }
+.qs-card { @include card($spacing-md); @include flex-column-center; gap: 2px; }
+.qs-icon { font-size: 1rem; }
+.qs-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.125rem; font-weight: 700; color: $color-text-primary; }
+.qs-label { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; }
+
+.empty-text { font-size: 0.8125rem; color: $color-text-muted; font-style: italic; }

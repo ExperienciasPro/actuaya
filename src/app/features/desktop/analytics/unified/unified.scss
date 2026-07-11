@@ -1,0 +1,302 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.unified-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// — Header —
+.page-header {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .header-subtitle {
+    color: $color-text-muted;
+    font-size: 0.9rem;
+  }
+}
+
+.week-score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: $radius-lg;
+  min-width: 100px;
+
+  .score-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  &.score-great { background: rgba(#00cec9, 0.12); color: #00b894; }
+  &.score-good  { background: rgba(#6c5ce7, 0.1); color: #6c5ce7; }
+  &.score-ok    { background: rgba(#feca57, 0.12); color: #c9a800; }
+  &.score-low   { background: rgba(#e84393, 0.1); color: #e84393; }
+}
+
+// — KPI Row —
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+}
+
+.kpi {
+  @include card($spacing-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .kpi-icon {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    line-height: 1.1;
+  }
+  .kpi-name {
+    font-size: 0.7rem;
+    color: $color-text-muted;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+}
+
+// — Main 3-column grid —
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+}
+
+.card {
+  @include card($spacing-lg);
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+    color: $color-text-primary;
+  }
+}
+
+// Ring
+.ring-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $spacing-md;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  flex: 1;
+  color: $color-text-secondary;
+}
+
+.legend-count {
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+// Bar chart
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding-top: $spacing-md;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: rgba($color-accent-primary, 0.2);
+  @include smooth;
+  position: relative;
+  min-height: 4px;
+
+  &.today {
+    background: $color-accent-primary;
+    box-shadow: 0 0 10px rgba($color-accent-primary, 0.3);
+  }
+
+  .bar-val {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $color-text-muted;
+  }
+}
+
+.bar-label {
+  font-size: 0.7rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+// Wins & Challenges split card
+.split-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 0.82rem;
+    color: $color-text-secondary;
+    margin-bottom: 4px;
+    line-height: 1.4;
+
+    &.muted {
+      color: $color-text-muted;
+      font-style: italic;
+    }
+  }
+}
+
+.wins {
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border-subtle;
+  margin-bottom: $spacing-md;
+}
+
+// — Goal Snapshots —
+.snapshots {
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.snap-grid {
+  @include grid-auto-fill(220px, $spacing-md);
+}
+
+.snap-card {
+  @include card($spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.snap-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.snap-mode {
+  font-size: 1.2rem;
+}
+
+.snap-trend {
+  font-size: 0.8rem;
+  font-weight: 700;
+  &.improving { color: $color-accent-secondary; }
+  &.stable    { color: #feca57; }
+  &.declining { color: $color-accent-danger; }
+}
+
+.snap-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  @include text-truncate;
+}
+
+.snap-bar {
+  height: 6px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.snap-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  @include smooth;
+}
+
+.snap-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: $color-text-muted;
+
+  .on-track { color: $color-accent-secondary; font-weight: 600; }
+  .off-track { color: $color-accent-danger; font-weight: 600; }
+}
+
+// Responsive
+@media (max-width: 960px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+}

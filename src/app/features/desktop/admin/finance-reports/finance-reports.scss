@@ -1,0 +1,236 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.admin-page { max-width: 100%; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; }
+
+.page-header {
+  margin-bottom: $spacing-lg;
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
+  .subtitle { font-size: 0.9rem; color: $color-text-muted; }
+}
+
+// Tabs
+.tabs {
+  display: flex; gap: 4px; margin-bottom: $spacing-xl;
+  background: $color-bg-tertiary; border-radius: $radius-md; padding: 4px;
+  width: fit-content; max-width: 100%; flex-wrap: wrap;
+}
+.tab {
+  @include button-base; padding: 10px 20px; border-radius: $radius-md;
+  font-size: 0.85rem; font-weight: 600; color: $color-text-muted;
+  &.active { background: $color-bg-secondary; color: $color-text-primary; box-shadow: $shadow-sm; }
+  &:hover:not(.active) { color: $color-text-secondary; }
+}
+
+// Summary cards
+.summary-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-md; margin-bottom: $spacing-xl;
+}
+.summary-card {
+  @include card($spacing-md); display: flex; flex-direction: column; align-items: center; text-align: center;
+  .sum-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; opacity: 0.8; margin-bottom: 4px; }
+  .sum-value { font-size: 1.5rem; font-weight: 800; }
+  &.green { border-left: 3px solid #00cec9; .sum-value { color: #00b894; } }
+  &.red { border-left: 3px solid #e84393; .sum-value { color: #e84393; } }
+  &.blue { border-left: 3px solid #6c5ce7; .sum-value { color: #6c5ce7; } }
+}
+
+// Chart sections
+.chart-section {
+  @include card($spacing-lg); margin-bottom: $spacing-lg;
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: $spacing-lg; }
+}
+
+.chart-header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: $spacing-md; margin-bottom: $spacing-lg;
+  h3 { margin-bottom: 0; }
+}
+
+.chart-controls {
+  display: flex; align-items: center; gap: $spacing-md; flex-wrap: wrap;
+}
+
+.view-toggle {
+  display: flex; gap: 2px; background: $color-bg-tertiary; border-radius: $radius-md; padding: 3px;
+  button {
+    @include button-base; padding: 6px 14px; border-radius: $radius-sm;
+    font-size: 0.78rem; font-weight: 600; color: $color-text-muted;
+    &.active { background: $color-bg-secondary; color: $color-text-primary; box-shadow: $shadow-sm; }
+    &:hover:not(.active) { color: $color-text-secondary; }
+  }
+}
+
+.year-nav {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.year-arrow {
+  @include button-base; width: 30px; height: 30px; border-radius: 50%;
+  font-size: 1.1rem; font-weight: 700; color: $color-text-secondary;
+  background: $color-bg-tertiary; display: flex; align-items: center; justify-content: center;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+}
+
+.year-label {
+  font-size: 0.95rem; font-weight: 700; color: $color-text-primary; min-width: 48px; text-align: center;
+}
+
+.year-select {
+  padding: 7px 32px 7px 14px; border: 1px solid $color-border-default; border-radius: $radius-md;
+  background: $color-bg-secondary; font-family: inherit; font-size: 0.85rem; font-weight: 600;
+  color: $color-text-primary; outline: none; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  @include smooth;
+  &:focus { border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+}
+
+.month-col.current-year {
+  .month-bar.income { background: rgba(#00cec9, 0.85); }
+  .month-label { color: $color-accent-primary; font-weight: 700; }
+}
+
+// Monthly bars
+.month-bars {
+  display: flex; gap: 6px; height: 180px; align-items: flex-end; margin-bottom: $spacing-md;
+}
+.month-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end;
+}
+.month-bar-wrap { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
+.month-bar {
+  flex: 1; border-radius: 3px 3px 0 0; min-height: 2px; @include smooth;
+  &.income { background: rgba(#00cec9, 0.6); }
+  &.expense { background: rgba(#e84393, 0.5); }
+}
+.month-label { font-size: 0.65rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; }
+.month-val {
+  font-size: 0.58rem; font-weight: 700; color: $color-text-secondary;
+  white-space: nowrap; order: -1;
+}
+
+.chart-legend { display: flex; gap: $spacing-lg; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: $color-text-muted; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%;
+  &.green { background: #00cec9; }
+  &.red { background: #e84393; }
+}
+
+// Horizontal bars
+.horizontal-bars { display: flex; flex-direction: column; gap: $spacing-md; }
+.h-bar-row { display: flex; align-items: center; gap: $spacing-md; }
+.h-bar-label { width: 160px; font-size: 0.82rem; font-weight: 600; color: $color-text-secondary; flex-shrink: 0; }
+.h-bar-track { flex: 1; height: 10px; background: $color-bg-tertiary; border-radius: 5px; overflow: hidden; }
+.h-bar-fill { height: 100%; border-radius: 5px; @include smooth; }
+.h-bar-value { font-size: 0.8rem; font-weight: 600; color: $color-text-primary; min-width: 100px; text-align: right; }
+
+// Table
+.table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%; border-collapse: collapse;
+  th, td { padding: 12px 16px; text-align: left; font-size: 0.85rem; }
+  th { font-weight: 600; color: $color-text-muted; font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 1px solid $color-border-subtle; background: $color-bg-tertiary; }
+  td { border-bottom: 1px solid $color-border-subtle; color: $color-text-secondary; }
+  tr:hover td { background: $color-bg-hover; }
+  tr.current td { background: rgba($color-accent-primary, 0.04); }
+  .right { text-align: right; }
+  .mono { font-weight: 600; color: $color-text-primary; }
+  .bold { font-weight: 600; color: $color-text-primary; }
+}
+
+.positive { color: #00b894 !important; font-weight: 600; }
+.negative { color: #e84393 !important; font-weight: 600; }
+.red-text { color: #e84393; }
+
+.company-tag {
+  display: inline-block; padding: 2px 8px; border-radius: $radius-sm;
+  background: rgba($color-accent-primary, 0.1); color: $color-accent-primary;
+  font-size: 0.75rem; font-weight: 600;
+}
+
+.btn-delete {
+  @include button-base; padding: 4px 8px; font-size: 0.75rem; color: $color-text-muted;
+  border-radius: $radius-sm;
+  &:hover { background: rgba(#e84393, 0.1); color: #e84393; }
+}
+
+// Forms
+.form-card {
+  @include card($spacing-lg); margin-bottom: $spacing-lg;
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: $spacing-md; }
+}
+
+.inline-form {
+  display: grid; gap: $spacing-md; align-items: end;
+}
+.grid-historical { grid-template-columns: 0.6fr 1fr 1fr auto; }
+.grid-expenses {
+  display: flex; flex-wrap: wrap;
+  margin-bottom: $spacing-md;
+  .form-field { flex: 1 1 140px; min-width: 120px; }
+}
+
+.form-field {
+  display: flex; flex-direction: column; gap: 4px;
+  label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.04em; }
+  input, select {
+    padding: 10px 14px; border: 1px solid $color-border-default;
+    border-radius: $radius-md; background: $color-bg-primary;
+    font-size: 0.9rem; font-family: inherit; color: $color-text-primary;
+    outline: none; @include smooth;
+    &:focus { border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+    &::placeholder { color: $color-text-muted; }
+  }
+  select { appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+}
+
+.btn-add {
+  @include button-base; padding: 10px 20px; background: $color-accent-primary;
+  color: #fff; font-weight: 600; border-radius: $radius-md; font-size: 0.85rem;
+  white-space: nowrap;
+  &:hover { background: $color-accent-primary-light; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &.red-btn { background: #e84393; &:hover { background: #ec6aab; } }
+}
+
+.empty-small { color: $color-text-muted; font-size: 0.85rem; text-align: center; padding: 24px; }
+
+// Empty state (no modules)
+.empty-state {
+  @include card($spacing-xl); text-align: center; padding: 60px 24px;
+  .empty-icon { font-size: 3rem; display: block; margin-bottom: $spacing-md; }
+  p { font-size: 1rem; color: $color-text-secondary; font-weight: 600; margin-bottom: 4px; }
+  .empty-hint { font-size: 0.85rem; color: $color-text-muted; font-weight: 400; }
+}
+
+.section-desc { font-size: 0.88rem; color: $color-text-muted; line-height: 1.6; margin-bottom: $spacing-lg; }
+
+// Investment cards
+.inv-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: $spacing-md;
+}
+.inv-detail-card {
+  @include card($spacing-md);
+}
+.inv-top {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: $spacing-sm;
+}
+.inv-name { font-weight: 600; color: $color-text-primary; font-size: 0.95rem; }
+.inv-curr { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: $radius-sm;
+  background: $color-bg-tertiary; color: $color-text-muted; }
+.inv-amounts { display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-sm; }
+.inv-col { display: flex; flex-direction: column; text-align: center; }
+.inv-small { font-size: 0.65rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.04em; }
+.inv-num { font-size: 0.95rem; font-weight: 700; color: $color-text-primary; }
+
+@media (max-width: 900px) {
+  .summary-row { grid-template-columns: 1fr; }
+  .grid-historical, .grid-expenses { grid-template-columns: 1fr 1fr; }
+  .h-bar-label { width: 100px; font-size: 0.75rem; }
+}

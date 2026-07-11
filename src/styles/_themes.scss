@@ -1,0 +1,331 @@
+// ═══════════════════════════════════════════
+// ActuaYa — Theme Overrides
+// ═══════════════════════════════════════════
+// Applied when .theme-light or .theme-dark class is on <html>
+
+.theme-light {
+  --bg-primary:    #F0FAF7;
+  --bg-secondary:  #ffffff;
+  --bg-tertiary:   #E6F5F0;
+  --bg-hover:      #D9F0E8;
+  --surface-raised: #E8F6F1;
+  --surface-glass:  rgba(240, 250, 247, 0.9);
+  --text-primary:   #1a2e35;
+  --text-secondary: #5a7a84;
+  --text-muted:     #8fa8b0;
+  --border-subtle:  rgba(0, 40, 30, 0.1);
+  --border-default: rgba(0, 40, 30, 0.15);
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+}
+
+// ═══════════════════════════════════════════
+// Dark Theme
+// ═══════════════════════════════════════════
+.theme-dark {
+  --bg-primary:    #0f1923;
+  --bg-secondary:  #1a2634;
+  --bg-tertiary:   #243242;
+  --bg-hover:      #2a3a4e;
+  --surface-raised: #1e2d3d;
+  --surface-glass:  rgba(15, 25, 35, 0.92);
+  --text-primary:   #e8f0f4;
+  --text-secondary: #a0b4c0;
+  --text-muted:     #607880;
+  --border-subtle:  rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --shadow-color:   rgba(0, 0, 0, 0.4);
+
+  body {
+    background-color: #0f1923;
+    color: #e8f0f4;
+  }
+
+  // ── Backgrounds ──
+  .welcome-page,
+  .desktop-shell,
+  .mobile-shell,
+  .admin-page {
+    background: #0f1923 !important;
+  }
+
+  // Cards & panels
+  .welcome-card,
+  .form-card,
+  .chart-section,
+  .table-wrap,
+  .dollar-card,
+  .portfolio-card,
+  .inv-detail-card,
+  .summary-card,
+  .kpi-item,
+  .goal-snap,
+  .ring-card,
+  .chart-card,
+  .wins-card,
+  .dashboard-card,
+  .onboarding-card,
+  .settings-section,
+  .about-card,
+  .login-card {
+    background: #1a2634 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e8f0f4;
+  }
+
+  // Sidebar & topbar
+  .sidebar {
+    background: #1a2634 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .topbar {
+    background: rgba(26, 38, 52, 0.92) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(12px);
+  }
+
+  // Nav & text
+  .nav-section-title { color: #607880 !important; }
+  .nav-item {
+    color: #a0b4c0 !important;
+    &:hover, &.active { background: #243242 !important; color: #e8f0f4 !important; }
+  }
+
+  .page-title, .logo-text { color: #e8f0f4 !important; }
+  .user-pill { color: #a0b4c0 !important; &:hover { background: #243242 !important; } }
+
+  h1, h2, h3, h4 { color: #e8f0f4 !important; }
+  p, span, label { color: #a0b4c0; }
+
+  // Inputs
+  input, select, textarea {
+    background: #0f1923 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #e8f0f4 !important;
+
+    &::placeholder { color: #607880 !important; }
+    &:focus { border-color: #6c5ce7 !important; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25) !important; }
+  }
+
+  // Tables
+  .data-table {
+    th { background: #243242 !important; color: #607880 !important; border-color: rgba(255, 255, 255, 0.08) !important; }
+    td { border-color: rgba(255, 255, 255, 0.06) !important; color: #a0b4c0 !important; }
+    tr:hover td { background: #1e2d3d !important; }
+  }
+
+  // Misc
+  .main-content { background: #0f1923 !important; }
+  .content-area { background: #0f1923 !important; }
+  .search-panel { background: #1a2634 !important; border-color: rgba(255, 255, 255, 0.08) !important; }
+  .search-bar { background: #243242 !important; }
+  .search-input { color: #e8f0f4 !important; }
+  .notification-panel { background: #1a2634 !important; border-color: rgba(255, 255, 255, 0.08) !important; }
+
+  .empty, .empty-small { color: #607880 !important; }
+  .card-footer, .tagline, .subtitle { color: #607880 !important; }
+
+  .card-top-bar { opacity: 0.8; }
+  .bg-orb { opacity: 0.12; }
+
+  // Tabs
+  .tabs { background: #243242 !important; }
+  .tab {
+    color: #607880 !important;
+    &.active { background: #1a2634 !important; color: #e8f0f4 !important; }
+  }
+
+  // Buttons
+  .btn-delete:hover { background: rgba(232, 67, 147, 0.15) !important; }
+  .btn-refresh { background: #1a2634 !important; border-color: rgba(255, 255, 255, 0.1) !important; color: #a0b4c0 !important; }
+
+  .filter-bar select { background: #1a2634 !important; border-color: rgba(255, 255, 255, 0.1) !important; color: #a0b4c0 !important; }
+
+  .company-tag { background: rgba(108, 92, 231, 0.15) !important; }
+  .mono { color: #e8f0f4 !important; }
+  .bold { color: #e8f0f4 !important; }
+
+  // Scrollbar
+  ::-webkit-scrollbar-track { background: #1a2634; }
+  ::-webkit-scrollbar-thumb { background: #2a3a4e; &:hover { background: #3a4e64; } }
+}
+
+// ═══════════════════════════════════════════
+// Icon Font Styles (Material Symbols Rounded)
+// ═══════════════════════════════════════════
+
+// — Shared base for all font icon modes —
+.icon-font-filled,
+.icon-font-outlined,
+.icon-font-circle,
+.icon-font-glass {
+  .nav-icon,
+  .user-avatar,
+  .mob-nav-icon,
+  [data-themed-icon="true"] {
+    font-family: 'Material Symbols Rounded' !important;
+    font-size: 22px !important;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+// — Filled / Solid —
+.icon-font-filled {
+  .nav-icon, .user-avatar, .mob-nav-icon, [data-themed-icon="true"] {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+// — Outlined / Line —
+.icon-font-outlined {
+  .nav-icon, .user-avatar, .mob-nav-icon, [data-themed-icon="true"] {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+// — Circle / Flat (icon inside colored circle) —
+.icon-font-circle {
+  .nav-icon, .mob-nav-icon {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    color: #fff !important;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px !important;
+    flex-shrink: 0;
+  }
+  .user-avatar {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    color: #fff !important;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px !important;
+    flex-shrink: 0;
+  }
+  
+  [data-themed-icon="true"] {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    // We let the module container keep its own background and color!
+  }
+
+  // Rotating circle colors
+  .nav-item:nth-child(8n+1) .nav-icon, .mob-nav-item:nth-child(8n+1) .mob-nav-icon { background: #26a69a; }
+  .nav-item:nth-child(8n+2) .nav-icon, .mob-nav-item:nth-child(8n+2) .mob-nav-icon { background: #5c6bc0; }
+  .nav-item:nth-child(8n+3) .nav-icon, .mob-nav-item:nth-child(8n+3) .mob-nav-icon { background: #ef5350; }
+  .nav-item:nth-child(8n+4) .nav-icon, .mob-nav-item:nth-child(8n+4) .mob-nav-icon { background: #66bb6a; }
+  .nav-item:nth-child(8n+5) .nav-icon, .mob-nav-item:nth-child(8n+5) .mob-nav-icon { background: #ffa726; }
+  .nav-item:nth-child(8n+6) .nav-icon, .mob-nav-item:nth-child(8n+6) .mob-nav-icon { background: #42a5f5; }
+  .nav-item:nth-child(8n+7) .nav-icon, .mob-nav-item:nth-child(8n+7) .mob-nav-icon { background: #ab47bc; }
+  .nav-item:nth-child(8n)   .nav-icon, .mob-nav-item:nth-child(8n)   .mob-nav-icon { background: #78909c; }
+
+  .user-pill:nth-child(1) .user-avatar { background: #ec407a; }
+  .user-pill:nth-child(2) .user-avatar { background: #42a5f5; }
+  .coach-link .nav-icon { background: #7e57c2 !important; }
+}
+
+// — Glass / 3D Transparent —
+.icon-font-glass {
+  .nav-icon, .mob-nav-icon, .user-avatar {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    color: transparent !important;
+    background-color: transparent !important;
+    background-clip: text;
+    -webkit-background-clip: text;
+    display: inline-block !important;
+    filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.15));
+    line-height: 1.2;
+    padding-bottom: 2px;
+  }
+  
+  [data-themed-icon="true"] {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25));
+    // Safe glass effect for module icons without breaking background-clip on containers
+  }
+  
+  // Vibrant gradients
+  .nav-item:nth-child(8n+1) .nav-icon, .mob-nav-item:nth-child(8n+1) .mob-nav-icon { background-image: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); }
+  .nav-item:nth-child(8n+2) .nav-icon, .mob-nav-item:nth-child(8n+2) .mob-nav-icon { background-image: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+  .nav-item:nth-child(8n+3) .nav-icon, .mob-nav-item:nth-child(8n+3) .mob-nav-icon { background-image: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+  .nav-item:nth-child(8n+4) .nav-icon, .mob-nav-item:nth-child(8n+4) .mob-nav-icon { background-image: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+  .nav-item:nth-child(8n+5) .nav-icon, .mob-nav-item:nth-child(8n+5) .mob-nav-icon { background-image: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+  .nav-item:nth-child(8n+6) .nav-icon, .mob-nav-item:nth-child(8n+6) .mob-nav-icon { background-image: linear-gradient(135deg, #0250c5 0%, #d43f8d 100%); }
+  .nav-item:nth-child(8n+7) .nav-icon, .mob-nav-item:nth-child(8n+7) .mob-nav-icon { background-image: linear-gradient(135deg, #b224ef 0%, #7579ff 100%); }
+  .nav-item:nth-child(8n)   .nav-icon, .mob-nav-item:nth-child(8n)   .mob-nav-icon { background-image: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+
+  .user-pill:nth-child(1) .user-avatar { background-image: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+  .user-pill:nth-child(2) .user-avatar { background-image: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); }
+  .coach-link .nav-icon { background-image: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%) !important; }
+}
+
+// ═══════════════════════════════════════════
+// Global Module Color Overrides
+// ═══════════════════════════════════════════
+// These rules cascade the active palette's accent color
+// into common module UI patterns (KPIs, buttons, badges, etc.)
+
+// — KPI / Stat icon backgrounds —
+.kpi-icon, .kpi-icon-box, .stat-icon, .kpi-mini-icon,
+.metric-icon, .resumen-kpi-icon, .analytics-kpi-icon,
+.module-icon-box, .summary-icon, .insight-icon {
+  background-color: rgba(var(--accent-rgb, 108, 92, 231), 0.12) !important;
+  color: var(--accent) !important;
+}
+
+// — Card icons and category icons —
+.card-icon, .mod-icon, .mod-cat-icon,
+.hero-icon, .tool-icon, .b-icon {
+  color: var(--accent) !important;
+}
+
+// — Buttons with accent —
+.btn-primary, button[class*="primary"],
+.cta-button, .save-btn, .submit-btn {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+// — Active tabs and pills —
+.tab-active, .pill-active,
+[class*="tab"][class*="active"],
+[class*="pill"][class*="active"] {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+// — Links inside modules —
+.module-content a:not([class]),
+.dashboard-content a:not([class]) {
+  color: var(--accent) !important;
+}
+
+// — Trend / Badge indicators —
+.trend-up, .trend-positive {
+  color: var(--sidebar-active, var(--accent)) !important;
+}
+
+// — Stat icon color variants (override hardcoded) —
+.stat-icon-blue, .stat-icon-purple, .stat-icon-teal, .stat-icon-amber,
+.icon-blue, .icon-purple, .icon-teal,
+.bg-icon-blue, .bg-icon-emerald, .bg-icon-teal, .bg-icon-orange {
+  background-color: rgba(var(--accent-rgb, 108, 92, 231), 0.12) !important;
+  color: var(--accent) !important;
+}
+
+// — Chart accent colors (grid & borders) —
+.chart-container canvas,
+.chart-wrapper canvas {
+  --chart-accent: var(--accent);
+}

@@ -1,0 +1,24 @@
+// ═══════════════════════════════════════════
+// ActuaYa — Responsive Utilities
+// ═══════════════════════════════════════════
+
+@use 'variables' as *;
+
+// Utility classes para mostrar/ocultar por dispositivo
+.desktop-only {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    display: none !important;
+  }
+}
+
+.mobile-only {
+  @media (min-width: $bp-tablet) {
+    display: none !important;
+  }
+}
+
+.tablet-up {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    display: none !important;
+  }
+}

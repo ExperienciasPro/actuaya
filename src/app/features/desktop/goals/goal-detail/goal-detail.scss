@@ -1,0 +1,651 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Goal Detail — Full View
+// ═══════════════════════════════════════════
+
+.goal-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// — Breadcrumb —
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  margin-bottom: $spacing-lg;
+
+  a {
+    text-decoration: none;
+    color: $color-text-muted;
+    @include smooth;
+
+    &:hover { color: $color-accent-primary-light; }
+  }
+
+  .sep { opacity: 0.4; }
+
+  span:last-child {
+    color: $color-text-secondary;
+    @include text-truncate;
+  }
+}
+
+// — Hero Section —
+.hero-section {
+  @include card($spacing-xl);
+  display: flex;
+  gap: $spacing-xl;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+
+  @include mobile-only {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.hero-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+
+  @include mobile-only {
+    justify-content: center;
+  }
+}
+
+.mode-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  line-height: 1.3;
+  margin-bottom: $spacing-sm;
+}
+
+.hero-desc {
+  font-size: 0.9375rem;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-md;
+}
+
+.starting-point {
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  border-left: 3px solid $color-accent-primary;
+  margin-bottom: $spacing-md;
+}
+
+.sp-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.sp-text {
+  font-size: 0.8125rem;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.hero-tags {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.tag-chip {
+  padding: 2px 10px;
+  border-radius: $radius-full;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba($color-accent-primary, 0.12);
+  color: $color-accent-primary-light;
+}
+
+.meta-date {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.hero-right {
+  flex-shrink: 0;
+}
+
+// — Intentions & Delegation —
+.intention-card {
+  background: rgba($color-bg-tertiary, 0.5);
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.intention-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.intention-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-accent-primary-light;
+}
+
+.intention-value {
+  font-size: 0.9375rem;
+  color: $color-text-primary;
+  line-height: 1.5;
+}
+
+.delegation-card {
+  @include flex-center;
+  justify-content: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-accent-info, 0.1);
+  border-left: 3px solid $color-accent-info;
+  border-radius: 0 $radius-md $radius-md 0;
+  margin-bottom: $spacing-md;
+  color: $color-text-primary;
+  font-size: 0.875rem;
+
+  strong {
+    font-weight: 600;
+  }
+}
+// — Action Bar —
+.action-bar {
+  @include card($spacing-md);
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.status-controls {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.status-btn {
+  @include button-base;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $color-text-muted;
+  border: 1px solid $color-border-subtle;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+    border-color: rgba($color-accent-primary, 0.3);
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.btn-primary {
+  @include button-primary;
+  text-decoration: none;
+
+  &.small {
+    padding: 5px 14px;
+    font-size: 0.75rem;
+  }
+}
+
+.btn-ghost {
+  @include button-ghost;
+  text-decoration: none;
+
+  &.small {
+    padding: 5px 14px;
+    font-size: 0.75rem;
+  }
+}
+
+// — Progress Section —
+.progress-section {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-md;
+}
+
+.progress-header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.progress-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-accent-primary-light;
+}
+
+.progress-slider {
+  width: 100%;
+  height: 6px;
+  appearance: none;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: $color-accent-primary;
+    box-shadow: $shadow-glow-primary;
+    cursor: pointer;
+    @include smooth;
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: $color-accent-primary;
+    box-shadow: $shadow-glow-primary;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+.slider-labels {
+  @include flex-between;
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  margin-top: $spacing-xs;
+}
+
+// — Tasks Section —
+.tasks-section {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-md;
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: $spacing-xs;
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+.section-desc {
+  font-size: 0.8125rem;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-lg;
+}
+
+.task-count {
+  font-size: 0.8125rem;
+  color: $color-text-secondary;
+  font-weight: 500;
+}
+
+// — Add Task Form —
+.add-task-form {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border-subtle;
+
+  @include mobile-only {
+    flex-wrap: wrap;
+  }
+}
+
+.form-input {
+  @include input-base;
+}
+
+.priority-select {
+  width: 120px;
+  flex-shrink: 0;
+
+  @include mobile-only {
+    width: auto;
+    flex: 1;
+  }
+}
+
+// — Task List —
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  @include smooth;
+  animation: fadeInUp 300ms ease both;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+
+  &.completed {
+    opacity: 0.5;
+
+    .task-title {
+      text-decoration: line-through;
+      color: $color-text-muted;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+.task-check {
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-sm;
+  border: 2px solid $color-border-default;
+  @include flex-center;
+  font-size: 0.75rem;
+  color: transparent;
+  @include smooth;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    background: rgba($color-accent-primary, 0.1);
+  }
+
+  &.checked {
+    background: $color-accent-secondary;
+    border-color: $color-accent-secondary;
+    color: $color-text-inverse;
+  }
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  display: block;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: 2px;
+}
+
+.priority-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+
+  &.critical { background: $color-accent-danger; }
+  &.high { background: $color-accent-warning; }
+  &.medium { background: $color-accent-info; }
+  &.low { background: $color-text-muted; }
+}
+
+.priority-label {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  text-transform: capitalize;
+}
+
+.task-time, .task-completed-at {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+.task-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  @include smooth;
+
+  .task-item:hover & {
+    opacity: 1;
+  }
+}
+
+.task-action-btn {
+  @include flex-center;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  color: $color-text-muted;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.danger:hover {
+    background: rgba($color-accent-danger, 0.12);
+    color: $color-accent-danger;
+  }
+}
+
+.empty-tasks {
+  text-align: center;
+  padding: $spacing-xl;
+  color: $color-text-muted;
+  font-size: 0.875rem;
+}
+
+.task-progress-bar {
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  margin-top: $spacing-md;
+  overflow: hidden;
+}
+
+.task-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-accent-primary, $color-accent-secondary);
+  border-radius: $radius-full;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// — Children Section —
+.children-section {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-md;
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.children-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.child-card {
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  text-decoration: none;
+  color: inherit;
+  @include smooth;
+  gap: $spacing-md;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.child-info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
+.child-mode {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.child-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  @include text-truncate;
+}
+
+.child-progress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.child-bar-track {
+  width: 80px;
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.child-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-accent-primary, $color-accent-primary-light);
+  border-radius: $radius-full;
+}
+
+.child-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  min-width: 32px;
+  text-align: right;
+}
+
+// — Time Modal —
+.time-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  @include flex-center;
+  z-index: $z-modal;
+  animation: fadeIn 150ms ease;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+.time-modal {
+  @include card($spacing-xl);
+  width: 280px;
+  text-align: center;
+  animation: scaleIn 200ms ease both;
+
+  h4 {
+    margin-bottom: $spacing-md;
+  }
+
+  .form-input {
+    margin-bottom: $spacing-md;
+    text-align: center;
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+.time-modal-actions {
+  display: flex;
+  gap: $spacing-sm;
+  justify-content: center;
+}
+
+// — Not Found —
+.not-found {
+  @include flex-column-center;
+  padding: $spacing-3xl;
+  text-align: center;
+  gap: $spacing-md;
+
+  h2 { font-size: 1.5rem; }
+  p { color: $color-text-secondary; }
+}

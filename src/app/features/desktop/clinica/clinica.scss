@@ -1,0 +1,1955 @@
+@use '../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════
+// Módulo Clínica — Styles
+// ═══════════════════════════════════════════
+
+$clinica-primary: var(--accent, #0ea5e9);
+$clinica-primary-light: color-mix(in srgb, var(--accent, #0ea5e9) 10%, transparent);
+$clinica-primary-glow: color-mix(in srgb, var(--accent, #0ea5e9) 20%, transparent);
+
+.clinica-page {
+  padding: $spacing-lg $spacing-xl;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ─── Module Header ────────────────────────
+.module-header {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(0, 40, 30, 0.08);
+  margin-bottom: 24px;
+}
+
+.module-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: $spacing-md;
+}
+
+.module-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.module-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: $clinica-primary-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    stroke: $clinica-primary;
+    fill: none;
+    stroke-width: 2;
+  }
+}
+
+.module-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.module-subtitle {
+  color: $color-text-secondary;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+// ─── Tab Navigation ───────────────────────
+.tabs-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-subtle;
+  background: $color-bg-secondary;
+  cursor: pointer;
+  transition: all 200ms ease;
+  font-weight: 600;
+  font-size: 14px;
+  color: $color-text-secondary;
+  font-family: inherit;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-border-default;
+    color: $color-text-primary;
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+
+  &.active {
+    color: $color-text-primary;
+    background: $color-bg-secondary;
+    border-bottom: 2px solid $clinica-primary;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 4px 16px $clinica-primary-glow;
+  }
+}
+
+.tab-icon {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+}
+
+// ─── KPI Cards ────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 200ms ease;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+}
+
+.kpi-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  line-height: 1.1;
+}
+
+.kpi-label {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+// ─── Header & View Navigation ──────────────────────
+.calendar-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.view-toggle {
+  display: flex;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+  padding: 4px;
+  
+  button {
+    padding: 6px 16px;
+    border: none;
+    background: transparent;
+    border-radius: $radius-full;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: inherit;
+    
+    &:hover { color: $color-text-primary; }
+    
+    &.active {
+      background: $clinica-primary;
+      color: white;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-primary;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+  font-family: inherit;
+
+  &:hover { border-color: $clinica-primary; color: $clinica-primary; }
+}
+
+.week-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.btn-today {
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  margin-left: auto;
+
+  &:hover { border-color: $clinica-primary; color: $clinica-primary; }
+}
+
+// ─── Schedule Grid ────────────────────────
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 70px repeat(7, 1fr);
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  @media (max-width: 900px) { grid-template-columns: 50px repeat(7, 1fr); }
+}
+
+.grid-corner {
+  background: $color-bg-tertiary;
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+  padding: 12px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+}
+
+.grid-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  background: $color-bg-tertiary;
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+
+  &:last-child { border-right: none; }
+
+  &.today {
+    background: $clinica-primary-light;
+    .day-name { color: $clinica-primary; }
+    .day-date { color: $clinica-primary; background: $clinica-primary-light; }
+  }
+}
+
+.day-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.day-date {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+// Time slot rows
+.grid-time {
+  padding: 8px 6px;
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 64px;
+}
+
+.grid-cell {
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+  padding: 4px;
+  min-height: 64px;
+  cursor: pointer;
+  position: relative;
+  transition: background $transition-fast;
+
+  &:nth-child(8n) { border-right: none; }
+
+  &:hover {
+    background: $color-bg-hover;
+    .cell-add { opacity: 1; }
+  }
+
+  &.today-col { background: color-mix(in srgb, var(--accent, #0ea5e9) 2%, transparent); }
+}
+
+.cell-add {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: $color-text-muted;
+  opacity: 0;
+  transition: opacity $transition-fast;
+}
+
+// ─── Appointment Chip ─────────────────────
+.appt-chip {
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  border-left: 3px solid;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: $color-bg-secondary;
+  box-shadow: $shadow-sm;
+  transition: all $transition-fast;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: scale(1.02);
+
+    .appt-remove { opacity: 1; }
+  }
+}
+
+.appt-time {
+  font-weight: 700;
+  color: $color-text-primary;
+  display: block;
+  font-size: 0.68rem;
+}
+
+.appt-name {
+  display: block;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.68rem;
+}
+
+.appt-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: $color-accent-danger;
+  color: white;
+  font-size: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity $transition-fast;
+}
+
+// ─── Day Timeline (list view) ─────────────
+.day-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 20px;
+}
+
+.timeline-slot {
+  display: flex;
+  align-items: stretch;
+  min-height: 64px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  transition: background $transition-fast;
+
+  &:hover { background: $color-bg-hover; }
+  &.is-break { opacity: 0.5; }
+}
+
+.timeline-time {
+  width: 72px;
+  flex-shrink: 0;
+  padding: 14px 12px 14px 0;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  border-right: 2px solid rgba(0,0,0,0.06);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $color-border-default;
+  }
+
+  .has-appt &::after { background: $clinica-primary; }
+}
+
+.timeline-content {
+  flex: 1;
+  padding: 10px 16px;
+  min-width: 0;
+}
+
+.timeline-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 12px 16px;
+  border-left: 3px solid $clinica-primary;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateX(2px);
+  }
+}
+
+.timeline-patient-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.timeline-appt-type {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+}
+
+.timeline-status {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.timeline-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border: 1px dashed $color-border-subtle;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $clinica-primary;
+    color: $clinica-primary;
+    background: $clinica-primary-light;
+  }
+}
+
+// ─── Patient Cards ────────────────────────
+.patients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.patient-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 20px;
+  transition: all 200ms ease;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+    border-color: $clinica-primary;
+  }
+}
+
+.patient-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.patient-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $clinica-primary, color-mix(in srgb, $clinica-primary 70%, #6366f1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.patient-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.patient-meta {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+}
+
+.patient-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patient-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: $color-text-muted;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+}
+
+.patient-dx {
+  font-size: 0.78rem;
+  color: $clinica-primary;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: $clinica-primary-light;
+  border-radius: $radius-full;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.patient-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+// ─── Buttons ──────────────────────────────
+.btn-primary {
+  padding: 10px 22px;
+  border-radius: $radius-full;
+  background: $clinica-primary;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &:hover:not(:disabled) { box-shadow: 0 4px 16px $clinica-primary-glow; transform: translateY(-1px); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  border-radius: $radius-full;
+  background: transparent;
+  border: 1px solid $color-border-default;
+  color: $color-text-secondary;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover { border-color: $clinica-primary; color: $clinica-primary; }
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: $clinica-primary;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 0;
+  transition: opacity $transition-fast;
+
+  &:hover { opacity: 0.7; }
+}
+
+// ─── Search Bar ───────────────────────────
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+  transition: border-color $transition-fast;
+
+  &:focus-within { border-color: $clinica-primary; box-shadow: 0 0 0 3px $clinica-primary-glow; }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: $color-text-muted;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.88rem;
+    color: $color-text-primary;
+    font-family: inherit;
+    width: 100%;
+
+    &::placeholder { color: $color-text-muted; }
+  }
+}
+
+.counter-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  white-space: nowrap;
+}
+
+// ─── Modal ────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: $color-surface-overlay;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  animation: fadeIn 200ms ease;
+}
+
+.modal-card {
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  padding: 28px 24px;
+  width: 90%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: $shadow-xl;
+  animation: slideUp 300ms ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: $color-text-primary;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+  margin: 0 0 20px;
+}
+
+// ─── Form Fields ──────────────────────────
+.form-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+
+  &.cols-2 { grid-template-columns: 1fr 1fr; }
+  &.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  @media (max-width: 600px) {
+    &.cols-2, &.cols-3 { grid-template-columns: 1fr; }
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  input, select, textarea {
+    padding: 10px 12px;
+    border-radius: $radius-md;
+    border: 1px solid $color-border-default;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: $color-text-primary;
+    background: $color-bg-primary;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $clinica-primary;
+      box-shadow: 0 0 0 3px $clinica-primary-glow;
+    }
+  }
+
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+// ─── Empty State ──────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: $color-text-muted;
+
+  .empty-illustration {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $color-text-primary;
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+}
+
+// ─── Expediente / Clinical History ─────────
+.expediente-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  margin-bottom: 20px;
+}
+
+.expediente-back {
+  background: none;
+  border: none;
+  color: $clinica-primary;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &:hover { opacity: 0.7; }
+}
+
+.expediente-profile {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  margin: 0 0 4px;
+}
+
+.exp-detail {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+}
+
+.exp-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+// Sub-tabs within expediente
+.exp-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+}
+
+.exp-tab {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: color 200ms ease;
+
+  &:hover { color: $color-text-primary; }
+
+  &.active {
+    color: $clinica-primary;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: $clinica-primary;
+      border-radius: 2px 2px 0 0;
+    }
+  }
+}
+
+// History sections
+.history-section {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.history-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-field {
+  margin-bottom: 16px;
+
+  &:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  .field-value {
+    font-size: 0.88rem;
+    color: $color-text-primary;
+    line-height: 1.5;
+    white-space: pre-wrap;
+
+    &.empty { color: $color-text-muted; font-style: italic; }
+  }
+}
+
+// ─── Clinical History 7-Section Styles ────
+// Edit header
+.hc-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid $clinica-primary-light;
+}
+
+.hc-edit-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: $clinica-primary;
+  margin: 0;
+}
+
+.hc-edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.hc-edit-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  margin-top: 12px;
+  border-top: 2px solid $clinica-primary-light;
+}
+
+// Collapsible sections
+.hc-section {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: box-shadow 200ms ease;
+
+  &:hover { box-shadow: $shadow-md; }
+}
+
+.hc-section-critical {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.hc-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  cursor: pointer;
+  user-select: none;
+  transition: background 200ms ease;
+
+  &:hover { background: rgba(0, 0, 0, 0.02); }
+
+  span:first-child { font-size: 1.1rem; }
+}
+
+.hc-critical {
+  color: #dc2626;
+}
+
+.hc-chevron {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: $color-text-muted;
+  transition: transform 200ms ease;
+
+  &.open { transform: rotate(90deg); }
+}
+
+.hc-section-body {
+  padding: 0 20px 20px;
+  animation: fadeIn 200ms ease;
+}
+
+// ─── View Mode Styles ─────────────────────
+.hc-view-section {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.hc-view-critical {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.hc-view-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+  span { font-size: 1rem; }
+}
+
+.hc-critical-title {
+  color: #dc2626;
+  border-bottom-color: rgba(239, 68, 68, 0.15);
+}
+
+.hc-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hc-field-wide {
+  grid-column: 1 / -1;
+}
+
+.hc-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hc-value {
+  font-size: 0.86rem;
+  color: $color-text-primary;
+  line-height: 1.5;
+  white-space: pre-wrap;
+
+  &.empty {
+    color: $color-text-muted;
+    font-style: italic;
+    font-size: 0.82rem;
+  }
+}
+
+.hc-quote {
+  font-style: italic;
+  color: $clinica-primary;
+  font-weight: 500;
+}
+
+// Risk badge
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: $radius-full;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+// ─── Notes List ───────────────────────────
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 16px 20px;
+  border-left: 3px solid $clinica-primary;
+  cursor: pointer;
+  transition: all 200ms ease;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateX(2px);
+  }
+
+  &.confidential { border-left-color: $color-accent-danger; }
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.note-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.note-date {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+}
+
+.note-type-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  background: $clinica-primary-light;
+  color: $clinica-primary;
+}
+
+.note-preview {
+  font-size: 0.82rem;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ─── Config Page ──────────────────────────
+.config-section {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.config-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.availability-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+
+  &:last-child { border-bottom: none; }
+}
+
+.avail-toggle {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid $color-border-default;
+  background: $color-bg-primary;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+
+  &.checked {
+    background: $clinica-primary;
+    border-color: $clinica-primary;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 800;
+  }
+}
+
+.avail-day {
+  width: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.avail-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: $color-text-secondary;
+
+  input[type="time"] {
+    padding: 6px 10px;
+    border-radius: $radius-sm;
+    border: 1px solid $color-border-default;
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: $color-text-primary;
+    background: $color-bg-primary;
+
+    &:focus { outline: none; border-color: $clinica-primary; }
+  }
+}
+
+.booking-link-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: $color-bg-primary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  margin-top: 12px;
+
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: $color-text-primary;
+    min-width: 0;
+
+    &:focus { outline: none; }
+  }
+}
+
+// ─── Utility ──────────────────────────────
+.fade-in { animation: fadeIn 350ms ease; }
+
+// ─── Red Flags ────────────────────────────
+.red-flags-banner {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: $radius-lg;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 350ms ease;
+}
+
+.red-flag-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+  }
+}
+
+.rfl-icon { font-size: 1.2rem; flex-shrink: 0; }
+.rfl-icon-lg { font-size: 1.6rem; flex-shrink: 0; }
+
+.rfl-body {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.82rem;
+    color: #ef4444;
+    font-weight: 700;
+  }
+
+  span {
+    display: block;
+    font-size: 0.78rem;
+    color: $color-text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.rfl-severity {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: $radius-full;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  flex-shrink: 0;
+
+  &.critica {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+    animation: pulse-flag 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-flag {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.rfl-severity-badge { @extend .rfl-severity; }
+
+.red-flag-card {
+  background: $color-bg-secondary;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-left: 4px solid #ef4444;
+  border-radius: $radius-md;
+  padding: 16px;
+  margin-bottom: 12px;
+  animation: slideUp 300ms ease;
+}
+
+.rfl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.rfl-card-title {
+  display: block;
+  font-size: 0.9rem;
+  color: #ef4444;
+}
+
+.rfl-card-date {
+  display: block;
+  font-size: 0.72rem;
+  color: $color-text-muted;
+}
+
+.rfl-card-desc {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.patient-flags-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ef4444;
+  padding: 2px 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: $radius-full;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.tab-count {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: #ef4444;
+  color: white;
+  padding: 1px 6px;
+  border-radius: $radius-full;
+  margin-left: 4px;
+}
+
+// ─── Danger Buttons ───────────────────────
+.btn-danger-sm {
+  padding: 7px 14px;
+  border-radius: $radius-full;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+  }
+}
+
+.btn-danger {
+  @extend .btn-primary;
+  background: #ef4444 !important;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3) !important;
+  }
+}
+
+// ─── Rich Text Editor ─────────────────────
+.modal-wide {
+  max-width: 720px !important;
+}
+
+.rich-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-subtle;
+  border-bottom: none;
+  border-radius: $radius-md $radius-md 0 0;
+  flex-wrap: wrap;
+}
+
+.rt-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: $color-text-secondary;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+  font-family: inherit;
+
+  &:hover {
+    background: $clinica-primary-light;
+    color: $clinica-primary;
+  }
+}
+
+.rt-voice {
+  width: auto;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  gap: 4px;
+  margin-left: auto;
+  background: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+  border-radius: $radius-full;
+  font-weight: 600;
+
+  &.recording {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    animation: pulse-flag 1.5s ease-in-out infinite;
+  }
+}
+
+.rt-voice-status {
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 600;
+  margin-left: 4px;
+  animation: pulse-flag 1.5s ease-in-out infinite;
+}
+
+.rt-sep {
+  width: 1px;
+  height: 20px;
+  background: $color-border-subtle;
+  margin: 0 4px;
+}
+
+.rich-editor {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 16px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: 0 0 $radius-md $radius-md;
+  color: $color-text-primary;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  font-family: inherit;
+  outline: none;
+
+  &:focus {
+    border-color: $clinica-primary;
+    box-shadow: 0 0 0 3px $clinica-primary-glow;
+  }
+
+  &:empty::before {
+    content: attr(data-placeholder);
+    color: $color-text-muted;
+    pointer-events: none;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $clinica-primary;
+    margin: 16px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid $color-border-subtle;
+  }
+
+  ul, ol {
+    padding-left: 20px;
+    margin: 4px 0;
+
+    li { margin-bottom: 4px; }
+  }
+
+  p { margin: 4px 0; }
+
+  b, strong { color: $color-text-primary; }
+}
+
+// ─── Template Selector ────────────────────
+.template-selector {
+  padding: 20px 0;
+}
+
+.template-label {
+  font-size: 0.82rem;
+  color: $color-text-muted;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.template-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.template-chip {
+  padding: 14px 20px;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  span { font-size: 1.2rem; }
+
+  &:hover {
+    border-color: $clinica-primary;
+    color: $clinica-primary;
+    box-shadow: $shadow-sm;
+    transform: translateY(-2px);
+  }
+
+  &.template-blank {
+    border-style: dashed;
+    color: $color-text-muted;
+
+    &:hover {
+      border-color: $color-text-muted;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+// ─── Month Grid ───────────────────────────
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.month-header-day {
+  background: $color-bg-tertiary;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+  
+  &:nth-child(7n) { border-right: none; }
+}
+
+.month-cell {
+  min-height: 100px;
+  padding: 8px;
+  border-bottom: 1px solid $color-border-subtle;
+  border-right: 1px solid $color-border-subtle;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background $transition-fast;
+  
+  &:nth-child(7n) { border-right: none; }
+  &:hover:not(.empty) { background: $color-bg-hover; cursor: pointer; }
+  
+  &.empty { background: rgba(0,0,0,0.02); }
+  &.today-cell { background: rgba(14, 165, 233, 0.03); }
+  &.today-cell .month-date {
+    background: $clinica-primary;
+    color: white;
+  }
+}
+
+.month-date {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  align-self: flex-start;
+}
+
+.month-appts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.month-appt-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 4px 6px;
+  border-radius: $radius-sm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: transform $transition-fast;
+  
+  &:hover { transform: scale(1.02); }
+}
+
+// ─── Evaluaciones Psicológicas ────────────
+
+.eval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.eval-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  animation: cardSlideIn 0.4s ease-out both;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.eval-card-banner {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eval-icon {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+// Category background gradients
+.eval-bg-blue { background: linear-gradient(135deg, #3b82f6, #93c5fd); }
+.eval-bg-amber { background: linear-gradient(135deg, #f59e0b, #fcd34d); }
+.eval-bg-purple { background: linear-gradient(135deg, #8b5cf6, #c4b5fd); }
+.eval-bg-pink { background: linear-gradient(135deg, #ec4899, #f9a8d4); }
+.eval-bg-teal { background: linear-gradient(135deg, #14b8a6, #5eead4); }
+.eval-bg-red { background: linear-gradient(135deg, #ef4444, #fca5a5); }
+.eval-bg-green { background: linear-gradient(135deg, #22c55e, #86efac); }
+.eval-bg-slate { background: linear-gradient(135deg, #64748b, #94a3b8); }
+
+.eval-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eval-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eval-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.eval-badge {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eval-badge-completada {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+.eval-badge-en_progreso {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.eval-badge-pendiente {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+.eval-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+.eval-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.eval-score-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: $clinica-primary;
+}
+
+.eval-score-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $color-text-muted;
+}
+
+.eval-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.eval-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.04);
+  color: $color-text-muted;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &:hover {
+    background: $clinica-primary-light;
+    color: $clinica-primary;
+  }
+}
+
+.eval-action-delete:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+}

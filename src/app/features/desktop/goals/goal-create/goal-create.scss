@@ -1,0 +1,331 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Goal Create — Form Page
+// ═══════════════════════════════════════════
+
+.goal-create-page {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+// — Page Header —
+.page-header {
+  margin-bottom: $spacing-xl;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  text-decoration: none;
+  margin-bottom: $spacing-sm;
+  @include smooth;
+
+  &:hover {
+    color: $color-accent-primary-light;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+}
+
+// — Create Form —
+.create-form {
+  @include card($spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+// — Form Sections —
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  letter-spacing: 0.01em;
+}
+
+.form-input {
+  @include input-base;
+
+  &.textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  &.tags-input {
+    border: none;
+    background: transparent;
+    padding-left: 0;
+    box-shadow: none;
+
+    &:focus {
+      box-shadow: none;
+      border-color: transparent;
+    }
+  }
+}
+
+.form-hint {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  margin-top: 2px;
+}
+
+.char-count {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  text-align: right;
+}
+
+.form-row {
+  display: flex;
+  gap: $spacing-md;
+
+  @include mobile-only {
+    flex-direction: column;
+  }
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+// — Mode Selector —
+.mode-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  border: 1px solid $color-border-subtle;
+  background: $color-bg-tertiary;
+  cursor: pointer;
+  @include smooth;
+  text-align: center;
+
+  &:hover {
+    border-color: $color-border-default;
+    background: $color-bg-hover;
+  }
+
+  &.active {
+    border-color: rgba($color-accent-primary, 0.5);
+    background: rgba($color-accent-primary, 0.08);
+    box-shadow: 0 0 0 2px rgba($color-accent-primary, 0.15);
+  }
+}
+
+.mode-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.mode-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.mode-desc {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+// — Suggestions Banner —
+.suggestions-banner {
+  background: rgba($color-accent-primary, 0.05);
+  border: 1px dashed rgba($color-accent-primary, 0.4);
+  border-radius: $radius-md;
+  overflow: hidden;
+  margin-bottom: $spacing-xs;
+}
+
+.banner-header {
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  cursor: pointer;
+  color: $color-accent-primary;
+  @include smooth;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.08);
+  }
+}
+
+.banner-title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: $color-border-subtle;
+  padding: 1px 0 0 0;
+}
+
+.suggestion-item {
+  @include flex-between;
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    .sug-add {
+      color: $color-accent-primary-light;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.sug-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sug-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text-primary;
+}
+
+.sug-desc {
+  font-size: 0.75rem;
+  color: $color-text-secondary;
+}
+
+.sug-add {
+  color: $color-text-muted;
+  @include smooth;
+}
+
+// — Tags Input —
+.tags-input-area {
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  padding: $spacing-sm;
+  background: $color-bg-tertiary;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  align-items: center;
+  @include smooth;
+
+  &:focus-within {
+    border-color: $color-accent-primary;
+    box-shadow: 0 0 0 3px rgba($color-accent-primary, 0.15);
+  }
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-primary, 0.15);
+  color: $color-accent-primary-light;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tag-remove {
+  @include flex-center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: $color-accent-primary-light;
+  @include smooth;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.3);
+  }
+}
+
+// — Form Actions —
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.btn-primary {
+  @include button-primary;
+  text-decoration: none;
+}
+
+.btn-ghost {
+  @include button-ghost;
+  text-decoration: none;
+}
+
+// — Implementation Intentions —
+.group-section {
+  background: rgba($color-bg-tertiary, 0.5);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  border: 1px solid $color-border-subtle;
+}
+
+.implementation-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-top: $spacing-xs;
+}
+
+.prefix-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-accent-primary-light;
+  margin-bottom: 4px;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "actuaya-ot-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Órdenes de Trabajo (OT) state machine",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest --reporter=verbose"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.8"
+  }
+}

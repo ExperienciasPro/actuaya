@@ -1,0 +1,126 @@
+// ═══════════════════════════════════════════
+// ActuaYa — Typography System
+// ═══════════════════════════════════════════
+
+@use 'variables' as *;
+
+// — Font Import (Google Fonts: Inter + Space Grotesk + Material Symbols) —
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap');
+
+// — Font Families —
+$font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-heading: 'Space Grotesk', 'Inter', sans-serif;
+$font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+// — Font Sizes (fluid scale) —
+$text-xs: 0.75rem;     // 12px
+$text-sm: 0.8125rem;   // 13px
+$text-base: 0.875rem;  // 14px
+$text-md: 1rem;        // 16px
+$text-lg: 1.125rem;    // 18px
+$text-xl: 1.25rem;     // 20px
+$text-2xl: 1.5rem;     // 24px
+$text-3xl: 1.875rem;   // 30px
+$text-4xl: 2.25rem;    // 36px
+$text-5xl: 3rem;        // 48px
+
+// — Font Weights —
+$weight-light: 300;
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+$weight-bold: 700;
+$weight-extrabold: 800;
+
+// — Line Heights —
+$leading-tight: 1.2;
+$leading-snug: 1.35;
+$leading-normal: 1.5;
+$leading-relaxed: 1.65;
+
+// — Letter Spacing —
+$tracking-tight: -0.025em;
+$tracking-normal: 0;
+$tracking-wide: 0.025em;
+$tracking-wider: 0.05em;
+$tracking-widest: 0.1em;
+
+// — Apply Global Typography —
+body {
+  font-family: $font-primary;
+  font-size: $text-base;
+  font-weight: $weight-regular;
+  line-height: $leading-normal;
+  color: $color-text-primary;
+  background-color: $color-bg-primary;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// — Heading Styles —
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
+  font-weight: $weight-bold;
+  line-height: $leading-tight;
+  letter-spacing: $tracking-tight;
+  color: $color-text-primary;
+}
+
+h1 {
+  font-size: $text-4xl;
+  font-weight: $weight-extrabold;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: $text-3xl;
+  font-weight: $weight-bold;
+}
+
+h3 {
+  font-size: $text-2xl;
+  font-weight: $weight-semibold;
+}
+
+h4 {
+  font-size: $text-xl;
+  font-weight: $weight-semibold;
+}
+
+h5 {
+  font-size: $text-lg;
+  font-weight: $weight-medium;
+}
+
+h6 {
+  font-size: $text-md;
+  font-weight: $weight-medium;
+}
+
+// — Utility Classes —
+.text-xs    { font-size: $text-xs; }
+.text-sm    { font-size: $text-sm; }
+.text-base  { font-size: $text-base; }
+.text-md    { font-size: $text-md; }
+.text-lg    { font-size: $text-lg; }
+.text-xl    { font-size: $text-xl; }
+.text-2xl   { font-size: $text-2xl; }
+.text-3xl   { font-size: $text-3xl; }
+
+.text-muted     { color: $color-text-muted; }
+.text-secondary { color: $color-text-secondary; }
+.text-accent    { color: $color-text-accent; }
+
+.font-mono   { font-family: $font-mono; }
+.font-medium { font-weight: $weight-medium; }
+.font-semibold { font-weight: $weight-semibold; }
+.font-bold   { font-weight: $weight-bold; }
+
+.uppercase {
+  text-transform: uppercase;
+  letter-spacing: $tracking-widest;
+  font-size: $text-xs;
+  font-weight: $weight-semibold;
+}

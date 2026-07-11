@@ -1,0 +1,1094 @@
+<div class="sub-header">
+  <div class="sub-title-block">
+    <div class="sub-icon">👥</div>
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <p>Administra usuarios y accesos de la plataforma.</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-create" (click)="openNewUserModal()">
+      <um-icon name="plus" [size]="16"></um-icon>
+      Nuevo Usuario
+    </button>
+    <button class="btn-create btn-import" (click)="triggerImportFile()">
+      📥 Importar
+    </button>
+    <button class="btn-create btn-refresh" (click)="refreshUsers()">
+      ↻ Refrescar
+    </button>
+    <input #fileInput type="file" accept=".csv,.xlsx,.xls" style="display:none"
+           (change)="onImportFile($event)" />
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- TAB: SUSCRIPTORES                           -->
+<!-- ═══════════════════════════════════════════ -->
+@if (activeTab() === 'subscribers') {
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon total">👥</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ stats().total }}</span>
+        <span class="kpi-label">Total Suscriptores</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon active">⚡</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ stats().active }}</span>
+        <span class="kpi-label">Activos</span>
+        @if (stats().trial > 0) {
+          <span class="kpi-sub">+{{ stats().trial }} en prueba</span>
+        }
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon warning">⊘</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ stats().expired + stats().suspended }}</span>
+        <span class="kpi-label">Expirados/Suspendidos</span>
+        @if (stats().urgent > 0) {
+          <span class="kpi-sub">{{ stats().urgent }} renovación urgente</span>
+        }
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon revenue">💰</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ formatCurrency(stats().revenueCOP, 'COP') }}</span>
+        <span class="kpi-label">Ingresos COP</span>
+        @if (stats().revenueUSD > 0) {
+          <span class="kpi-sub">+ {{ formatCurrency(stats().revenueUSD, 'USD') }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <input class="search-input"
+           type="text"
+           placeholder="🔍 Buscar por empresa, NIT, contacto..."
+           [ngModel]="searchQuery()"
+           (ngModelChange)="searchQuery.set($event)" />
+    <button class="filter-chip" [class.active]="statusFilter() === 'all'"
+            (click)="statusFilter.set('all')">Todos</button>
+    <button class="filter-chip" [class.active]="statusFilter() === 'ACTIVE'"
+            (click)="statusFilter.set('ACTIVE')">Activos</button>
+    <button class="filter-chip" [class.active]="statusFilter() === 'TRIAL'"
+            (click)="statusFilter.set('TRIAL')">Prueba</button>
+    <button class="filter-chip" [class.active]="statusFilter() === 'EXPIRED'"
+            (click)="statusFilter.set('EXPIRED')">Expirados</button>
+    <button class="filter-chip" [class.active]="statusFilter() === 'SUSPENDED'"
+            (click)="statusFilter.set('SUSPENDED')">Suspendidos</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-section">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th>Tipo</th>
+          <th>App</th>
+          <th>Estado</th>
+          <th>Contacto</th>
+          <th>Almacenamiento</th>
+          <th>Valor</th>
+          <th>Renovación</th>
+          <th>Salud</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (sub of filteredSubscriptions(); track sub.id) {
+          @let health = getRenewalHealth(sub.sub ? sub.sub.nextRenewalDate : '');
+          <tr (click)="sub.sub ? openSubDetail(sub.sub) : null" [style.cursor]="sub.sub ? 'pointer' : 'default'">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar" [style.background]="getAvatarColor(sub.name)">
+                  {{ getAvatarInitials(sub.name) }}
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ sub.name }}</span>
+                  <span class="user-email">{{ sub.sub ? 'NIT: ' + (sub.sub.company.nit || '—') : sub.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (sub.sub) {
+                <span class="type-badge" [class]="sub.sub.clientType">
+                  {{ clientTypeIcons[sub.sub.clientType] }} {{ clientTypeLabels[sub.sub.clientType] }}
+                </span>
+              } @else {
+                <span class="type-badge persona">Usuario</span>
+              }
+            </td>
+            <td>
+              @if (sub.sub) {
+                <span class="app-badge">{{ appIcons[sub.sub.app] }} {{ appLabels[sub.sub.app] }}</span>
+              } @else {
+                <span class="app-badge">—</span>
+              }
+            </td>
+            <td>
+              <um-subscription-status-badge [variant]="sub.sub ? sub.sub.status : sub.status"></um-subscription-status-badge>
+            </td>
+            <td>
+              <div class="contact-info">
+                <span class="contact-name">{{ sub.sub ? sub.sub.contact.name : sub.name }}</span>
+                <span class="contact-email">{{ sub.email }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="storage-cell">
+                <div class="storage-bar">
+                  <div class="storage-fill"
+                       [class]="getStorageClass(getStoragePercent(sub.sub?.storageUsedMB || 0, sub.sub?.storageLimitMB || 100))"
+                       [style.width.%]="getStoragePercent(sub.sub?.storageUsedMB || 0, sub.sub?.storageLimitMB || 100)">
+                  </div>
+                </div>
+                <span class="storage-text">{{ sub.sub?.storageUsedMB || 0 }} / {{ sub.sub?.storageLimitMB || 100 }} MB</span>
+              </div>
+            </td>
+            <td>
+              <div class="value-cell">
+                <span class="value-amount">{{ formatCurrency(sub.sub?.amount || 0, sub.sub?.currency || 'COP') }}</span>
+                @if (sub.sub) {
+                  <span class="value-freq">{{ frequencyLabels[sub.sub.paymentFrequency] }}</span>
+                }
+              </div>
+            </td>
+            <td>{{ sub.sub ? formatDate(sub.sub.nextRenewalDate) : '—' }}</td>
+            <td>
+              @if (sub.sub) {
+                <span class="health-badge" [class]="getRenewalClass(health)">
+                  {{ health.label }}
+                </span>
+              } @else {
+                <span class="health-badge">—</span>
+              }
+            </td>
+            <td>
+              <div class="action-btns">
+                @if (sub.sub) {
+                  <button class="btn-icon" title="Editar" (click)="$event.stopPropagation(); openEdit(sub.sub)">✏️</button>
+                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteSub(sub.sub)">🗑️</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <p>No se encontraron suscriptores</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Subscriber Detail Panel -->
+  @if (selectedSub(); as sub) {
+    <div class="panel-backdrop" (click)="closeSubDetail()"></div>
+    <div class="slide-panel detail-panel">
+      <div class="detail-header">
+        <div class="detail-avatar" [style.background]="getAvatarColor(sub.company.name)">
+          {{ getAvatarInitials(sub.company.name) }}
+        </div>
+        <div class="detail-header-info">
+          <h2>{{ sub.company.name }}</h2>
+          <div class="detail-header-badges">
+            <um-subscription-status-badge [variant]="sub.status"></um-subscription-status-badge>
+            <span class="app-badge">{{ appIcons[sub.app] }} {{ appLabels[sub.app] }}</span>
+            <span class="type-badge" [class]="sub.clientType">{{ clientTypeLabels[sub.clientType] }}</span>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeSubDetail()">✕</button>
+      </div>
+
+      <div class="detail-body">
+        <!-- Company Info -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">🏢 Empresa</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Nombre</span>
+              <span class="detail-value">{{ sub.company.name }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">NIT</span>
+              <span class="detail-value mono">{{ sub.company.nit || '—' }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Tipo de Cliente</span>
+              <span class="detail-value">{{ clientTypeIcons[sub.clientType] }} {{ clientTypeLabels[sub.clientType] }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">👤 Contacto</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Nombre</span>
+              <span class="detail-value">{{ sub.contact.name || '—' }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Correo</span>
+              <a class="detail-value detail-link" [href]="'mailto:' + sub.contact.email">📧 {{ sub.contact.email }}</a>
+            </div>
+            @if (sub.contact.whatsapp) {
+              <div class="detail-field">
+                <span class="detail-label">WhatsApp</span>
+                <a class="detail-value detail-link wa-link" [href]="'https://wa.me/' + sub.contact.whatsapp" target="_blank">📱 {{ sub.contact.whatsapp }}</a>
+              </div>
+            }
+            @if (sub.contact.phone) {
+              <div class="detail-field">
+                <span class="detail-label">Teléfono</span>
+                <span class="detail-value">📞 {{ sub.contact.phone }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Financial Info -->
+        @let subHealth = getRenewalHealth(sub.nextRenewalDate);
+        <div class="detail-section">
+          <h3 class="detail-section-title">💰 Información Financiera</h3>
+          <div class="detail-metrics">
+            <div class="metric-card">
+              <span class="metric-value">{{ formatCurrency(sub.amount, sub.currency) }}</span>
+              <span class="metric-label">{{ frequencyLabels[sub.paymentFrequency] }}</span>
+            </div>
+            <div class="metric-card accent">
+              <span class="metric-value">{{ formatCurrency(getMonthlyRevenue(sub), sub.currency) }}</span>
+              <span class="metric-label">MRR (Ingreso Mensual)</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value">{{ formatCurrency(getLTV(sub), sub.currency) }}</span>
+              <span class="metric-label">LTV Estimado</span>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Último Pago</span>
+              <span class="detail-value">{{ formatDateLong(sub.lastPaymentDate) }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Días desde Último Pago</span>
+              <span class="detail-value">{{ getDaysSince(sub.lastPaymentDate) }} días</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates & Renewal -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">📅 Fechas y Renovación</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Fecha de Inicio</span>
+              <span class="detail-value">{{ formatDateLong(sub.startDate) }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Antigüedad</span>
+              <span class="detail-value highlight">{{ getSubscriptionAge(sub) }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Próxima Renovación</span>
+              <span class="detail-value">{{ formatDateLong(sub.nextRenewalDate) }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Salud de Renovación</span>
+              <span class="health-badge" [class]="getRenewalClass(subHealth)">{{ subHealth.label }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">💾 Almacenamiento</h3>
+          @let storagePercent = getStoragePercent(sub.storageUsedMB || 0, sub.storageLimitMB || 100);
+          <div class="storage-detail">
+            <div class="storage-bar-lg">
+              <div class="storage-fill-lg"
+                   [class]="getStorageClass(storagePercent)"
+                   [style.width.%]="storagePercent"></div>
+            </div>
+            <div class="storage-info">
+              <span class="storage-amount">{{ sub.storageUsedMB || 0 }} MB / {{ sub.storageLimitMB || 100 }} MB</span>
+              <span class="storage-percent">{{ storagePercent | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ambassador -->
+        @if (sub.ambassadorName) {
+          <div class="detail-section">
+            <h3 class="detail-section-title">🤝 Embajador</h3>
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span class="detail-label">Nombre</span>
+                <span class="detail-value">{{ sub.ambassadorName }}</span>
+              </div>
+              <div class="detail-field">
+                <span class="detail-label">Comisión</span>
+                <span class="detail-value">{{ sub.ambassadorCommission || 0 }}%</span>
+              </div>
+              <div class="detail-field">
+                <span class="detail-label">Comisión Estimada</span>
+                <span class="detail-value highlight">{{ formatCurrency(getAmbassadorCommissionAmount(sub), sub.currency) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Notes -->
+        @if (sub.notes) {
+          <div class="detail-section">
+            <h3 class="detail-section-title">📝 Notas Internas</h3>
+            <div class="detail-notes">{{ sub.notes }}</div>
+          </div>
+        }
+
+        <!-- Timestamps -->
+        <div class="detail-section detail-timestamps">
+          <span>Creado: {{ formatDate(sub.createdAt) }}</span>
+          @if (sub.updatedAt) {
+            <span>·</span>
+            <span>Actualizado: {{ formatDate(sub.updatedAt) }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-footer">
+        <button class="btn-danger-outline" (click)="deleteSubFromDetail()">🗑️ Eliminar</button>
+        <button class="btn-primary" (click)="editFromDetail()">✏️ Editar Suscriptor</button>
+      </div>
+    </div>
+  }
+
+  <!-- Edit/Create Slide Panel -->
+  @if (panelMode() !== 'closed') {
+    <div class="panel-backdrop" (click)="closePanel()"></div>
+    <div class="slide-panel">
+      <div class="panel-header">
+        <h2>{{ panelMode() === 'create' ? 'Nuevo Suscriptor' : 'Editar Suscriptor' }}</h2>
+        <button class="btn-close" (click)="closePanel()">✕</button>
+      </div>
+
+      <div class="panel-body">
+        <!-- Company -->
+        <h3 class="section-title">🏢 Empresa</h3>
+
+        <div class="form-group">
+          <label>Nombre de Empresa</label>
+          <input type="text" [ngModel]="form().companyName"
+                 (ngModelChange)="form.update(f => ({...f, companyName: $event}))"
+                 placeholder="Ej: Consultorio Mental SAS" />
+        </div>
+
+        <div class="form-group">
+          <label>NIT</label>
+          <input type="text" [ngModel]="form().companyNit"
+                 (ngModelChange)="form.update(f => ({...f, companyNit: $event}))"
+                 placeholder="Ej: 900123456-7" />
+        </div>
+
+        <!-- Contact -->
+        <h3 class="section-title">👤 Contacto</h3>
+
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [ngModel]="form().contactName"
+                 (ngModelChange)="form.update(f => ({...f, contactName: $event}))"
+                 placeholder="Ej: María López" />
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" [ngModel]="form().contactEmail"
+                 (ngModelChange)="form.update(f => ({...f, contactEmail: $event}))"
+                 placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>WhatsApp</label>
+            <input type="text" [ngModel]="form().contactWhatsapp"
+                   (ngModelChange)="form.update(f => ({...f, contactWhatsapp: $event}))"
+                   placeholder="3001234567" />
+          </div>
+
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" [ngModel]="form().contactPhone"
+                   (ngModelChange)="form.update(f => ({...f, contactPhone: $event}))"
+                   placeholder="6011234567" />
+          </div>
+        </div>
+
+        <!-- Subscription -->
+        <h3 class="section-title">📋 Suscripción</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>App</label>
+            <select [ngModel]="form().app"
+                    (ngModelChange)="form.update(f => ({...f, app: $event}))">
+              @for (app of appOptions; track app) {
+                <option [value]="app">{{ appIcons[app] }} {{ appLabels[app] }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo de Cliente</label>
+            <select [ngModel]="form().clientType"
+                    (ngModelChange)="form.update(f => ({...f, clientType: $event}))">
+              @for (type of clientTypeOptions; track type) {
+                <option [value]="type">{{ clientTypeLabels[type] }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estado</label>
+            <select [ngModel]="form().status"
+                    (ngModelChange)="form.update(f => ({...f, status: $event}))">
+              @for (status of statusOptions; track status) {
+                <option [value]="status">{{ statusLabels[status] }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Frecuencia de Pago</label>
+            <select [ngModel]="form().paymentFrequency"
+                    (ngModelChange)="form.update(f => ({...f, paymentFrequency: $event}))">
+              @for (freq of frequencyOptions; track freq) {
+                <option [value]="freq">{{ frequencyLabels[freq] }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="number" [ngModel]="form().amount"
+                   (ngModelChange)="form.update(f => ({...f, amount: $event}))"
+                   min="0" />
+          </div>
+
+          <div class="form-group">
+            <label>Moneda</label>
+            <select [ngModel]="form().currency"
+                    (ngModelChange)="form.update(f => ({...f, currency: $event}))">
+              @for (cur of currencies; track cur) {
+                <option [value]="cur">{{ cur }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha Inicio</label>
+            <input type="date" [ngModel]="form().startDate"
+                   (ngModelChange)="form.update(f => ({...f, startDate: $event}))" />
+          </div>
+
+          <div class="form-group">
+            <label>Fecha Renovación</label>
+            <input type="date" [ngModel]="form().nextRenewalDate"
+                   (ngModelChange)="form.update(f => ({...f, nextRenewalDate: $event}))" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Último Pago</label>
+          <input type="date" [ngModel]="form().lastPaymentDate"
+                 (ngModelChange)="form.update(f => ({...f, lastPaymentDate: $event}))" />
+        </div>
+
+        <!-- Storage -->
+        <h3 class="section-title">💾 Almacenamiento</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Almacenamiento Usado (MB)</label>
+            <input type="number" [ngModel]="form().storageUsedMB"
+                   (ngModelChange)="form.update(f => ({...f, storageUsedMB: $event}))"
+                   min="0" />
+          </div>
+
+          <div class="form-group">
+            <label>Límite Almacenamiento (MB)</label>
+            <input type="number" [ngModel]="form().storageLimitMB"
+                   (ngModelChange)="form.update(f => ({...f, storageLimitMB: $event}))"
+                   min="0" />
+          </div>
+        </div>
+
+        <!-- Ambassador -->
+        <h3 class="section-title">🤝 Embajador</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre del Embajador</label>
+            <input type="text" [ngModel]="form().ambassadorName"
+                   (ngModelChange)="form.update(f => ({...f, ambassadorName: $event}))"
+                   placeholder="Opcional" />
+          </div>
+
+          <div class="form-group">
+            <label>Comisión (%)</label>
+            <input type="number" [ngModel]="form().ambassadorCommission"
+                   (ngModelChange)="form.update(f => ({...f, ambassadorCommission: $event}))"
+                   min="0" max="100" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notas Internas</label>
+          <textarea [ngModel]="form().notes"
+                    (ngModelChange)="form.update(f => ({...f, notes: $event}))"
+                    placeholder="Notas sobre este suscriptor..."
+                    rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-secondary" (click)="closePanel()">Cancelar</button>
+        <button class="btn-primary" (click)="saveSubscription()" [disabled]="!isFormValid()">
+          {{ panelMode() === 'create' ? 'Crear Suscriptor' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  }
+}
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- TAB: USUARIOS                               -->
+<!-- ═══════════════════════════════════════════ -->
+@if (activeTab() === 'users') {
+  <!-- User KPIs Row 1 -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon total">👥</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ userStats().totalUsers }}</span>
+        <span class="kpi-label">Total Usuarios</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon active">⚡</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ userStats().activeUsers }}</span>
+        <span class="kpi-label">Activos</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon warning">⊘</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ userStats().inactiveUsers }}</span>
+        <span class="kpi-label">Inactivos</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon revenue">💰</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ formatCurrency(stats().revenueCOP, 'COP') }}</span>
+        <span class="kpi-label">Ingresos COP</span>
+        @if (stats().revenueUSD > 0) {
+          <span class="kpi-sub">+ {{ formatCurrency(stats().revenueUSD, 'USD') }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- User KPIs Row 2: Engagement & Intelligence -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: #dfe6fd; color: #4a6cf7;">📈</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ advancedUserStats().newLast30 }}</span>
+        <span class="kpi-label">Nuevos (30d)</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: #d0f5e6; color: #00b894;">🟢</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ advancedUserStats().activeLastWeek }}</span>
+        <span class="kpi-label">Activos (7d)</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: #fde8e8; color: #e74c3c;">⚠️</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ advancedUserStats().churnRisk }}</span>
+        <span class="kpi-label">Riesgo Churn</span>
+        @if (advancedUserStats().trialExpiringSoon > 0) {
+          <span class="kpi-sub">🔴 {{ advancedUserStats().trialExpiringSoon }} trial por vencer</span>
+        }
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: #e8e4f7; color: #6c5ce7;">💾</div>
+      <div class="kpi-data">
+        <span class="kpi-value">{{ advancedUserStats().totalStorageKB }} KB</span>
+        <span class="kpi-label">Almacenamiento</span>
+        <span class="kpi-sub">{{ advancedUserStats().storageKeys }} registros</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Filters -->
+  <div class="filter-bar">
+    <input class="search-input"
+           type="text"
+           placeholder="🔍 Buscar por nombre, correo, teléfono..."
+           [ngModel]="userSearchQuery()"
+           (ngModelChange)="userSearchQuery.set($event)" />
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'all'"
+            (click)="userStatusFilter.set('all')">Todos</button>
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'active'"
+            (click)="userStatusFilter.set('active')">Activos</button>
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'trial'"
+            (click)="userStatusFilter.set('trial')">Prueba</button>
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'expired'"
+            (click)="userStatusFilter.set('expired')">Expirados</button>
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'inactive'"
+            (click)="userStatusFilter.set('inactive')">Inactivos</button>
+    <button class="filter-chip" [class.active]="userStatusFilter() === 'churn-risk'"
+            (click)="userStatusFilter.set('churn-risk')" style="color: #e74c3c;">⚠ Riesgo</button>
+    <button class="btn-export" (click)="exportUsersCSV()" title="Exportar a CSV">📄 Exportar</button>
+  </div>
+
+  <!-- Users Table -->
+  <div class="table-section">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Rol</th>
+          <th>Suscripción</th>
+          <th>Estado</th>
+          <th>Engagement</th>
+          <th>Trial</th>
+          <th>Almacenamiento</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers(); track user.id) {
+          <tr [class.inactive-row]="!user.isActive" [class.superadmin-row]="user.role === 'superadmin'"
+              (click)="openUserDetail(user)" style="cursor: pointer;">
+            <td>
+              <div class="user-cell">
+                <span class="user-avatar-sm">{{ getUserInitials(user.name) }}</span>
+                <div class="user-info">
+                  <span class="user-name">{{ user.name }}</span>
+                  @if (user.companyName) {
+                    <span class="company-tag">{{ user.companyName }}</span>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="mono">{{ user.email || '—' }}</td>
+            <td class="mono">
+              @if (user.phone) {
+                <a class="phone-link" [href]="'https://wa.me/' + user.phone.replace('+', '')" target="_blank" title="Abrir WhatsApp" (click)="$event.stopPropagation()">
+                  📱 {{ user.phone }}
+                </a>
+              } @else {
+                —
+              }
+            </td>
+            <td>
+              <span class="role-badge" [class]="user.role">{{ getRoleLabel(user.role) }}</span>
+            </td>
+            <td>
+              <span class="sub-badge" [class]="user.subscriptionStatus || 'trial'">
+                {{ getUserSubStatusLabel(user.subscriptionStatus) }}
+              </span>
+              @if (user.subscriptionActivatedByAdmin) {
+                <span class="admin-activated" title="Activado por admin">✅</span>
+              }
+            </td>
+            <td>
+              <span class="status-dot" [class.active]="user.isActive"></span>
+              {{ user.isActive ? 'Activo' : 'Inactivo' }}
+            </td>
+            <td>
+              <span class="engagement-badge" [class]="getEngagementClass(user.lastLogin)">
+                {{ getEngagementLabel(user.lastLogin) }}
+              </span>
+            </td>
+            <td>
+              <span class="trial-badge">{{ getTrialLabel(user) }}</span>
+            </td>
+            <td>
+              <div class="storage-cell">
+                <div class="storage-bar">
+                  <div class="storage-fill"
+                       [class]="getStorageClass(getUserStoragePercent(user.id))"
+                       [style.width.%]="getUserStoragePercent(user.id)">
+                  </div>
+                </div>
+                <span class="storage-text">{{ getUserStorageKB(user.id) }} KB</span>
+              </div>
+            </td>
+            <td class="date-cell">{{ formatDate(user.createdAt) }}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-icon" title="Ver detalle" (click)="$event.stopPropagation(); openUserDetail(user)">👁️</button>
+                <button class="btn-icon" title="Cambiar clave" (click)="$event.stopPropagation(); openPasswordModal(user)">🔑</button>
+                @if (user.role !== 'superadmin') {
+                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteUser(user)">🗑️</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="11">
+              <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <p>Sin usuarios registrados</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- User Detail Panel -->
+  @if (selectedUser(); as user) {
+    <div class="panel-backdrop" (click)="closeUserDetail()"></div>
+    <div class="slide-panel detail-panel">
+      <div class="detail-header">
+        <div class="detail-avatar-user">{{ getUserInitials(user.name) }}</div>
+        <div class="detail-header-info">
+          <h2>{{ user.name }}</h2>
+          <div class="detail-header-badges">
+            <span class="role-badge" [class]="user.role">{{ getRoleLabel(user.role) }}</span>
+            <span class="status-pill" [class.active]="user.isActive">
+              {{ user.isActive ? '● Activo' : '○ Inactivo' }}
+            </span>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeUserDetail()">✕</button>
+      </div>
+
+      <div class="detail-body">
+        <!-- Personal Info -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">📋 Información Personal</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Correo Electrónico</span>
+              @if (user.email) {
+                <a class="detail-value detail-link" [href]="'mailto:' + user.email">📧 {{ user.email }}</a>
+              } @else {
+                <span class="detail-value muted">No registrado</span>
+              }
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Teléfono / WhatsApp</span>
+              @if (user.phone) {
+                <a class="detail-value detail-link wa-link" [href]="'https://wa.me/' + user.phone.replace('+', '')" target="_blank">📱 {{ user.phone }}</a>
+              } @else {
+                <span class="detail-value muted">No registrado</span>
+              }
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Ocupación</span>
+              <span class="detail-value" [class.muted]="!user.occupation">{{ user.occupation || 'No especificada' }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Edad</span>
+              <span class="detail-value" [class.muted]="!user.age">{{ user.age ? user.age + ' años' : 'No especificada' }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Empresa / Organización</span>
+              <span class="detail-value" [class.muted]="!user.companyName">{{ user.companyName || 'No especificada' }}</span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Tamaño de Empresa</span>
+              <span class="detail-value" [class.muted]="!user.companySize">{{ user.companySize ? companySizeLabels[user.companySize] || user.companySize : 'No especificado' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscription -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">💎 Suscripción</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Estado</span>
+              <span class="sub-badge" [class]="user.subscriptionStatus || 'trial'">
+                {{ getUserSubStatusLabel(user.subscriptionStatus) }}
+              </span>
+            </div>
+            <div class="detail-field">
+              <span class="detail-label">Fin del Periodo de Prueba</span>
+              <span class="detail-value">{{ user.trialEndsAt ? formatDateLong(user.trialEndsAt) : '—' }}</span>
+            </div>
+            @if (user.subscriptionStatus === 'trial') {
+              <div class="detail-field">
+                <span class="detail-label">Días Restantes de Prueba</span>
+                <span class="detail-value highlight">{{ getTrialDaysRemaining(user) }} días</span>
+              </div>
+            }
+            <div class="detail-field">
+              <span class="detail-label">Activada por Admin</span>
+              <span class="detail-value">{{ user.subscriptionActivatedByAdmin ? '✅ Sí' : '❌ No' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Activity -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">📊 Actividad de la Cuenta</h3>
+          <div class="detail-metrics">
+            <div class="metric-card">
+              <span class="metric-value">{{ getDaysSince(user.createdAt) }}</span>
+              <span class="metric-label">Días desde registro</span>
+            </div>
+            <div class="metric-card" [class.accent]="user.lastLogin">
+              <span class="metric-value">{{ user.lastLogin ? getTimeAgo(user.lastLogin) : 'Nunca' }}</span>
+              <span class="metric-label">Último acceso</span>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-label">Fecha de Registro</span>
+              <span class="detail-value">{{ formatDateLong(user.createdAt) }}</span>
+            </div>
+            @if (user.lastLogin) {
+              <div class="detail-field">
+                <span class="detail-label">Último Acceso</span>
+                <span class="detail-value">{{ formatDateLong(user.lastLogin) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="detail-section">
+          <h3 class="detail-section-title">⚡ Acciones Rápidas</h3>
+          <div class="detail-actions">
+            <button class="action-card" (click)="openPasswordModal(user)">
+              <span class="action-icon">🔑</span>
+              <span class="action-text">Cambiar Contraseña</span>
+            </button>
+            @if (user.role !== 'superadmin') {
+              @if (user.subscriptionStatus !== 'active') {
+                <button class="action-card accent" (click)="activateUserSubscription(user)">
+                  <span class="action-icon">💎</span>
+                  <span class="action-text">Activar Suscripción</span>
+                </button>
+              } @else {
+                <button class="action-card warn" (click)="deactivateUserSubscription(user)">
+                  <span class="action-icon">⏸️</span>
+                  <span class="action-text">Desactivar Suscripción</span>
+                </button>
+              }
+              <button class="action-card" (click)="toggleUserActive(user)">
+                <span class="action-icon">{{ user.isActive ? '🚫' : '✅' }}</span>
+                <span class="action-text">{{ user.isActive ? 'Desactivar Cuenta' : 'Activar Cuenta' }}</span>
+              </button>
+              <button class="action-card danger" (click)="deleteUser(user)">
+                <span class="action-icon">🗑️</span>
+                <span class="action-text">Eliminar Usuario</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Password Modal -->
+  @if (passwordModal()) {
+    <div class="modal-backdrop" (click)="closePasswordModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>🔑 Cambiar Contraseña</h3>
+        <p class="modal-subtitle">Usuario: <strong>{{ editingUser()?.name }}</strong></p>
+
+        <div class="form-field">
+          <label>Nueva contraseña</label>
+          <input type="password" [(ngModel)]="newPassword" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div class="form-field">
+          <label>Confirmar contraseña</label>
+          <input type="password" [(ngModel)]="confirmPassword" placeholder="Repite la contraseña" />
+        </div>
+
+        @if (passwordError) {
+          <p class="error-msg">{{ passwordError }}</p>
+        }
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closePasswordModal()">Cancelar</button>
+          <button class="btn-primary" (click)="changePassword()"
+            [disabled]="!newPassword || newPassword.length < 6 || newPassword !== confirmPassword">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Activation Modal -->
+  @if (activationModal()) {
+    <div class="modal-backdrop" (click)="closeActivationModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>💎 Activar Suscripción</h3>
+        <p class="modal-subtitle">Usuario: <strong>{{ activationUser()?.name }}</strong></p>
+
+        <div class="form-field">
+          <label>Duración de la suscripción</label>
+          <select [(ngModel)]="activationMonths">
+            <option [ngValue]="1">1 mes</option>
+            <option [ngValue]="3">3 meses</option>
+            <option [ngValue]="6">6 meses</option>
+            <option [ngValue]="12">12 meses (1 año)</option>
+            <option [ngValue]="24">24 meses (2 años)</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeActivationModal()">Cancelar</button>
+          <button class="btn-secondary" (click)="confirmActivation(true)" title="Sin fecha de expiración">♾️ Indefinida</button>
+          <button class="btn-primary" (click)="confirmActivation(false)">
+            Activar por {{ activationMonths }} {{ activationMonths === 1 ? 'mes' : 'meses' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- New User Modal -->
+@if (newUserModal()) {
+  <div class="modal-backdrop" (click)="closeNewUserModal()">
+    <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
+      <h3>👤 Nuevo Usuario</h3>
+      <p class="modal-subtitle">Registrar un usuario manualmente</p>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Nombre Completo *</label>
+          <input type="text" [(ngModel)]="newUser.name" placeholder="Ej: María López" />
+        </div>
+        <div class="form-field">
+          <label>Correo Electrónico *</label>
+          <input type="email" [(ngModel)]="newUser.email" placeholder="correo&#64;ejemplo.com" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Teléfono / WhatsApp *</label>
+          <input type="text" [(ngModel)]="newUser.phone" placeholder="3001234567" />
+        </div>
+        <div class="form-field">
+          <label>Contraseña *</label>
+          <input type="password" [(ngModel)]="newUser.password" placeholder="Mínimo 6 caracteres" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Empresa</label>
+          <input type="text" [(ngModel)]="newUser.companyName" placeholder="Nombre de empresa (opcional)" />
+        </div>
+        <div class="form-field">
+          <label>Rol</label>
+          <select [(ngModel)]="newUser.role">
+            <option value="user">Usuario</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Suscripción</label>
+          <select [(ngModel)]="newUser.subscriptionStatus">
+            <option value="trial">⏳ Versión de Prueba (30 días)</option>
+            <option value="active">✅ Suscripción Activa</option>
+            <option value="expired">❌ Expirada</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Ocupación</label>
+          <input type="text" [(ngModel)]="newUser.occupation" placeholder="Ej: Consultor, Coach..." />
+        </div>
+      </div>
+
+      @if (newUserError) {
+        <p class="error-msg">{{ newUserError }}</p>
+      }
+
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeNewUserModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveNewUser()"
+          [disabled]="!newUser.name || !newUser.email || !newUser.phone || !newUser.password || newUser.password.length < 6">
+          Crear Usuario
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Import Results Modal -->
+@if (importResults()) {
+  <div class="modal-backdrop" (click)="importResults.set(null)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <h3>📥 Resultado de Importación</h3>
+      <div class="import-results">
+        <div class="import-stat success">
+          <span class="import-num">{{ importResults()!.created }}</span>
+          <span>usuarios creados</span>
+        </div>
+        <div class="import-stat skip">
+          <span class="import-num">{{ importResults()!.skipped }}</span>
+          <span>duplicados omitidos</span>
+        </div>
+        @if (importResults()!.errors > 0) {
+          <div class="import-stat error">
+            <span class="import-num">{{ importResults()!.errors }}</span>
+            <span>filas con errores</span>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" (click)="importResults.set(null)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Toast -->
+@if (toast()) {
+  <div class="toast">{{ toast() }}</div>
+}

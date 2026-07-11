@@ -1,0 +1,138 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.radar-inventory { max-width: 1200px; margin: 0 auto; }
+
+// — Header —
+.page-header { @include flex-between; margin-bottom: $spacing-lg; flex-wrap: wrap; gap: $spacing-md; }
+.header-left { h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; } }
+.subtitle { font-size: 0.875rem; color: $color-text-muted; }
+.header-actions { display: flex; gap: $spacing-sm; }
+.btn-kanban { @include button-ghost; text-decoration: none; }
+.btn-import { @include button-ghost; }
+.btn-add-contact { @include button-primary; }
+
+// — Stats Bar —
+.stats-bar { display: flex; gap: $spacing-sm; flex-wrap: wrap; margin-bottom: $spacing-lg; }
+.stat-chip {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: $radius-full;
+  background: $color-bg-secondary; border: 1px solid $color-border-subtle; font-size: 0.8125rem; color: $color-text-secondary;
+  cursor: pointer; transition: all 0.2s ease;
+  &:hover { background: $color-bg-active; border-color: $color-text-muted; }
+  &.active { border-color: $color-text-primary; color: $color-text-primary; font-weight: 600; }
+  &.total { font-weight: 600; color: $color-text-primary; }
+}
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+.radar-dot { background: $color-text-muted; }
+.contacted-dot { background: linear-gradient(135deg, $color-accent-info, #00cec9); }
+.snoozed-dot { background: $color-accent-warning; }
+.promoted-dot { background: $color-accent-secondary; }
+
+// — Bulk Panel —
+.bulk-panel { @include card($spacing-lg); margin-bottom: $spacing-lg;
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+}
+.bulk-hint { font-size: 0.75rem; color: $color-text-muted; margin-bottom: $spacing-md; }
+.quick-add-selectors { display: flex; gap: $spacing-sm; margin-bottom: $spacing-md; }
+.auto-width { max-width: max-content; }
+.quick-add-form { display: flex; gap: $spacing-sm; flex-wrap: wrap; align-items: flex-end; }
+.qi { @include input-base; flex: 1; min-width: 140px; }
+.btn-quick-add { @include button-primary; white-space: nowrap; &:disabled { opacity: 0.4; } }
+.btn-icon { @include button-ghost; padding: 0 8px; font-size: 1.1rem; }
+.btn-detallar { padding: 0 12px; font-size: 0.8125rem; white-space: nowrap; .icon { margin-right: 4px; font-size: 0.9rem; } }
+
+.quick-add-details {
+  margin-top: $spacing-sm;
+  width: 100%;
+  .details-row {
+    display: flex; gap: $spacing-sm; flex-wrap: wrap; margin-bottom: $spacing-sm;
+    .qi { flex: 1; min-width: 140px; }
+  }
+  textarea.qi { width: 100%; min-height: 80px; resize: vertical; }
+}
+
+// — Filter Bar —
+.filter-bar { display: flex; gap: $spacing-sm; margin-bottom: $spacing-md; flex-wrap: wrap; }
+.search-filter { @include input-base; flex: 2; min-width: 200px; }
+.tag-filter, .status-filter { @include input-base; flex: 1; min-width: 140px; }
+
+// — Data Grid —
+.data-grid { @include card(0); overflow: hidden; }
+.grid-header, .grid-row { display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr; align-items: center; }
+.grid-header { padding: $spacing-sm $spacing-md; background: $color-bg-tertiary; }
+.gh { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: $color-text-muted; }
+.grid-row {
+  padding: $spacing-sm $spacing-md; border-top: 1px solid $color-border-subtle; @include smooth;
+  &:hover { background: $color-bg-hover; }
+  &.contacted { border-left: 3px solid $color-accent-info; }
+  &.promoted { border-left: 3px solid $color-accent-secondary; opacity: 0.6; }
+  &.snoozed { opacity: 0.65; }
+}
+.grid-item-container { display: flex; flex-direction: column; }
+.grid-row-expanded {
+  padding: $spacing-md; background: $color-bg-hover; border-top: 1px dashed $color-border-subtle;
+  .expanded-info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: $spacing-sm; margin-bottom: $spacing-sm;
+  }
+  .info-item { font-size: 0.8125rem; color: $color-text-secondary; strong { color: $color-text-primary; margin-right: 4px; } }
+  .info-notes {
+    font-size: 0.8125rem; color: $color-text-secondary; margin-top: $spacing-sm; padding-top: $spacing-sm; border-top: 1px dashed $color-border-subtle;
+    strong { color: $color-text-primary; display: block; margin-bottom: 4px; }
+    p { margin: 0; white-space: pre-wrap; line-height: 1.4; }
+  }
+}
+.gc { font-size: 0.8125rem; color: $color-text-secondary; display: flex; align-items: center; gap: $spacing-xs; }
+.col-name { font-weight: 500; color: $color-text-primary; }
+
+// — Contact Avatar —
+.contact-avatar {
+  width: 28px; height: 28px; border-radius: $radius-full; @include flex-center; flex-shrink: 0;
+  font-size: 0.6875rem; font-weight: 700; background: $color-bg-tertiary; color: $color-text-muted;
+  &.radar { background: rgba($color-text-muted, 0.15); }
+  &.contacted { background: linear-gradient(135deg, rgba($color-accent-info, 0.2), rgba(#00cec9, 0.2)); color: $color-accent-info; }
+  &.promoted { background: rgba($color-accent-secondary, 0.15); color: $color-accent-secondary; }
+}
+
+// — Tag Badge —
+.tag-badge { @include badge(rgba($color-text-muted, 0.15), $color-text-secondary); }
+
+// — Status Badge —
+.status-badge {
+  @include badge(rgba($color-text-muted, 0.15), $color-text-muted); font-size: 0.625rem;
+  &.radar { background: rgba($color-text-muted, 0.15); color: $color-text-muted; }
+  &.contacted { background: rgba($color-accent-info, 0.15); color: $color-accent-info; }
+  &.snoozed { background: rgba($color-accent-warning, 0.15); color: $color-accent-warning; }
+  &.promoted { background: rgba($color-accent-secondary, 0.15); color: $color-accent-secondary; }
+}
+
+// — Actions —
+.action-mini {
+  width: 28px; height: 28px; @include flex-center; border-radius: $radius-sm; @include smooth; font-size: 0.8rem;
+  &:hover { background: $color-bg-active; }
+  &.promote-action:hover { background: rgba($color-accent-secondary, 0.15); }
+  &.contact-action:hover { background: rgba($color-accent-info, 0.15); }
+  &.delete-action:hover { background: rgba($color-accent-danger, 0.15); }
+  &.email-action { font-weight: 900; font-size: 1.15rem; color: $color-text-secondary; }
+}
+
+// — Empty —
+.grid-empty { @include flex-column-center; gap: $spacing-sm; padding: $spacing-3xl; color: $color-text-muted; }
+.empty-icon { font-size: 3rem; }
+.grid-empty h3 { font-size: 1.125rem; font-weight: 600; }
+.grid-empty p { font-size: 0.8125rem; }
+
+// — Promote Modal —
+.modal-backdrop {
+  position: fixed; inset: 0; background: $color-surface-overlay; z-index: $z-modal-backdrop;
+  @include flex-center;
+}
+.promote-modal {
+  background: $color-bg-secondary; border: 1px solid $color-border-subtle; border-radius: $radius-xl;
+  padding: $spacing-xl; width: 420px; max-width: 90vw;
+  h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: $spacing-xs; }
+}
+.promote-name { font-size: 0.875rem; color: $color-text-secondary; margin-bottom: $spacing-lg; }
+.modal-label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-xs; margin-top: $spacing-md; display: block; }
+.modal-actions { display: flex; gap: $spacing-sm; justify-content: flex-end; margin-top: $spacing-xl; }
+.btn-cancel { @include button-ghost; }
+.btn-promote { @include button-primary; &:disabled { opacity: 0.4; } }

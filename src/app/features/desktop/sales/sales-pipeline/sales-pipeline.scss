@@ -1,0 +1,223 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.sales-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-header { @include flex-between; margin-bottom: $spacing-xl; flex-wrap: wrap; gap: $spacing-md;
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
+}
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+.btn-primary { @include button-primary; text-decoration: none; }
+
+// — KPI Row —
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+}
+
+.kpi-card {
+  @include card($spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  &.won {
+    border-left: 3px solid $color-accent-secondary;
+  }
+}
+
+.kpi-icon { font-size: 1.5rem; }
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kpi-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.kpi-label {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+// — Funnels Grid —
+.funnels-grid {
+  @include grid-auto-fill(340px, $spacing-md);
+  margin-bottom: $spacing-xl;
+}
+
+.funnel-card {
+  @include card;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.funnel-header {
+  @include flex-between;
+}
+
+.funnel-name {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.funnel-actions { display: flex; gap: $spacing-sm; align-items: center; }
+
+.action-link {
+  font-size: 0.8125rem;
+  color: $color-accent-primary-light;
+  text-decoration: none;
+  font-weight: 500;
+  @include smooth;
+  &:hover { color: $color-text-primary; }
+}
+
+.action-btn {
+  @include flex-center;
+  width: 28px; height: 28px;
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  color: $color-text-muted;
+  @include smooth;
+  &:hover { background: $color-bg-hover; }
+  &.danger:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; }
+}
+
+// — Pipeline Viz —
+.pipeline-viz {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: $spacing-sm 0;
+  min-height: 80px;
+}
+
+.stage-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stage-bar {
+  width: 100%;
+  border-radius: $radius-sm $radius-sm 0 0;
+  transition: height 400ms ease;
+  min-height: 16px;
+}
+
+.stage-name {
+  font-size: 0.5625rem;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+  @include text-truncate;
+  max-width: 100%;
+}
+
+.stage-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.funnel-stats {
+  display: flex;
+  justify-content: space-between;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.stat {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+// — Recent Deals —
+.recent-section {
+  @include card($spacing-lg);
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: $spacing-lg;
+  h2 { font-size: 1.125rem; font-weight: 600; }
+}
+
+.deals-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 0.8fr 0.8fr;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 0.8fr 0.8fr;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border-bottom: 1px solid $color-border-subtle;
+  font-size: 0.875rem;
+  @include smooth;
+
+  &:hover { background: $color-bg-hover; }
+  &:last-child { border-bottom: none; }
+}
+
+.deal-contact {
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+.deal-company { color: $color-text-secondary; }
+
+.deal-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+}
+
+.deal-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  &.open { background: $color-accent-info; }
+  &.won { background: $color-accent-secondary; }
+  &.lost { background: $color-accent-danger; }
+  &.stalled { background: $color-accent-warning; }
+}

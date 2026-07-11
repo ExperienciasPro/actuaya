@@ -1,0 +1,352 @@
+@use '../../../../styles/variables' as *;
+
+.storytelling-container {
+  display: flex;
+  height: calc(100vh - 100px);
+  background: $color-bg-primary;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-xl;
+  border: 1px solid $color-border-subtle;
+}
+
+// — Sidebar —
+.story-sidebar {
+  width: 320px;
+  background: white;
+  border-right: 1px solid $color-border-subtle;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  .sidebar-header {
+    padding: $spacing-lg;
+    border-bottom: 1px solid $color-border-subtle;
+    
+    h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 $spacing-md 0; }
+    .btn-new {
+      width: 100%;
+      padding: 10px;
+      background: $color-accent-primary;
+      color: white;
+      border: none;
+      border-radius: $radius-md;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.2s;
+      &:hover { filter: brightness(1.1); }
+    }
+  }
+
+  .story-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-sm;
+  }
+
+  .story-item {
+    padding: $spacing-md;
+    border-radius: $radius-md;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+
+    &:hover { background: $color-bg-hover; }
+    &.active { background: $color-accent-primary-glow; border-left: 3px solid $color-accent-primary; }
+
+    .story-info {
+      display: flex;
+      flex-direction: column;
+      .story-title { font-weight: 600; font-size: 0.9rem; color: $color-text-primary; }
+      .story-meta { font-size: 0.75rem; color: $color-text-muted; }
+    }
+
+    .btn-del {
+      opacity: 0;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: $color-accent-danger;
+      cursor: pointer;
+    }
+    &:hover .btn-del { opacity: 1; }
+  }
+
+  .sidebar-footer {
+    padding: $spacing-lg;
+    border-top: 1px solid $color-border-subtle;
+    .btn-sources {
+      width: 100%;
+      padding: 10px;
+      background: $color-bg-tertiary;
+      border: 1px solid $color-border-default;
+      border-radius: $radius-md;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      &:hover { background: $color-bg-hover; }
+    }
+  }
+}
+
+// — Canvas —
+.story-canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-xl;
+  background: $color-bg-primary;
+
+  .canvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-xl;
+
+    .title-group {
+      .input-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        border: none;
+        background: transparent;
+        color: $color-text-primary;
+        width: 100%;
+        &:focus { outline: none; }
+      }
+      .subtitle { color: $color-text-muted; margin-top: 4px; }
+    }
+
+    .canvas-actions {
+      display: flex;
+      gap: $spacing-sm;
+      
+      button {
+        padding: 8px 16px;
+        border-radius: $radius-md;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-share { background: white; border: 1px solid $color-border-default; }
+      .btn-add-visual { background: $color-accent-info; color: white; border: none; }
+      .btn-save { background: $color-accent-primary; color: white; border: none; }
+      button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    }
+  }
+}
+
+// — Visuals Grid —
+.visuals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(150px, auto);
+  gap: $spacing-lg;
+}
+
+.visual-card {
+  background: white;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border-subtle;
+  display: flex;
+  flex-direction: column;
+
+  .visual-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+    h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: $color-text-primary; }
+    .visual-opts {
+      display: flex;
+      gap: 4px;
+      button { background: none; border: none; cursor: pointer; opacity: 0.5; &:hover { opacity: 1; }}
+    }
+  }
+
+  .visual-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+}
+
+// — Chart Mocks —
+.chart-mock {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.kpi .kpi-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: $color-accent-primary;
+  }
+
+  &.bar .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 120px;
+    .bar {
+      width: 25px;
+      background: linear-gradient(to top, $color-accent-primary, $color-accent-info);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.5s ease;
+    }
+  }
+}
+
+// — Empty State —
+.canvas-empty {
+  grid-column: 1 / -1;
+  padding: 100px;
+  text-align: center;
+  background: white;
+  border: 2px dashed $color-border-default;
+  border-radius: $radius-xl;
+  .empty-icon { font-size: 4rem; margin-bottom: $spacing-md; }
+  h3 { font-size: 1.4rem; color: $color-text-primary; }
+  p { color: $color-text-muted; margin-bottom: $spacing-xl; }
+}
+
+.welcome-screen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-2xl;
+  
+  .welcome-card {
+    max-width: 600px;
+    text-align: center;
+    h1 { font-size: 2.4rem; font-weight: 800; color: $color-text-primary; margin-bottom: $spacing-lg; }
+    p { font-size: 1.1rem; color: $color-text-secondary; margin-bottom: $spacing-2xl; line-height: 1.6; }
+    .welcome-actions {
+      display: flex;
+      justify-content: center;
+      gap: $spacing-md;
+      
+      button {
+        padding: 12px 32px;
+        border-radius: $radius-md;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary { background: $color-accent-primary; color: white; border: none; }
+      .btn-secondary { background: white; border: 1px solid $color-border-default; color: $color-text-primary; }
+      button:hover { transform: translateY(-2px); box-shadow: $shadow-md; }
+    }
+  }
+}
+
+// — Modals —
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 40, 30, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: $radius-xl;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: $shadow-xl;
+  padding: $spacing-xl;
+
+  &.large { max-width: 800px; }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xl;
+    h3 { margin: 0; font-size: 1.2rem; }
+    button { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: $color-text-muted; }
+  }
+}
+
+.visual-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  label { font-size: 0.85rem; font-weight: 700; color: $color-text-secondary; }
+  .form-input {
+    padding: 12px;
+    border: 1px solid $color-border-default;
+    border-radius: $radius-md;
+    font-size: 0.9rem;
+    &:focus { outline: none; border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+  }
+}
+
+.import-section {
+  background: $color-bg-secondary;
+  padding: $spacing-lg;
+  border-radius: $radius-lg;
+  margin-top: $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  
+  h4 { margin: 0; font-size: 0.9rem; }
+  textarea {
+    width: 100%;
+    padding: $spacing-md;
+    border: 1px solid $color-border-default;
+    border-radius: $radius-md;
+    font-family: monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+  }
+  .btn-import {
+    background: $color-accent-secondary;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: $radius-md;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+.sources-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+
+  .source-card {
+    padding: $spacing-md;
+    background: $color-bg-primary;
+    border: 1px solid $color-border-subtle;
+    border-radius: $radius-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .source-info {
+      display: flex;
+      flex-direction: column;
+      strong { font-size: 0.9rem; }
+      span { font-size: 0.75rem; color: $color-text-muted; }
+    }
+  }
+}

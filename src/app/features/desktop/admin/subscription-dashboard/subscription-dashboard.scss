@@ -1,0 +1,1089 @@
+@use '../../../../../styles/variables' as *;
+
+.sub-manager {
+  padding: $spacing-lg $spacing-xl;
+  max-width: 1200px;
+}
+
+// ─── Header ───────────────────────────────
+.page-header {
+  margin-bottom: $spacing-lg;
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $color-text-primary;
+    margin: 0;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.88rem;
+  color: $color-text-secondary;
+  margin: 4px 0 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-backup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: $radius-full;
+  background: $color-bg-active;
+  color: $color-text-secondary;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid $color-border-subtle;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.08);
+    border-color: rgba($color-accent-primary, 0.3);
+    color: $color-accent-primary;
+  }
+}
+
+.btn-create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: $radius-full;
+  background: $color-accent-primary;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(108, 60, 233, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+// ─── Stats ────────────────────────────────
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: $spacing-lg;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: $radius-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  transition: all $transition-fast;
+
+  &:hover { box-shadow: $shadow-sm; }
+
+  &.clickable {
+    cursor: pointer;
+    &:hover {
+      border-color: $color-accent-primary;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.active-filter {
+    border-color: $color-accent-primary;
+    background: rgba($color-accent-primary, 0.04);
+    box-shadow: 0 0 0 2px $color-accent-primary-glow;
+  }
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+}
+
+.total-icon { background: rgba($color-accent-primary, 0.1); }
+.active-icon { background: rgba(0, 184, 148, 0.1); }
+.expired-icon { background: rgba(232, 67, 147, 0.1); }
+.trial-icon { background: rgba(253, 203, 110, 0.15); }
+.urgent-icon { background: rgba(232, 67, 147, 0.1); }
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 2px;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  margin: 0;
+
+  &.accent-green { color: #00b894; }
+  &.accent-pink { color: #e84393; }
+  &.accent-yellow { color: #d4a017; }
+}
+
+// ─── Revenue Row ──────────────────────────
+.revenue-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: $spacing-lg;
+
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+.revenue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba($color-accent-primary, 0.06), rgba($color-accent-secondary, 0.05));
+  border: 1px solid $color-border-subtle;
+
+  &.accent {
+    background: linear-gradient(135deg, rgba($color-accent-primary, 0.1), rgba($color-accent-secondary, 0.08));
+    border-color: rgba($color-accent-primary, 0.2);
+  }
+}
+
+.revenue-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.revenue-values {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.revenue-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: $color-accent-primary;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+
+  &.secondary {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $color-text-muted;
+  }
+}
+
+.revenue-note {
+  font-size: 0.68rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+// ─── Filters ──────────────────────────────
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+  }
+
+  &.chip-active {
+    background: $color-accent-primary;
+    color: white;
+    border-color: $color-accent-primary;
+  }
+
+  &.chip-clear {
+    border-color: $color-accent-danger;
+    color: $color-accent-danger;
+
+    &:hover {
+      background: rgba($color-accent-danger, 0.08);
+    }
+  }
+}
+
+.filter-search {
+  flex: 1;
+  min-width: 200px;
+
+  input {
+    width: 100%;
+    padding: 8px 14px;
+    border-radius: $radius-full;
+    border: 1px solid $color-border-default;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: $color-text-primary;
+    background: $color-bg-primary;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent-primary;
+      box-shadow: 0 0 0 3px $color-accent-primary-glow;
+    }
+
+    &::placeholder { color: $color-text-muted; }
+  }
+}
+
+// ─── Table ────────────────────────────────
+.section-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: $spacing-lg;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.85rem;
+  }
+
+  th {
+    font-weight: 600;
+    color: $color-text-muted;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid $color-border-subtle;
+    background: $color-bg-primary;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    border-bottom: 1px solid $color-border-subtle;
+    color: $color-text-secondary;
+  }
+
+  tr {
+    transition: background $transition-fast;
+    &:hover td { background: $color-bg-hover; }
+  }
+}
+
+.row-expired td { background: rgba(232, 67, 147, 0.02); }
+.row-suspended td { opacity: 0.55; }
+
+.company-cell {
+  strong {
+    display: block;
+    color: $color-text-primary;
+    font-size: 0.88rem;
+  }
+}
+
+.nit-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: $radius-sm;
+  background: rgba($color-accent-primary, 0.08);
+  color: $color-accent-primary;
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: 3px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-primary, 0.06);
+  color: $color-text-primary;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  background: rgba(0, 184, 148, 0.08);
+  color: #00b894;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.marca-blanca {
+    background: rgba(108, 92, 231, 0.1);
+    color: $color-accent-primary;
+  }
+}
+
+.contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span:first-child {
+    font-weight: 600;
+    color: $color-text-primary;
+    font-size: 0.85rem;
+  }
+}
+
+.contact-email {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.btn-wa {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: $radius-md;
+  background: rgba(37, 211, 102, 0.1);
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+  margin-top: 2px;
+  align-self: flex-start;
+
+  &:hover {
+    background: rgba(37, 211, 102, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+.mono {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  white-space: nowrap;
+}
+
+.date-cell {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  white-space: nowrap;
+}
+
+.tenure-tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-primary, 0.07);
+  color: $color-accent-primary;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+// ─── Health Tag ───────────────────────────
+.health-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.healthy {
+    background: rgba(0, 184, 148, 0.1);
+    color: #00b894;
+  }
+
+  &.urgent {
+    background: rgba(253, 203, 110, 0.18);
+    color: #d4a017;
+  }
+
+  &.critical {
+    background: rgba(232, 67, 147, 0.12);
+    color: #e84393;
+    animation: pulse-bg 2s ease-in-out infinite;
+  }
+
+  &.overdue {
+    background: rgba(231, 76, 60, 0.12);
+    color: #e74c3c;
+    animation: pulse-bg 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-bg {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+// ─── Actions ──────────────────────────────
+.action-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: $radius-md;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: background $transition-fast;
+
+  &:hover { background: $color-bg-active; }
+  &.danger:hover { background: rgba(231, 76, 60, 0.1); }
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+  }
+}
+
+// ─── Empty State ──────────────────────────
+.empty-cell {
+  text-align: center;
+  padding: 40px !important;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 0.88rem;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+// ═══════════════════════════════════════════
+// DETAIL / FORM VIEW
+// ═══════════════════════════════════════════
+
+.detail-view {
+  max-width: 900px;
+}
+
+.detail-header {
+  margin-bottom: $spacing-xl;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: $color-text-primary;
+    margin: 12px 0 0;
+  }
+}
+
+.btn-back {
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+  }
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.form-section {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 20px 24px;
+}
+
+.form-section-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  input, select, textarea {
+    padding: 10px 14px;
+    border-radius: $radius-md;
+    border: 1px solid $color-border-default;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: $color-text-primary;
+    background: $color-bg-primary;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent-primary;
+      box-shadow: 0 0 0 3px $color-accent-primary-glow;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fa8b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 36px;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.btn-primary {
+  padding: 10px 26px;
+  border-radius: $radius-full;
+  background: $color-accent-primary;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(108, 60, 233, 0.3);
+    transform: translateY(-1px);
+  }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.btn-secondary {
+  padding: 10px 22px;
+  border-radius: $radius-full;
+  background: transparent;
+  border: 1px solid $color-border-default;
+  color: $color-text-secondary;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover { border-color: $color-text-primary; color: $color-text-primary; }
+}
+
+// ─── Delete Confirmation Modal ────────────
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: $color-surface-overlay;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  animation: fadeIn 200ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  padding: 28px 24px;
+  width: 90%;
+  max-width: 440px;
+  box-shadow: $shadow-xl;
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: $color-text-primary;
+  }
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-danger-solid {
+  padding: 10px 22px;
+  border-radius: $radius-full;
+  background: $color-accent-danger;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+// ─── Toast ────────────────────────────────
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: $color-text-primary;
+  color: $color-bg-primary;
+  padding: 14px 24px;
+  border-radius: $radius-lg;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: $shadow-xl;
+  z-index: $z-toast;
+}
+
+// ─── Phone Cell ─────────────────────────────
+.phone-cell {
+  font-size: 0.8rem;
+}
+.phone-link {
+  color: $color-accent-primary;
+  text-decoration: none;
+  white-space: nowrap;
+  &:hover { text-decoration: underline; }
+}
+
+// ─── Ambassador / Seller Cell ───────────────
+.ambassador-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.82rem;
+}
+
+.ambassador-name {
+  font-weight: 600;
+  white-space: nowrap;
+  color: $color-text-primary;
+}
+
+.commission-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: $radius-full;
+  background: rgba(#fdcb6e, 0.18);
+  color: #e17055;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.commission-value {
+  font-size: 0.72rem;
+  color: #00b894;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.muted {
+  color: $color-text-muted;
+  font-size: 0.78rem;
+}
+
+// ─── Commission Preview (Form) ──────────────
+.commission-preview {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  padding: 10px $spacing-md;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, rgba(#00b894, 0.08), rgba(#00b894, 0.02));
+  border: 1px solid rgba(#00b894, 0.18);
+}
+
+.commission-preview-label {
+  font-size: 0.82rem;
+  color: $color-text-secondary;
+}
+
+.commission-preview-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #00b894;
+}
+
+.commission-preview-note {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+}
+
+// ─── Form Hint ──────────────────────────────
+.form-hint {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  margin: -4px 0 $spacing-sm 0;
+  line-height: 1.4;
+}
+
+// ─── Type Cell (Table) ──────────────────────
+.type-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.login-url-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-sm;
+  background: rgba($color-accent-primary, 0.08);
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.18);
+    transform: scale(1.1);
+  }
+}
+
+// ─── Marca Blanca Form Field ────────────────
+.label-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.required-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  background: rgba($color-accent-primary, 0.1);
+  color: $color-accent-primary;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.value-cell {
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.frequency-tag {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.field-error {
+  border-color: $color-accent-danger !important;
+  box-shadow: 0 0 0 2px rgba($color-accent-danger, 0.15);
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+// ─── Clickable Table Row ────────────────────
+.clickable-row {
+  cursor: pointer;
+  &:hover td { background: rgba($color-accent-primary, 0.03) !important; }
+}
+
+// ─── Subscriber Detail Modal ────────────────
+.detail-modal {
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  width: 92%;
+  max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: $shadow-xl;
+  animation: fadeInUp 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.detail-modal-header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid $color-border-subtle;
+  position: relative;
+  h3 { font-size: 1.3rem; font-weight: 800; color: $color-text-primary; margin: 0 0 4px; padding-right: 36px; }
+}
+
+.detail-modal-title { margin-bottom: 12px; }
+
+.detail-modal-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-close-btn {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border: none; border-radius: $radius-md;
+  background: $color-bg-active; color: $color-text-muted; font-size: 1rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all $transition-fast;
+  &:hover { background: $color-accent-danger; color: white; }
+}
+
+.detail-modal-body { padding: 20px 28px; overflow-y: auto; flex: 1; }
+
+.detail-section {
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid $color-border-subtle;
+  &:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  h4 { font-size: 0.82rem; font-weight: 700; color: $color-text-primary; margin: 0 0 12px; }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.detail-item { display: flex; flex-direction: column; gap: 2px; }
+
+.detail-label {
+  font-size: 0.68rem; font-weight: 600; color: $color-text-muted;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.detail-value {
+  font-size: 0.9rem; color: $color-text-primary; line-height: 1.4;
+  &.bold { font-weight: 700; font-size: 1rem; color: $color-accent-primary; }
+  &.mono-sm { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; }
+}
+
+.btn-wa-inline {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: $radius-full;
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  background: rgba(37, 211, 102, 0.08);
+  color: #128C7E; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all $transition-fast;
+  &:hover { background: rgba(37, 211, 102, 0.15); border-color: rgba(37, 211, 102, 0.4); }
+}
+
+.detail-login-url {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: $radius-md;
+  background: rgba($color-accent-primary, 0.06);
+  border: 1px solid rgba($color-accent-primary, 0.15);
+  color: $color-accent-primary; font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; word-break: break-all; transition: all $transition-fast;
+  &:hover { background: rgba($color-accent-primary, 0.12); border-color: $color-accent-primary; }
+  .external-icon { font-size: 1rem; flex-shrink: 0; }
+}
+
+.detail-notes {
+  font-size: 0.88rem; color: $color-text-secondary; line-height: 1.6;
+  margin: 0; padding: 10px 14px;
+  background: $color-bg-primary; border-radius: $radius-md;
+  border: 1px solid $color-border-subtle;
+}
+
+.detail-modal-footer {
+  padding: 16px 28px; border-top: 1px solid $color-border-subtle;
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+// ─── Animations ───────────────────────────
+.animate-fadeInUp {
+  animation: fadeInUp 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-1 { animation-delay: 100ms; }
+.stagger-2 { animation-delay: 200ms; }
+.stagger-3 { animation-delay: 300ms; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}

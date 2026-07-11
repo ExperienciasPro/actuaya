@@ -1,0 +1,252 @@
+<div class="cliente-page">
+
+  <!-- ═══ Page Header ═══ -->
+  <header class="page-header animate-fadeInUp">
+    <div class="header-left">
+      <h1>👤 Mis Equipos</h1>
+      <p class="header-subtitle">
+        Monitorea el estado de tus equipos y programa tus mantenimientos
+      </p>
+    </div>
+    <div class="header-right">
+      <button class="whatsapp-btn" (click)="contactWhatsApp()">
+        <span class="wa-icon">💬</span>
+        Contactar por WhatsApp
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ Tabs ═══ -->
+  <div class="tabs-bar animate-fadeInUp stagger-1">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'equipos'"
+      (click)="activeTab.set('equipos')"
+    >
+      🖥️ Mis Equipos
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'alertas'"
+      (click)="activeTab.set('alertas')"
+    >
+      🔔 Alertas
+      @if (alertCount() > 0) {
+        <span class="tab-badge">{{ alertCount() }}</span>
+      }
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'documentos'"
+      (click)="activeTab.set('documentos')"
+    >
+      📄 Documentación
+    </button>
+  </div>
+
+  <!-- ═══ Tab: Equipos ═══ -->
+  @if (activeTab() === 'equipos') {
+
+    <!-- Summary Strip -->
+    <section class="summary-strip animate-fadeInUp stagger-2">
+      <div class="summary-card">
+        <div class="sc-icon">🖥️</div>
+        <div class="sc-value">{{ equipos().length }}</div>
+        <div class="sc-label">Equipos Registrados</div>
+      </div>
+      <div class="summary-card success">
+        <div class="sc-icon">✅</div>
+        <div class="sc-value">{{ equiposVigentes().length }}</div>
+        <div class="sc-label">Al Día</div>
+      </div>
+      <div class="summary-card warning">
+        <div class="sc-icon">⏳</div>
+        <div class="sc-value">{{ equiposProximos().length }}</div>
+        <div class="sc-label">Próx. Mantenimiento</div>
+      </div>
+      <div class="summary-card alert">
+        <div class="sc-icon">🚨</div>
+        <div class="sc-value">{{ equiposVencidos().length }}</div>
+        <div class="sc-label">Vencidos</div>
+      </div>
+    </section>
+
+    <!-- Equipment List -->
+    <div class="equipos-list">
+      @for (equipo of equipos(); track equipo.id) {
+        <div
+          class="equipo-card animate-fadeInUp"
+          [class.vencido]="equipo.statusCode === 'vencido'"
+          [class.proximo]="equipo.statusCode === 'proximo'"
+          [class.vigente]="equipo.statusCode === 'vigente'"
+          [style.animation-delay.ms]="$index * 60 + 120"
+        >
+          <div class="equipo-header" (click)="toggleEquipo(equipo.id)">
+            <div class="equipo-info">
+              <div class="equipo-icon">{{ equipo.icon }}</div>
+              <div class="equipo-name">
+                <strong>{{ equipo.nombre }}</strong>
+                <span>{{ equipo.marca }} — {{ equipo.modelo }}</span>
+              </div>
+            </div>
+            <div class="equipo-status-pills">
+              <span class="status-pill" [class]="equipo.statusCode">
+                {{ equipo.statusLabel }}
+              </span>
+              <span class="expand-chevron" [class.open]="expandedEquipo() === equipo.id">▼</span>
+            </div>
+          </div>
+
+          @if (expandedEquipo() === equipo.id) {
+            <div class="equipo-detail">
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="di-label">Ubicación</span>
+                  <span class="di-value">{{ equipo.ubicacion }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="di-label">Serial / Placa</span>
+                  <span class="di-value">{{ equipo.serial }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="di-label">Último Mantenimiento</span>
+                  <span class="di-value">{{ formatDate(equipo.ultimoMantenimiento) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="di-label">Próximo Mantenimiento</span>
+                  <span
+                    class="di-value"
+                    [class.danger]="equipo.statusCode === 'vencido'"
+                    [class.warning]="equipo.statusCode === 'proximo'"
+                    [class.success]="equipo.statusCode === 'vigente'"
+                  >
+                    {{ formatDate(equipo.proximoMantenimiento) }}
+                    @if (equipo.statusCode === 'vencido') {
+                      — ¡Vencido!
+                    }
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <span class="di-label">Tipo de Mantenimiento</span>
+                  <span class="di-value">{{ equipo.tipoMantenimiento }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="di-label">Frecuencia</span>
+                  <span class="di-value">{{ equipo.frecuencia }}</span>
+                </div>
+              </div>
+
+              <div class="equipo-actions">
+                <button class="action-btn wa" (click)="contactWhatsAppEquipo(equipo)">
+                  💬 Programar Mantenimiento
+                </button>
+                <button class="action-btn" (click)="verHistorial(equipo)">
+                  📋 Ver Historial
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @empty {
+        <div class="alerta-empty">
+          <span class="empty-icon">🖥️</span>
+          No tienes equipos registrados aún. <br/>
+          Contacta a tu administrador para vincular tus activos.
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══ Tab: Alertas ═══ -->
+  @if (activeTab() === 'alertas') {
+    <div class="alertas-list">
+      @for (alerta of alertas(); track alerta.id) {
+        <div
+          class="alerta-row animate-fadeInUp"
+          [class.urgente]="alerta.tipo === 'vencido'"
+          [class.proximo]="alerta.tipo === 'proximo'"
+          [class.info]="alerta.tipo === 'info'"
+          [style.animation-delay.ms]="$index * 60"
+        >
+          <span class="alerta-icon">{{ alerta.icon }}</span>
+          <div class="alerta-body">
+            <strong>{{ alerta.titulo }}</strong>
+            <span>{{ alerta.mensaje }}</span>
+          </div>
+          <div class="alerta-action">
+            @if (alerta.tipo === 'vencido' || alerta.tipo === 'proximo') {
+              <button class="action-btn wa" (click)="contactWhatsApp(alerta.equipoNombre)">
+                💬 Contactar
+              </button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="alerta-empty">
+          <span class="empty-icon">🎉</span>
+          ¡Todo en orden! No tienes alertas pendientes.
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══ Tab: Documentos ═══ -->
+  @if (activeTab() === 'documentos') {
+
+    <!-- Documentos de Técnicos -->
+    <div class="docs-section animate-fadeInUp">
+      <h3 class="docs-section-title">🛡️ Documentación de Técnicos</h3>
+      <div class="docs-grid">
+        @for (doc of docsTecnicos(); track doc.id) {
+          <div class="doc-card" (click)="downloadDoc(doc)">
+            <div class="doc-icon" [class]="doc.fileType">
+              {{ doc.icon }}
+            </div>
+            <div class="doc-info">
+              <strong>{{ doc.nombre }}</strong>
+              <span>{{ doc.descripcion }}</span>
+            </div>
+            <span class="doc-download-icon">⬇️</span>
+          </div>
+        } @empty {
+          <div class="docs-empty">
+            <span class="empty-icon">📄</span>
+            No hay documentos de técnicos disponibles.<br/>
+            Tu administrador aún no ha cargado la documentación.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Documentos de Servicio -->
+    <div class="docs-section animate-fadeInUp stagger-2">
+      <h3 class="docs-section-title">📋 Documentos de Servicio</h3>
+      <div class="docs-grid">
+        @for (doc of docsServicio(); track doc.id) {
+          <div class="doc-card" (click)="downloadDoc(doc)">
+            <div class="doc-icon" [class]="doc.fileType">
+              {{ doc.icon }}
+            </div>
+            <div class="doc-info">
+              <strong>{{ doc.nombre }}</strong>
+              <span>{{ doc.descripcion }}</span>
+            </div>
+            <span class="doc-download-icon">⬇️</span>
+          </div>
+        } @empty {
+          <div class="docs-empty">
+            <span class="empty-icon">📋</span>
+            No hay documentos de servicio disponibles.
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ═══ WhatsApp FAB ═══ -->
+  <div class="wa-floating">
+    <button class="wa-fab" title="Contactar por WhatsApp" (click)="contactWhatsApp()">💬</button>
+    <span class="wa-fab-label">Soporte</span>
+  </div>
+
+</div>

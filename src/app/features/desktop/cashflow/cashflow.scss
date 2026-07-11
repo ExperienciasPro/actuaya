@@ -1,0 +1,441 @@
+@use '../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════
+// Flujo de Caja — Styles
+// ═══════════════════════════════════════════
+
+.cashflow-page {
+  padding: $spacing-lg $spacing-xl;
+  max-width: 900px;
+}
+
+// ─── Header ───────────────────────────────
+.page-header {
+  margin-bottom: $spacing-lg;
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $color-text-primary;
+    margin: 0;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.88rem;
+  color: $color-text-secondary;
+  margin: 4px 0 0;
+}
+
+.btn-add {
+  padding: 10px 20px;
+  border-radius: $radius-full;
+  background: $color-accent-primary;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  box-shadow: 0 2px 12px rgba(108, 92, 231, 0.25);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 18px rgba(108, 92, 231, 0.35);
+  }
+}
+
+// ─── Month Nav ────────────────────────────
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+}
+
+.month-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-primary;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-accent-primary;
+    color: white;
+    border-color: $color-accent-primary;
+  }
+}
+
+.month-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+// ─── Summary Cards ────────────────────────
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: $spacing-xl;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: $radius-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  transition: box-shadow $transition-fast;
+
+  &:hover { box-shadow: $shadow-md; }
+
+  &.ingreso .summary-icon {
+    background: rgba(0, 180, 166, 0.1);
+    color: $color-accent-secondary;
+  }
+  &.egreso .summary-icon {
+    background: rgba(232, 67, 147, 0.1);
+    color: $color-accent-warm;
+  }
+  &.balance.positive .summary-icon {
+    background: rgba(0, 180, 166, 0.1);
+    color: $color-accent-secondary;
+  }
+  &.balance.negative .summary-icon {
+    background: rgba(231, 76, 60, 0.1);
+    color: $color-accent-danger;
+  }
+}
+
+.summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 2px;
+}
+
+.summary-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+// ─── Form Panel ───────────────────────────
+.form-panel {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 24px;
+  margin-bottom: $spacing-xl;
+  animation: slideDown 300ms ease;
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 $spacing-md;
+    color: $color-text-primary;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.type-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: $spacing-lg;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: $radius-full;
+  border: 2px solid $color-border-default;
+  background: $color-bg-secondary;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+  transition: all $transition-fast;
+
+  &.active {
+    border-color: $color-accent-primary;
+    background: rgba(108, 92, 231, 0.06);
+    color: $color-accent-primary;
+  }
+
+  &:hover:not(.active) {
+    border-color: rgba(108, 92, 231, 0.3);
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  input, select, textarea {
+    padding: 10px 14px;
+    border-radius: $radius-md;
+    border: 1px solid $color-border-default;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: $color-text-primary;
+    background: $color-bg-primary;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent-primary;
+      box-shadow: 0 0 0 3px $color-accent-primary-glow;
+    }
+  }
+}
+
+.notes-field {
+  margin-bottom: $spacing-md;
+}
+
+.btn-save {
+  width: 100%;
+  padding: 12px;
+  border-radius: $radius-full;
+  background: $color-accent-primary;
+  color: white;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 18px rgba(108, 92, 231, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Transaction List ─────────────────────
+.tx-list {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.tx-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid $color-border-subtle;
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: $color-text-primary;
+  }
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+
+  button {
+    padding: 5px 14px;
+    border-radius: $radius-full;
+    border: 1px solid $color-border-subtle;
+    background: transparent;
+    color: $color-text-muted;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all $transition-fast;
+
+    &.active {
+      background: $color-accent-primary;
+      color: white;
+      border-color: $color-accent-primary;
+    }
+
+    &:hover:not(.active) {
+      border-color: $color-accent-primary;
+      color: $color-accent-primary;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: $color-text-muted;
+
+  .empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  p { margin: 0 0 6px; font-size: 0.9rem; }
+  .empty-hint { font-size: 0.82rem; }
+}
+
+// Transaction row
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid $color-border-subtle;
+  transition: background $transition-fast;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $color-bg-hover; }
+}
+
+.tx-indicator {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+
+  .ingreso & {
+    background: rgba(0, 180, 166, 0.1);
+    color: $color-accent-secondary;
+  }
+  .egreso & {
+    background: rgba(232, 67, 147, 0.1);
+    color: $color-accent-warm;
+  }
+}
+
+.tx-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-desc {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-meta {
+  font-size: 0.78rem;
+  color: $color-text-muted;
+  margin: 0;
+}
+
+.tx-amount {
+  font-size: 0.95rem;
+  font-weight: 800;
+  white-space: nowrap;
+
+  &.positive { color: $color-accent-secondary; }
+  &.negative { color: $color-accent-warm; }
+}
+
+.tx-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+  opacity: 0;
+
+  .tx-row:hover & { opacity: 1; }
+
+  &:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: $color-accent-danger;
+  }
+}
+
+.badge-auto {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: $color-accent-primary;
+  background: rgba(108, 92, 231, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+

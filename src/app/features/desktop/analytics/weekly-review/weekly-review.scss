@@ -1,0 +1,56 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.review-page { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: $spacing-xl; h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; } }
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+
+// — Score —
+.score-section { margin-bottom: $spacing-xl; }
+.score-card {
+  @include card($spacing-xl); @include flex-column-center; gap: $spacing-sm;
+  background: linear-gradient(135deg, $color-bg-secondary, rgba($color-accent-primary, 0.06));
+}
+.score-ring { display: flex; align-items: baseline; gap: 2px; }
+.score-value { font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 700; color: $color-accent-primary-light; line-height: 1; }
+.score-max { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; color: $color-text-muted; }
+.score-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: $color-text-muted; }
+.score-desc { font-size: 1rem; color: $color-text-secondary; }
+
+// — Section —
+.section { margin-bottom: $spacing-xl; h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: $spacing-md; } }
+
+// — Achievements —
+.achievements-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-md; }
+.achievement-card { @include card($spacing-lg); @include flex-column-center; gap: 4px; }
+.ach-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: $color-text-primary; }
+.ach-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; }
+
+// — Two Col —
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: $spacing-md; margin-bottom: $spacing-xl; @include mobile-only { grid-template-columns: 1fr; } }
+.col-card {
+  @include card($spacing-lg);
+  h3 { font-size: 0.9375rem; font-weight: 600; margin-bottom: $spacing-md; }
+  &.wins { border-left: 3px solid $color-accent-secondary; }
+  &.challenges { border-left: 3px solid $color-accent-warning; }
+}
+
+.items-list { display: flex; flex-direction: column; gap: $spacing-sm; }
+.item {
+  font-size: 0.875rem; color: $color-text-secondary; line-height: 1.5;
+  padding-left: $spacing-sm; border-left: 2px solid $color-border-subtle;
+  &.muted { color: $color-text-muted; font-style: italic; }
+}
+
+// — Focus —
+.focus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: $spacing-md; }
+.focus-card {
+  @include card($spacing-md); display: flex; flex-direction: column; gap: $spacing-xs;
+  text-decoration: none; color: inherit; @include smooth;
+  &:hover { border-color: $color-border-default; transform: translateY(-1px); }
+}
+.focus-icon { font-size: 1rem; }
+.focus-title { font-size: 0.875rem; font-weight: 600; @include text-truncate; }
+.focus-bar { height: 4px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; }
+.focus-fill { height: 100%; border-radius: $radius-full; background: $color-accent-primary; transition: width 400ms ease; }
+.focus-pct { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; font-family: 'Space Grotesk', sans-serif; }

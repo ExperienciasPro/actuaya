@@ -1,0 +1,374 @@
+<div class="ceo-page">
+
+  <!-- ═══ Page Header ═══ -->
+  <header class="page-header animate-fadeInUp">
+    <div class="header-left">
+      <h1>🛠️ Gestión de Mantenimientos</h1>
+      <p class="header-subtitle">
+        Monitoreo operativo en tiempo real · {{ orders().length }} órdenes de trabajo
+      </p>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <span class="pulse-dot"></span>
+        EN VIVO
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ KPI Strip ═══ -->
+  <section class="kpi-strip animate-fadeInUp stagger-1">
+    <div class="kpi-mini">
+      <span class="kpi-mini-icon">📋</span>
+      <div class="kpi-mini-body">
+        <span class="kpi-mini-value">{{ kpis().total }}</span>
+        <span class="kpi-mini-label">Total OTs</span>
+      </div>
+    </div>
+    <div class="kpi-mini active">
+      <span class="kpi-mini-icon">🔧</span>
+      <div class="kpi-mini-body">
+        <span class="kpi-mini-value">{{ kpis().active }}</span>
+        <span class="kpi-mini-label">En Campo</span>
+      </div>
+    </div>
+    <div class="kpi-mini warning">
+      <span class="kpi-mini-icon">⏸️</span>
+      <div class="kpi-mini-body">
+        <span class="kpi-mini-value">{{ kpis().paused }}</span>
+        <span class="kpi-mini-label">Pausadas</span>
+      </div>
+    </div>
+    <div class="kpi-mini pending">
+      <span class="kpi-mini-icon">⏳</span>
+      <div class="kpi-mini-body">
+        <span class="kpi-mini-value">{{ kpis().pending }}</span>
+        <span class="kpi-mini-label">Pendientes</span>
+      </div>
+    </div>
+    <div class="kpi-mini success">
+      <span class="kpi-mini-icon">✅</span>
+      <div class="kpi-mini-body">
+        <span class="kpi-mini-value">{{ kpis().completed + kpis().closed }}</span>
+        <span class="kpi-mini-label">Cerradas</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Main Grid ═══ -->
+  <section class="main-grid">
+
+    <!-- ─── LEFT COLUMN ─── -->
+    <div class="col-left">
+
+      <!-- 💰 Live Cost Card -->
+      <div class="dash-card cost-card animate-fadeInUp stagger-2">
+        <div class="card-header">
+          <h2>💰 Costo Operativo en Vivo</h2>
+          <span class="total-cost">{{ formatCOP(totalLiveCost()) }}</span>
+        </div>
+        <div class="card-body">
+          <div class="cost-breakdown">
+            <div class="cost-row header-row">
+              <span class="cost-col wide">OT / Técnico</span>
+              <span class="cost-col">Horas</span>
+              <span class="cost-col">Mano de Obra</span>
+              <span class="cost-col">Repuestos</span>
+              <span class="cost-col accent">Total</span>
+            </div>
+            @for (ot of executingOrders(); track ot.id) {
+              <div class="cost-row">
+                <div class="cost-col wide">
+                  <strong class="cost-ot-title">{{ ot.title }}</strong>
+                  <span class="cost-tech">👤 {{ ot.tech_name || '—' }} · {{ formatCOP(ot.tech_hourly_rate || 0) }}/h</span>
+                </div>
+                <span class="cost-col timer-value">
+                  {{ formatHours(getElapsedHours(ot)) }}
+                </span>
+                <span class="cost-col">
+                  {{ formatCOP(getElapsedHours(ot) * (ot.tech_hourly_rate || 0)) }}
+                </span>
+                <span class="cost-col">
+                  {{ formatCOP(ot.parts_cost || 0) }}
+                </span>
+                <span class="cost-col accent">
+                  {{ formatCOP(getLiveCost(ot)) }}
+                </span>
+              </div>
+            } @empty {
+              <div class="cost-empty">
+                <p>No hay OTs en ejecución actualmente.</p>
+              </div>
+            }
+          </div>
+
+          <!-- Cost Totals -->
+          @if (executingOrders().length) {
+            <div class="cost-totals">
+              <div class="cost-total-item">
+                <span>Repuestos Acumulados:</span>
+                <strong>{{ formatCOP(totalPartsCost()) }}</strong>
+              </div>
+              <div class="cost-total-item primary">
+                <span>Costo Operativo Total:</span>
+                <strong class="big-total">{{ formatCOP(totalLiveCost()) }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 🚨 SLA Compliance Monitor -->
+      <div class="dash-card sla-card animate-fadeInUp stagger-3">
+        <div class="card-header">
+          <h2>🚨 Monitor de Cumplimiento SLA</h2>
+          <div class="sla-rate" [class.ok]="slaRate() >= 80" [class.bad]="slaRate() < 80">
+            {{ slaRate() }}%
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="sla-desc">
+            SLA: Respuesta máx. <strong>{{ SLA_LIMIT_HOURS }}h</strong> para OTs con prioridad
+            <span class="priority-badge critica">CRÍTICA</span>
+          </p>
+
+          <!-- SLA Summary -->
+          <div class="sla-summary">
+            <div class="sla-box ok">
+              <span class="sla-box-value">{{ slaCompliant().length }}</span>
+              <span class="sla-box-label">Cumplidas</span>
+            </div>
+            <div class="sla-box violation">
+              <span class="sla-box-value">{{ slaViolations().length }}</span>
+              <span class="sla-box-label">Violaciones</span>
+            </div>
+            <div class="sla-box pending">
+              <span class="sla-box-value">{{ slaPending().length }}</span>
+              <span class="sla-box-label">Pendientes</span>
+            </div>
+          </div>
+
+          <!-- SLA Details -->
+          <div class="sla-list">
+            @for (ot of criticalOrders(); track ot.id) {
+              <div class="sla-item" [class.violation]="getSlaStatus(ot) === 'violation'">
+                <div class="sla-item-left">
+                  <span
+                    class="sla-indicator"
+                    [class.ok]="getSlaStatus(ot) === 'ok'"
+                    [class.warning]="getSlaStatus(ot) === 'warning'"
+                    [class.violation]="getSlaStatus(ot) === 'violation'"
+                    [class.pending]="getSlaStatus(ot) === 'pending'"
+                  ></span>
+                  <div class="sla-item-info">
+                    <strong>{{ ot.title }}</strong>
+                    <span class="sla-item-meta">
+                      {{ getStatusLabel(ot.status) }} · 📍 {{ ot.location_name || '—' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="sla-item-right">
+                  @if (getSlaResponseHours(ot) !== null) {
+                    <span
+                      class="sla-delta"
+                      [class.ok]="getSlaStatus(ot) === 'ok' || getSlaStatus(ot) === 'warning'"
+                      [class.violation]="getSlaStatus(ot) === 'violation'"
+                    >
+                      {{ formatHours(getSlaResponseHours(ot)!) }}
+                    </span>
+                    <span class="sla-delta-label">
+                      @if (getSlaStatus(ot) === 'violation') {
+                        ⚠️ Excede SLA
+                      } @else {
+                        ✅ Dentro SLA
+                      }
+                    </span>
+                  } @else {
+                    <span class="sla-delta pending">Esperando</span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="sla-empty">
+                <p>No hay OTs con prioridad Crítica.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── RIGHT COLUMN ─── -->
+    <div class="col-right">
+
+      <!-- 🗺️ Logistic Heat Map -->
+      <div class="dash-card map-card animate-fadeInUp stagger-2">
+        <div class="card-header">
+          <h2>🗺️ Mapa Logístico en Vivo</h2>
+          <span class="field-count">{{ fieldOrders().length }} técnicos en campo</span>
+        </div>
+        <div class="card-body map-body">
+          <div #mapContainer class="map-container"></div>
+          <!-- Map Legend -->
+          <div class="map-legend">
+            <span class="legend-item">
+              <span class="legend-dot en-camino"></span> En Camino
+            </span>
+            <span class="legend-item">
+              <span class="legend-dot en-ejecucion"></span> En Ejecución
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📋 Active Field Table -->
+      <div class="dash-card field-table-card animate-fadeInUp stagger-4">
+        <div class="card-header">
+          <h2>📋 OTs Activas en Campo</h2>
+        </div>
+        <div class="card-body">
+          <div class="field-table">
+            <div class="ft-header">
+              <span class="ft-col wide">Orden</span>
+              <span class="ft-col">Estado</span>
+              <span class="ft-col">Prioridad</span>
+              <span class="ft-col">Técnico</span>
+              <span class="ft-col">Ubicación</span>
+            </div>
+            @for (ot of fieldOrders(); track ot.id) {
+              <div class="ft-row">
+                <div class="ft-col wide">
+                  <strong>{{ ot.title }}</strong>
+                </div>
+                <span class="ft-col">
+                  <span class="status-pill" [style.background]="getStatusColor(ot.status)">
+                    {{ getStatusLabel(ot.status) }}
+                  </span>
+                </span>
+                <span class="ft-col">
+                  @if (ot.priority) {
+                    <span class="priority-badge" [class]="ot.priority">
+                      {{ ot.priority | uppercase }}
+                    </span>
+                  }
+                </span>
+                <span class="ft-col">{{ ot.tech_name || '—' }}</span>
+                <span class="ft-col meta">{{ ot.location_name || '—' }}</span>
+              </div>
+            } @empty {
+              <div class="ft-empty">
+                <p>No hay OTs en campo actualmente.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Documentos & Config Section ═══ -->
+  <section class="admin-docs-section animate-fadeInUp stagger-5">
+    <div class="main-grid">
+      <div class="col-left">
+        <div class="dash-card docs-card">
+          <div class="card-header">
+            <h2>📄 Documentación de Técnicos</h2>
+            <button class="add-doc-btn" (click)="showAddDocModal.set(true)">+ Agregar</button>
+          </div>
+          <div class="card-body">
+            <p class="docs-hint">
+              Estos documentos estarán disponibles para tus clientes en el módulo <strong>Soy Cliente</strong>.
+            </p>
+            <div class="admin-docs-list">
+              @for (doc of adminDocs(); track doc.id) {
+                <div class="admin-doc-row">
+                  <span class="admin-doc-icon">{{ doc.icon }}</span>
+                  <div class="admin-doc-info">
+                    <strong>{{ doc.nombre }}</strong>
+                    <span>{{ doc.descripcion }}</span>
+                  </div>
+                  <div class="admin-doc-actions">
+                    <button class="small-btn danger" (click)="removeDoc(doc.id)">🗑️</button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="admin-docs-empty">
+                  <p>No hay documentos cargados. Haz clic en <strong>+ Agregar</strong> para subir.</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-right">
+        <div class="dash-card whatsapp-config-card">
+          <div class="card-header">
+            <h2>💬 Configuración WhatsApp</h2>
+          </div>
+          <div class="card-body">
+            <p class="docs-hint">
+              Configura el número de WhatsApp que tus clientes usarán para contactarte
+              desde el módulo <strong>Soy Cliente</strong>.
+            </p>
+            <div class="wa-config-form">
+              <div class="wa-field">
+                <label>Nombre de la Empresa</label>
+                <input type="text" [value]="waEmpresa()" (input)="onWaEmpresaChange($event)" placeholder="Ej: Mantenimientos XYZ" />
+              </div>
+              <div class="wa-field">
+                <label>Número WhatsApp (con código país)</label>
+                <input type="tel" [value]="waNumber()" (input)="onWaNumberChange($event)" placeholder="Ej: 573001234567" />
+              </div>
+              <button class="save-wa-btn" (click)="saveWhatsAppConfig()">✅ Guardar Configuración</button>
+              @if (waSaved()) {
+                <span class="wa-saved-msg">¡Configuración guardada!</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (showAddDocModal()) {
+    <div class="modal-overlay" (click)="showAddDocModal.set(false)">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>📄 Agregar Documento</h3>
+          <button class="modal-close" (click)="showAddDocModal.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-field">
+            <label>Nombre del Documento</label>
+            <input type="text" [value]="newDocName()" (input)="newDocName.set(getInputVal($event))" placeholder="Ej: Planilla Seguridad Social" />
+          </div>
+          <div class="modal-field">
+            <label>Descripción</label>
+            <input type="text" [value]="newDocDesc()" (input)="newDocDesc.set(getInputVal($event))" placeholder="Ej: Último período vigente" />
+          </div>
+          <div class="modal-field">
+            <label>Categoría</label>
+            <select [value]="newDocCat()" (change)="newDocCat.set(getInputVal($event))">
+              <option value="tecnico">Documentación de Técnico</option>
+              <option value="servicio">Documento de Servicio</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Ícono</label>
+            <div class="icon-picker">
+              @for (ic of docIcons; track ic) {
+                <button class="icon-opt" [class.selected]="newDocIcon() === ic" (click)="newDocIcon.set(ic)">{{ ic }}</button>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-cancel" (click)="showAddDocModal.set(false)">Cancelar</button>
+          <button class="modal-save" (click)="addDoc()" [disabled]="!newDocName()">Guardar Documento</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
+

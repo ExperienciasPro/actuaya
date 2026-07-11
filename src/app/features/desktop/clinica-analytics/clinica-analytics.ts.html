@@ -1,0 +1,169 @@
+<div class="clinica-analytics-container fade-in">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div>
+      <h2 style="margin:0 0 4px;font-weight:800;font-size:1.3rem;color:var(--text-primary,#f1f5f9);">🔬 Analítica Consultantes</h2>
+      <p style="margin:0;font-size:0.82rem;color:var(--text-secondary,#94a3b8);">Patrones, correlaciones y tendencias de tu consulta clínica</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="analytics-data-badge">
+        {{ clinicaService.patients().length }} pacientes · {{ clinicaService.appointments().length }} citas · {{ clinicaService.notes().length }} notas
+      </span>
+    </div>
+  </div>
+
+  <!-- Data Readiness -->
+  <div class="analytics-readiness" *ngIf="analyticsReadiness() < 100">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <span style="font-size:1.1rem;">📊</span>
+      <div>
+        <strong style="color:var(--text-primary,#f1f5f9);font-size:0.85rem;">Recopilando datos para insights avanzados</strong>
+        <p style="margin:2px 0 0;font-size:0.75rem;color:var(--text-secondary,#94a3b8);">A medida que registres más pacientes, citas y evaluaciones, se desbloquearán análisis más profundos.</p>
+      </div>
+    </div>
+    <div class="readiness-bar">
+      <div class="readiness-fill" [style.width.%]="analyticsReadiness()"></div>
+    </div>
+    <span style="font-size:0.72rem;color:var(--text-muted,#64748b);">{{ analyticsReadiness() }}% datos suficientes</span>
+  </div>
+
+  <!-- KPIs Grid -->
+  <div class="analytics-kpi-grid">
+    <div class="analytics-kpi-card" *ngFor="let kpi of analyticsKPIs()">
+      <div class="analytics-kpi-icon" [style.background]="kpi.bg">{{ kpi.icon }}</div>
+      <div class="analytics-kpi-info">
+        <span class="analytics-kpi-value">{{ kpi.value }}</span>
+        <span class="analytics-kpi-label">{{ kpi.label }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main analytics grid -->
+  <div class="analytics-main-grid">
+
+    <!-- Heatmap de Recurrencia de Crisis -->
+    <div class="analytics-card analytics-card-wide">
+      <div class="analytics-card-header">
+        <h4>🗺️ Mapa de Calor — Recurrencia de Crisis</h4>
+        <span class="analytics-card-sub">Frecuencia de citas de crisis por mes y día de la semana</span>
+      </div>
+      <div class="heatmap-container">
+        <div class="heatmap-y-labels">
+          <span></span>
+          <span *ngFor="let m of heatmapMonths">{{ m }}</span>
+        </div>
+        <div class="heatmap-grid">
+          <div class="heatmap-x-labels">
+            <span *ngFor="let d of heatmapDays">{{ d }}</span>
+          </div>
+          <div class="heatmap-row" *ngFor="let row of crisisHeatmapData(); let mi = index">
+            <div class="heatmap-cell"
+                 *ngFor="let val of row; let di = index"
+                 [style.background]="getHeatmapColor(val)"
+                 [title]="val + ' crisis — ' + heatmapMonths[mi] + ', ' + heatmapDays[di]">
+              <span class="heatmap-cell-val" *ngIf="val > 0">{{ val }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="heatmap-legend">
+          <span style="font-size:0.7rem;color:var(--text-muted,#64748b)">Menos</span>
+          <div class="heatmap-legend-cell" style="background:rgba(var(--accent-rgb, 14, 165, 233), 0.05)"></div>
+          <div class="heatmap-legend-cell" style="background:rgba(var(--accent-rgb, 14, 165, 233), 0.2)"></div>
+          <div class="heatmap-legend-cell" style="background:rgba(var(--accent-rgb, 14, 165, 233), 0.45)"></div>
+          <div class="heatmap-legend-cell" style="background:rgba(var(--accent-rgb, 14, 165, 233), 0.7)"></div>
+          <div class="heatmap-legend-cell" style="background:var(--accent)"></div>
+          <span style="font-size:0.7rem;color:var(--text-muted,#64748b)">Más</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Diagnósticos -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h4>🏥 Diagnósticos más frecuentes</h4>
+      </div>
+      <div *ngIf="topDiagnoses().length === 0" class="analytics-empty-mini">
+        <p>Sin diagnósticos registrados aún</p>
+      </div>
+      <div class="analytics-rank-list" *ngIf="topDiagnoses().length > 0">
+        <div class="analytics-rank-item" *ngFor="let d of topDiagnoses(); let i = index">
+          <span class="analytics-rank-pos">#{{ i + 1 }}</span>
+          <div class="analytics-rank-info">
+            <span class="analytics-rank-name">{{ d.name || '(Sin especificar)' }}</span>
+            <div class="analytics-rank-bar-track">
+              <div class="analytics-rank-bar-fill" [style.width.%]="d.pct" [style.background]="d.color"></div>
+            </div>
+          </div>
+          <span class="analytics-rank-count">{{ d.count }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tests más usados -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h4>🧪 Instrumentos más aplicados</h4>
+      </div>
+      <div *ngIf="topInstruments().length === 0" class="analytics-empty-mini">
+        <p>Sin evaluaciones registradas aún</p>
+      </div>
+      <div class="analytics-rank-list" *ngIf="topInstruments().length > 0">
+        <div class="analytics-rank-item" *ngFor="let t of topInstruments(); let i = index">
+          <span class="analytics-rank-pos">{{ getEvalCategoryIcon(t.category) }}</span>
+          <div class="analytics-rank-info">
+            <span class="analytics-rank-name">{{ t.name }}</span>
+            <div class="analytics-rank-bar-track">
+              <div class="analytics-rank-bar-fill" [style.width.%]="t.pct" [style.background]="t.color"></div>
+            </div>
+          </div>
+          <span class="analytics-rank-count">{{ t.count }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adherencia por tipo de cita -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h4>📅 Adherencia por tipo de cita</h4>
+      </div>
+      <div *ngIf="adherenceByType().length === 0" class="analytics-empty-mini">
+        <p>Sin citas registradas aún</p>
+      </div>
+      <div class="analytics-rank-list" *ngIf="adherenceByType().length > 0">
+        <div class="analytics-rank-item" *ngFor="let a of adherenceByType()">
+          <span class="analytics-rank-pos" [style.color]="a.color">●</span>
+          <div class="analytics-rank-info">
+            <span class="analytics-rank-name">{{ a.label }}</span>
+            <div class="analytics-rank-bar-track">
+              <div class="analytics-rank-bar-fill" [style.width.%]="a.rate" [style.background]="a.color"></div>
+            </div>
+          </div>
+          <span class="analytics-rank-count">{{ a.rate }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribución de Alertas -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h4>🚩 Distribución de Alertas Clínicas</h4>
+      </div>
+      <div *ngIf="alertDistribution().length === 0" class="analytics-empty-mini">
+        <p>Sin alertas registradas</p>
+      </div>
+      <div class="analytics-rank-list" *ngIf="alertDistribution().length > 0">
+        <div class="analytics-rank-item" *ngFor="let a of alertDistribution()">
+          <span class="analytics-rank-pos">{{ a.icon }}</span>
+          <div class="analytics-rank-info">
+            <span class="analytics-rank-name">{{ a.label }}</span>
+            <div class="analytics-rank-bar-track">
+              <div class="analytics-rank-bar-fill" [style.width.%]="a.pct" style="background:#ef4444"></div>
+            </div>
+          </div>
+          <span class="analytics-rank-count">{{ a.count }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,23 @@
+{
+  "name": "UnaMeta Coach",
+  "short_name": "UnaMeta",
+  "theme_color": "#6c3ce9",
+  "background_color": "#F0FAF7",
+  "display": "standalone",
+  "scope": "/",
+  "description": "Tu asistente de bolsillo. Planifica en escritorio, ejecuta en móvil.",
+  "icons": [
+    {
+      "src": "assets/icons/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

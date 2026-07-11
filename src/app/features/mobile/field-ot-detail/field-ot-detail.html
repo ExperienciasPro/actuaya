@@ -1,0 +1,359 @@
+<div class="ot-detail-page">
+  @if (ot(); as order) {
+
+    <!-- ═══ Sticky Header ═══ -->
+    <header class="detail-header">
+      <button class="back-btn" (click)="goBack()">← Atrás</button>
+      <span
+        class="status-chip"
+        [style.background]="statusColor()"
+      >
+        {{ statusIcon() }} {{ statusLabel() }}
+      </span>
+    </header>
+
+    <!-- ═══ OT Info Card ═══ -->
+    <div class="info-card">
+      <h1 class="ot-title">{{ order.title }}</h1>
+      @if (order.description) {
+        <p class="ot-desc">{{ order.description }}</p>
+      }
+      <div class="ot-meta">
+        <span>🆔 {{ order.id.slice(0, 8) }}</span>
+        <span>📅 {{ order.created_at | date:'d MMM yyyy' }}</span>
+      </div>
+    </div>
+
+    <!-- ═══ Action Buttons ═══ -->
+    @if (order.status !== 'completada' && order.status !== 'cerrada') {
+      <div class="action-zone">
+        @if (getAdvanceLabel()) {
+          <button
+            class="btn-advance"
+            [class.disabled]="!canAdvance()"
+            [disabled]="!canAdvance()"
+            (click)="advanceState()"
+          >
+            {{ getAdvanceLabel() }}
+          </button>
+        }
+        @if (order.status === 'en_ejecucion') {
+          <button class="btn-pause" (click)="requestPause()">
+            ⏸️ Pausar
+          </button>
+        }
+      </div>
+
+      <!-- Evidence requirement hint -->
+      @if (order.status === 'en_ejecucion' && !canComplete()) {
+        <div class="requirement-banner">
+          <span class="req-icon">⚠️</span>
+          <p>Para completar, necesitas: <strong>1 foto Antes</strong>, <strong>1 foto Después</strong> y <strong>1 video</strong>.</p>
+        </div>
+      }
+    }
+
+    <!-- ═══ WORK AREA (only during execution/pause) ═══ -->
+    @if (isWorkInProgress()) {
+
+      <!-- ─── Evidence Section ─── -->
+      <section class="section">
+        <h2 class="section-title">📸 Evidencia Multimedia</h2>
+        <p class="section-hint">Obligatorio: 1 foto antes, 1 foto después, 1 video</p>
+
+        <div class="evidence-grid">
+          <!-- Photo Before -->
+          <div class="evidence-slot" [class.filled]="evidenceCount().before > 0">
+            <div class="slot-header">
+              <span>📷 Antes</span>
+              <span class="slot-count" [class.ok]="evidenceCount().before >= 1">
+                {{ evidenceCount().before }}/1
+              </span>
+            </div>
+            @for (ev of evidence(); track ev.id) {
+              @if (ev.type === 'photo_before') {
+                <div class="evidence-thumb">
+                  <img [src]="ev.dataUrl" [alt]="ev.filename" />
+                  <button class="thumb-remove" (click)="removeEvidence(ev.id)">✕</button>
+                </div>
+              }
+            }
+            <button class="add-evidence-btn" (click)="triggerFileInput('photo_before')">
+              ＋ Capturar Foto
+            </button>
+          </div>
+
+          <!-- Photo After -->
+          <div class="evidence-slot" [class.filled]="evidenceCount().after > 0">
+            <div class="slot-header">
+              <span>📷 Después</span>
+              <span class="slot-count" [class.ok]="evidenceCount().after >= 1">
+                {{ evidenceCount().after }}/1
+              </span>
+            </div>
+            @for (ev of evidence(); track ev.id) {
+              @if (ev.type === 'photo_after') {
+                <div class="evidence-thumb">
+                  <img [src]="ev.dataUrl" [alt]="ev.filename" />
+                  <button class="thumb-remove" (click)="removeEvidence(ev.id)">✕</button>
+                </div>
+              }
+            }
+            <button class="add-evidence-btn" (click)="triggerFileInput('photo_after')">
+              ＋ Capturar Foto
+            </button>
+          </div>
+
+          <!-- Video -->
+          <div class="evidence-slot wide" [class.filled]="evidenceCount().video > 0">
+            <div class="slot-header">
+              <span>🎥 Video</span>
+              <span class="slot-count" [class.ok]="evidenceCount().video >= 1">
+                {{ evidenceCount().video }}/1
+              </span>
+            </div>
+            @for (ev of evidence(); track ev.id) {
+              @if (ev.type === 'video') {
+                <div class="evidence-thumb video">
+                  <span class="video-label">🎬 {{ ev.filename }}</span>
+                  <button class="thumb-remove" (click)="removeEvidence(ev.id)">✕</button>
+                </div>
+              }
+            }
+            <button class="add-evidence-btn" (click)="triggerFileInput('video')">
+              ＋ Grabar Video
+            </button>
+          </div>
+        </div>
+
+        <!-- Hidden file inputs -->
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+        <input
+          #videoInput
+          type="file"
+          accept="video/*"
+          capture="environment"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+      </section>
+
+      <!-- ─── Spare Parts Section ─── -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">🔩 Repuestos Utilizados</h2>
+          <button class="btn-small" (click)="openPartsModal()">＋ Agregar</button>
+        </div>
+
+        @if (spareParts().length) {
+          <div class="parts-list">
+            @for (part of spareParts(); track part.id) {
+              <div class="part-item">
+                <div class="part-info">
+                  <strong>{{ part.name }}</strong>
+                  <span class="part-sku">SKU: {{ part.sku }} · × {{ part.quantity }}</span>
+                </div>
+                <div class="part-cost">
+                  {{ formatCurrency(part.totalCost) }}
+                  <button class="part-remove" (click)="removePart(part.id)">✕</button>
+                </div>
+              </div>
+            }
+            <div class="parts-total">
+              <strong>Total Repuestos:</strong>
+              <strong class="total-value">{{ formatCurrency(partsTotalCost()) }}</strong>
+            </div>
+          </div>
+        } @else {
+          <p class="section-empty">Sin repuestos registrados.</p>
+        }
+      </section>
+
+      <!-- ─── Findings + Speech-to-Text ─── -->
+      <section class="section">
+        <h2 class="section-title">📝 Descripción de Hallazgos</h2>
+        <div class="findings-wrap">
+          <textarea
+            class="findings-textarea"
+            placeholder="Describe lo encontrado, trabajos realizados, observaciones..."
+            [ngModel]="findings()"
+            (ngModelChange)="findings.set($event)"
+            (blur)="saveFindings()"
+            rows="4"
+          ></textarea>
+          <button
+            class="mic-btn"
+            [class.active]="isRecordingSpeech()"
+            (click)="toggleSpeech()"
+            title="Dictar por voz"
+          >
+            🎤
+            @if (isRecordingSpeech()) {
+              <span class="mic-pulse"></span>
+            }
+          </button>
+        </div>
+        @if (isRecordingSpeech()) {
+          <p class="speech-hint">🔴 Grabando... Habla claro y pausado.</p>
+        }
+      </section>
+
+      <!-- ─── Client Signature ─── -->
+      <section class="section">
+        <h2 class="section-title">✍️ Firma del Cliente</h2>
+        @if (signatureDataUrl()) {
+          <div class="signature-preview">
+            <img [src]="signatureDataUrl()!" alt="Firma del cliente" />
+            <button class="btn-small danger" (click)="clearSignature(); signatureDataUrl.set(null)">
+              Borrar firma
+            </button>
+          </div>
+        } @else {
+          <button class="btn-signature" (click)="openSignaturePad()">
+            ✍️ Capturar Firma del Cliente
+          </button>
+        }
+      </section>
+    }
+
+    <!-- ═══ Completion Summary ═══ -->
+    @if (order.status === 'completada' || order.status === 'cerrada') {
+      <div class="completion-card">
+        <span class="completion-icon">🎉</span>
+        <h2>Trabajo {{ order.status === 'cerrada' ? 'Cerrado' : 'Completado' }}</h2>
+        <p>Esta orden ha sido {{ order.status === 'cerrada' ? 'cerrada y auditada' : 'completada exitosamente' }}.</p>
+      </div>
+    }
+
+    <!-- ═══ Pause Modal ═══ -->
+    @if (showPauseModal()) {
+      <div class="modal-backdrop" (click)="showPauseModal.set(false)">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <h3>⏸️ Pausar Orden de Trabajo</h3>
+          <p class="modal-hint">Describe el motivo de la pausa (obligatorio):</p>
+          <textarea
+            class="modal-textarea"
+            placeholder="Ej: Falta de repuesto, esperando material..."
+            [ngModel]="pauseReason()"
+            (ngModelChange)="pauseReason.set($event)"
+            rows="3"
+          ></textarea>
+          <div class="modal-actions">
+            <button
+              class="btn-advance pause"
+              [disabled]="!pauseReason().trim()"
+              (click)="confirmPause()"
+            >
+              ⏸️ Confirmar Pausa
+            </button>
+            <button class="btn-cancel" (click)="showPauseModal.set(false)">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ═══ Spare Parts Modal (Scanner) ═══ -->
+    @if (showPartsModal()) {
+      <div class="modal-backdrop" (click)="showPartsModal.set(false)">
+        <div class="modal-card parts-modal" (click)="$event.stopPropagation()">
+          <h3>🔩 Agregar Repuesto</h3>
+
+          <!-- Barcode Scanner Button -->
+          <button class="scan-btn" (click)="simulateScan()">
+            📷 Escanear Código de Barras
+          </button>
+
+          <div class="scan-divider">
+            <span>ó ingresa manualmente</span>
+          </div>
+
+          <!-- Manual SKU Input -->
+          <div class="scan-input-row">
+            <input
+              class="scan-input"
+              type="text"
+              placeholder="Código SKU..."
+              [ngModel]="scanSku()"
+              (ngModelChange)="scanSku.set($event)"
+              (input)="lookupSku()"
+            />
+            <button class="btn-search" (click)="lookupSku()">🔍</button>
+          </div>
+
+          <!-- Scan Result -->
+          @if (scanResult(); as result) {
+            <div class="scan-result">
+              <div class="result-info">
+                <strong>{{ result.name }}</strong>
+                <span class="result-sku">SKU: {{ result.sku }}</span>
+                <span class="result-cost">{{ formatCurrency(result.cost) }} / ud.</span>
+              </div>
+              <div class="result-qty-row">
+                <label>Cantidad:</label>
+                <div class="qty-stepper">
+                  <button (click)="partQty.set(Math.max(1, partQty() - 1))">−</button>
+                  <span class="qty-display">{{ partQty() }}</span>
+                  <button (click)="partQty.set(partQty() + 1)">＋</button>
+                </div>
+              </div>
+              <p class="result-total">
+                Total: <strong>{{ formatCurrency(scanResult()!.cost * partQty()) }}</strong>
+              </p>
+              <button class="btn-advance" (click)="addPartToOt()">
+                ✅ Agregar a la OT
+              </button>
+            </div>
+          } @else if (scanSku().trim()) {
+            <div class="scan-empty">
+              <p>⚠️ SKU no encontrado: "{{ scanSku() }}"</p>
+            </div>
+          }
+
+          <button class="btn-cancel modal-close" (click)="showPartsModal.set(false)">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ═══ Signature Pad Modal ═══ -->
+    @if (showSignaturePad()) {
+      <div class="modal-backdrop" (click)="showSignaturePad.set(false)">
+        <div class="modal-card signature-modal" (click)="$event.stopPropagation()">
+          <h3>✍️ Firma del Cliente</h3>
+          <p class="modal-hint">Pida al cliente que firme con el dedo en el área:</p>
+
+          <canvas
+            #signatureCanvas
+            class="signature-canvas"
+            (pointerdown)="onCanvasPointerDown($event)"
+            (pointermove)="onCanvasPointerMove($event)"
+            (pointerup)="onCanvasPointerUp()"
+            (pointerleave)="onCanvasPointerUp()"
+          ></canvas>
+
+          <div class="modal-actions">
+            <button class="btn-advance" (click)="confirmSignature()">✅ Guardar Firma</button>
+            <button class="btn-cancel" (click)="clearSignature()">🗑️ Limpiar</button>
+            <button class="btn-cancel" (click)="showSignaturePad.set(false)">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+  } @else {
+    <!-- Loading / Not Found -->
+    <div class="empty-center">
+      <span class="empty-icon">🔍</span>
+      <h2>Orden no encontrada</h2>
+      <button class="btn-advance" (click)="goBack()">← Volver</button>
+    </div>
+  }
+</div>

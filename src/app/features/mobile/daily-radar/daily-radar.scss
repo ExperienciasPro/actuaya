@@ -1,0 +1,130 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.daily-radar { padding: $spacing-lg; @include flex-column; gap: $spacing-lg; }
+
+// — Header —
+.radar-header { text-align: center; padding-top: $spacing-sm; }
+.radar-emoji { font-size: 2rem; display: block; margin-bottom: $spacing-xs; }
+.radar-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 2px; }
+.radar-subtitle { font-size: 0.8125rem; color: $color-text-muted; }
+
+// — Progress Hero —
+.progress-hero { position: relative; @include flex-center; }
+.progress-center {
+  position: absolute; @include flex-column-center;
+}
+.progress-count { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; color: $color-text-primary; line-height: 1; }
+.progress-of { font-size: 0.75rem; color: $color-text-muted; margin-top: 2px; }
+
+// — Backlog Warning —
+.backlog-warning {
+  display: flex; align-items: center; gap: $spacing-md; padding: $spacing-md;
+  background: rgba(#ff6348, 0.08); border: 1px solid rgba(#ff6348, 0.2);
+  border-radius: $radius-lg;
+}
+.bw-icon { font-size: 1.5rem; flex-shrink: 0; }
+.bw-text { display: flex; flex-direction: column; gap: 2px;
+  strong { font-size: 0.875rem; color: #ff6348; }
+  span { font-size: 0.75rem; color: $color-text-secondary; }
+}
+
+// — Contact Cards —
+.contact-list { @include flex-column; gap: $spacing-sm; }
+
+.contact-card {
+  @include card($spacing-md); display: flex; flex-direction: column; gap: $spacing-sm;
+  position: relative; overflow: hidden;
+  &.overdue {
+    border-left: 3px solid #ff6348;
+    background: linear-gradient(135deg, rgba(#ff6348, 0.03), transparent);
+  }
+  &.completed {
+    border-left: 3px solid $color-accent-secondary;
+    background: linear-gradient(135deg, rgba($color-accent-info, 0.03), rgba(#00cec9, 0.03));
+    opacity: 0.7;
+  }
+}
+
+// — Banners —
+.overdue-banner {
+  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #ff6348; margin-bottom: -2px;
+}
+.completed-banner {
+  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: $color-accent-secondary; margin-bottom: -2px;
+}
+
+// — Contact Row —
+.contact-row { display: flex; align-items: center; gap: $spacing-sm; }
+.contact-avatar-wrap {
+  width: 40px; height: 40px; border-radius: $radius-full; @include flex-center; flex-shrink: 0;
+  background: rgba($color-text-muted, 0.15); @include smooth;
+  // Transition to Electric Blue → Cyan gradient when active
+  &.active {
+    background: linear-gradient(135deg, rgba($color-accent-info, 0.3), rgba(#00cec9, 0.3));
+    .contact-initial { color: $color-accent-info; }
+  }
+}
+.contact-initial { font-size: 1rem; font-weight: 700; color: $color-text-muted; text-transform: uppercase; }
+.contact-info { display: flex; flex-direction: column; min-width: 0; }
+.contact-name { font-size: 0.9375rem; font-weight: 600; color: $color-text-primary; @include text-truncate; }
+.contact-meta { font-size: 0.75rem; color: $color-text-muted; font-family: 'Space Grotesk', sans-serif; }
+
+// — Reminder —
+.reminder-text {
+  font-size: 0.75rem; color: #ff6348; font-style: italic;
+  padding: $spacing-xs $spacing-sm; border-radius: $radius-sm;
+  background: rgba(#ff6348, 0.06);
+}
+
+// — Action Row —
+.action-row { display: flex; gap: $spacing-sm; }
+
+.action-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: $spacing-xs;
+  padding: 10px; border-radius: $radius-md; font-weight: 600; @include smooth;
+}
+.wa-btn {
+  background: linear-gradient(135deg, rgba($color-accent-info, 0.12), rgba(#00cec9, 0.12));
+  color: $color-accent-info; border: 1px solid rgba($color-accent-info, 0.2);
+  &:hover, &:active { background: linear-gradient(135deg, rgba($color-accent-info, 0.2), rgba(#00cec9, 0.2)); }
+}
+.snooze-btn {
+  background: $color-bg-tertiary; color: $color-text-muted;
+  border: 1px solid $color-border-subtle;
+  &:hover, &:active { background: $color-bg-hover; color: $color-text-secondary; }
+}
+.action-icon { font-size: 0.9rem; }
+.action-label { font-size: 0.75rem; }
+
+// — Empty —
+.empty-state { @include flex-column-center; gap: $spacing-md; padding: $spacing-3xl $spacing-md; }
+.empty-emoji { font-size: 3.5rem; }
+.empty-state h2 { font-size: 1.125rem; font-weight: 600; }
+.empty-state p { font-size: 0.8125rem; color: $color-text-muted; text-align: center; }
+
+// — Snooze Modal —
+.modal-backdrop { position: fixed; inset: 0; background: $color-surface-overlay; z-index: $z-modal-backdrop; @include flex-center; padding: $spacing-lg; }
+.snooze-modal {
+  background: $color-bg-secondary; border: 1px solid $color-border-subtle; border-radius: $radius-xl;
+  padding: $spacing-xl; width: 100%; max-width: 380px;
+  h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: $spacing-xs; }
+}
+.snooze-target-name { font-size: 0.875rem; color: $color-text-secondary; margin-bottom: $spacing-sm; }
+.snooze-hint { font-size: 0.75rem; color: $color-text-muted; margin-bottom: $spacing-md; }
+
+.snooze-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: $spacing-sm; margin-bottom: $spacing-lg; }
+.snooze-opt {
+  padding: $spacing-sm; border-radius: $radius-md; background: $color-bg-tertiary;
+  color: $color-text-secondary; font-size: 0.8125rem; font-weight: 500; @include smooth;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+}
+
+.custom-date-label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: $spacing-xs; }
+.date-input { @include input-base; }
+
+.modal-actions { display: flex; gap: $spacing-sm; justify-content: flex-end; margin-top: $spacing-lg; }
+.btn-cancel { @include button-ghost; }
+.btn-confirm { @include button-primary; &:disabled { opacity: 0.4; } }

@@ -1,0 +1,60 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.celebration-screen { padding: $spacing-lg; @include flex-column; gap: $spacing-lg; align-items: center; }
+
+// — Hero —
+.celeb-hero { text-align: center; position: relative; padding: $spacing-xl 0 $spacing-md; width: 100%; overflow: hidden; }
+.confetti-bg { position: absolute; inset: 0; pointer-events: none; }
+.confetti-dot {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%; top: 0;
+  background: $color-accent-primary; opacity: 0.3;
+  animation: confettiFall 3s ease-in infinite;
+  &:nth-child(2n) { background: $color-accent-secondary; width: 4px; height: 8px; border-radius: 2px; }
+  &:nth-child(3n) { background: $color-accent-warning; }
+}
+@keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 0.5; } 100% { transform: translateY(120px) rotate(360deg); opacity: 0; } }
+
+.trophy { font-size: 3rem; display: block; margin-bottom: $spacing-sm; position: relative; z-index: 1; }
+.celeb-hero h1 { font-size: 1.5rem; font-weight: 700; position: relative; z-index: 1; }
+.hero-sub { font-size: 0.9375rem; color: $color-text-secondary; position: relative; z-index: 1; margin-top: 4px; }
+
+// — Score —
+.score-card { @include card($spacing-xl); @include flex-column-center; gap: $spacing-sm; width: 100%; max-width: 300px; }
+.score-circle {
+  @include flex-center; gap: 2px; padding: $spacing-lg;
+  border-radius: 50%; width: 120px; height: 120px;
+  &.excellent { background: rgba(#00cec9, 0.1); .score-num { color: #00cec9; } }
+  &.good { background: rgba(#a78bfa, 0.1); .score-num { color: #a78bfa; } }
+  &.fair { background: rgba($color-accent-warning, 0.1); .score-num { color: $color-accent-warning; } }
+  &.low { background: rgba($color-text-muted, 0.1); .score-num { color: $color-text-muted; } }
+}
+.score-num { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; }
+.score-of { font-size: 1rem; color: $color-text-muted; }
+.score-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: $color-text-muted; }
+
+// — Achievements —
+.achievements { display: grid; grid-template-columns: repeat(2, 1fr); gap: $spacing-sm; width: 100%; }
+.ach-card {
+  @include card($spacing-md); @include flex-column-center; gap: 4px;
+  opacity: 0.5; &.achieved { opacity: 1; }
+}
+.ach-emoji { font-size: 1.25rem; }
+.ach-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: $color-text-primary; }
+.ach-label { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; text-align: center; }
+
+// — Goals —
+.goals-section { @include card($spacing-lg); width: 100%; h2 { font-size: 0.9375rem; font-weight: 600; margin-bottom: $spacing-md; } }
+.goal-row { display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-xs 0; }
+.gr-icon { font-size: 0.875rem; flex-shrink: 0; }
+.gr-name { font-size: 0.8125rem; font-weight: 500; width: 100px; @include text-truncate; }
+.gr-bar { flex: 1; height: 4px; background: $color-bg-tertiary; border-radius: $radius-full; overflow: hidden; }
+.gr-fill { height: 100%; border-radius: $radius-full; transition: width 600ms ease; }
+.gr-pct { font-size: 0.75rem; font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: $color-text-muted; min-width: 30px; text-align: right; }
+
+// — Motivation —
+.motivation-card { @include card($spacing-lg); text-align: center; width: 100%; border-left: 3px solid $color-accent-primary; }
+.motiv-quote { font-size: 0.9375rem; color: $color-text-secondary; line-height: 1.6; font-style: italic; }
+
+// — CTA —
+.new-week-btn { @include button-primary; text-decoration: none; width: 100%; max-width: 300px; text-align: center; padding: $spacing-md; font-size: 0.9375rem; }

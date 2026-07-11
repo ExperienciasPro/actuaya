@@ -1,0 +1,385 @@
+@use '../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════
+// Licitaciones — Styles
+// ═══════════════════════════════════════════
+
+.licitaciones-page {
+  max-width: 1200px;
+}
+
+// — Header —
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+
+  h1 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+  .subtitle { color: $color-text-secondary; margin-top: 4px; font-size: 0.85rem; }
+}
+
+.header-actions {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-input-wrapper {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  background: white;
+  padding: 2px;
+  border-radius: $radius-md;
+  border: 1px solid $color-border-default;
+
+  .search-query {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    min-width: 250px;
+    &:focus { box-shadow: none; border: none; }
+  }
+
+  .btn-fetch {
+    margin: 0;
+  }
+}
+
+.btn-config, .btn-import, .btn-fetch {
+  padding: 8px 16px;
+  border-radius: $radius-md;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-primary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover { background: $color-bg-hover; border-color: $color-accent-primary; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-fetch {
+  background: $color-accent-primary;
+  color: white;
+  border-color: $color-accent-primary;
+  &:hover { filter: brightness(1.1); }
+}
+
+// — KPI Row —
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  text-align: center;
+  border: 1px solid $color-border-subtle;
+  transition: transform $transition-fast;
+
+  &:hover { transform: translateY(-2px); }
+
+  .kpi-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $color-text-secondary;
+    font-weight: 600;
+  }
+
+  &.purple .kpi-value { color: $color-accent-primary; }
+  &.blue .kpi-value { color: $color-accent-info; }
+  &.pink .kpi-value { color: $color-accent-warm; }
+  &.teal .kpi-value { color: $color-accent-secondary; }
+}
+
+// — Config / Import Panel —
+.config-panel {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  h3 { margin: 0 0 $spacing-sm 0; font-size: 1rem; }
+  .config-hint { color: $color-text-muted; font-size: 0.82rem; margin-bottom: $spacing-md; }
+}
+
+.config-row {
+  display: flex;
+  gap: $spacing-sm;
+
+  .form-input { flex: 1; }
+}
+
+.btn-save {
+  padding: 8px 20px;
+  border-radius: $radius-md;
+  background: $color-accent-primary;
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: filter $transition-fast;
+
+  &:hover { filter: brightness(1.1); }
+}
+
+.btn-demo {
+  padding: 8px 20px;
+  border-radius: $radius-md;
+  background: $color-bg-tertiary;
+  color: $color-text-primary;
+  border: 1px solid $color-border-default;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover { background: $color-bg-hover; }
+}
+
+.config-msg {
+  display: inline-block;
+  margin-top: $spacing-sm;
+  font-size: 0.82rem;
+  color: $color-accent-secondary;
+
+  &.error { color: $color-accent-danger; }
+}
+
+.json-input {
+  width: 100%;
+  min-height: 120px;
+  padding: $spacing-md;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  font-family: 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+  background: $color-bg-primary;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+
+  &:focus { outline: none; border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+}
+
+.import-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.form-input {
+  padding: 10px 14px;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  font-size: 0.88rem;
+  background: $color-bg-primary;
+  color: $color-text-primary;
+
+  &:focus { outline: none; border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+}
+
+// — Status Bar —
+.status-bar {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(0, 206, 201, 0.1);
+  color: $color-accent-secondary;
+  margin-bottom: $spacing-lg;
+
+  &.error { background: rgba(231, 76, 60, 0.1); color: $color-accent-danger; }
+}
+
+// — Filters —
+.filter-row {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 8px 14px;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  font-size: 0.82rem;
+  background: $color-bg-secondary;
+  color: $color-text-primary;
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: $color-accent-primary; }
+}
+
+// — Results Grid —
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: $spacing-md;
+}
+
+.lic-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  transition: all $transition-base;
+  border-left: 4px solid transparent;
+
+  &.rel-alta { border-left-color: #e84393; }
+  &.rel-media { border-left-color: #6c5ce7; }
+  &.rel-baja { border-left-color: #00cec9; }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.lic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.lic-relevancia {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  color: white;
+}
+
+.lic-sector {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+  font-weight: 600;
+  background: $color-bg-tertiary;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+}
+
+.lic-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 $spacing-xs 0;
+  line-height: 1.3;
+  color: $color-text-primary;
+}
+
+.lic-entidad {
+  font-size: 0.82rem;
+  color: $color-accent-primary;
+  font-weight: 600;
+  margin: 0 0 $spacing-sm 0;
+}
+
+.lic-desc {
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  margin: 0 0 $spacing-md 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lic-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.meta-item {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+  background: $color-bg-tertiary;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+}
+
+.lic-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.estado-select {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  background: $color-bg-primary;
+  color: $color-text-primary;
+  cursor: pointer;
+}
+
+.btn-link {
+  font-size: 0.78rem;
+  color: $color-accent-primary;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: $radius-md;
+  transition: background $transition-fast;
+
+  &:hover { background: $color-accent-primary-glow; }
+}
+
+// — Empty State —
+.empty {
+  text-align: center;
+  padding: $spacing-2xl;
+  color: $color-text-muted;
+  font-size: 0.88rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: $spacing-3xl $spacing-xl;
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  border: 1px dashed $color-border-default;
+
+  .empty-icon { font-size: 3rem; margin-bottom: $spacing-md; }
+  h3 { margin: 0 0 $spacing-sm 0; color: $color-text-primary; }
+  p { color: $color-text-muted; margin-bottom: $spacing-lg; }
+}
+
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-md;
+}

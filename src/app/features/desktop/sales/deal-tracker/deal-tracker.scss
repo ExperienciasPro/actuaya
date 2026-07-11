@@ -1,0 +1,55 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.deals-page { max-width: 1280px; margin: 0 auto; }
+.page-header { margin-bottom: $spacing-lg; }
+.back-link { display: inline-block; font-size: 0.8125rem; color: $color-text-muted; text-decoration: none; margin-bottom: $spacing-sm; @include smooth; &:hover { color: $color-accent-primary-light; } }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+.btn-primary { @include button-primary; text-decoration: none; }
+
+// — Filters —
+.filters-row { display: flex; gap: $spacing-xs; margin-bottom: $spacing-lg; flex-wrap: wrap; }
+.filter-btn {
+  @include button-base; padding: 6px 14px; font-size: 0.8125rem; border-radius: $radius-full;
+  background: transparent; color: $color-text-muted; border: 1px solid $color-border-subtle;
+  &.active { background: rgba($color-accent-primary, 0.15); color: $color-accent-primary-light; border-color: transparent; }
+  &:hover:not(.active) { background: $color-bg-hover; }
+}
+.filter-count { font-size: 0.6875rem; font-weight: 700; margin-left: 4px; opacity: 0.6; }
+
+// — Stats —
+.stats-row { display: flex; gap: $spacing-md; margin-bottom: $spacing-lg; }
+.stat-card { @include card($spacing-md); display: flex; flex-direction: column; gap: 2px; flex: 1; max-width: 240px; }
+.stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: $color-text-primary; }
+.stat-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: $color-text-muted; }
+
+// — Table —
+.deals-table { @include card(0); overflow: hidden; }
+.table-header {
+  display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 0.8fr 0.6fr; gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md; font-size: 0.6875rem; font-weight: 600; color: $color-text-muted;
+  text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid $color-border-subtle;
+}
+.table-row {
+  display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 0.8fr 0.6fr; gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md; border-bottom: 1px solid $color-border-subtle;
+  font-size: 0.875rem; @include smooth; align-items: center;
+  &:hover { background: $color-bg-hover; } &:last-child { border-bottom: none; }
+}
+.cell-contact { font-weight: 500; color: $color-text-primary; }
+.cell-company { color: $color-text-secondary; }
+.cell-funnel { font-size: 0.8125rem; color: $color-text-muted; }
+.cell-value { font-family: 'Space Grotesk', sans-serif; font-weight: 600; }
+.cell-status { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%;
+  &.open { background: $color-accent-info; } &.won { background: $color-accent-secondary; }
+  &.lost { background: $color-accent-danger; } &.stalled { background: $color-accent-warning; }
+}
+.cell-actions { display: flex; gap: 4px; }
+.action-btn {
+  @include flex-center; width: 26px; height: 26px; border-radius: $radius-sm; font-size: 0.75rem; @include smooth;
+  &.win { color: $color-accent-secondary; &:hover { background: rgba($color-accent-secondary, 0.12); } }
+  &.lose { color: $color-accent-danger; &:hover { background: rgba($color-accent-danger, 0.12); } }
+  &.danger { color: $color-text-muted; &:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; } }
+}

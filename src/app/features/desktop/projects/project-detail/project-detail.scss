@@ -1,0 +1,1199 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Asana-Style Project Workspace
+// ═══════════════════════════════════════════
+
+.asana-workspace {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ─── Top Bar ──────────────────────────
+.workspace-topbar {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.topbar-left {
+  min-width: 0;
+}
+
+.back-link {
+  display: block;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  text-decoration: none;
+  margin-bottom: $spacing-xs;
+  @include smooth;
+  &:hover { color: $color-accent-primary-light; }
+}
+
+.project-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.project-desc {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  margin-top: 2px;
+}
+
+.leader-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: $spacing-sm;
+  padding: 4px 12px 4px 4px;
+  background: rgba(#feca57, 0.12);
+  border: 1px solid rgba(#feca57, 0.25);
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  color: $color-text-secondary;
+
+  strong { color: $color-text-primary; font-weight: 600; }
+}
+
+.leader-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.progress-pill {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 6px 14px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+}
+
+.progress-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+// ─── Toolbar ──────────────────────────
+.workspace-toolbar {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.view-tabs {
+  display: flex;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.view-tab {
+  @include button-base;
+  padding: 7px 16px;
+  font-size: 0.8125rem;
+  border-radius: 0;
+  background: transparent;
+  color: $color-text-muted;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.toolbar-btn {
+  @include button-base;
+  padding: 7px 14px;
+  font-size: 0.8125rem;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  border: 1px solid $color-border-subtle;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+    border-color: $color-border-default;
+  }
+
+  &.danger:hover {
+    background: rgba($color-accent-danger, 0.12);
+    color: $color-accent-danger;
+    border-color: rgba($color-accent-danger, 0.3);
+  }
+}
+
+// ─── View Toggle ─────────────────────
+.view-toggle {
+  display: flex;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  @include button-base;
+  padding: 7px 16px;
+  font-size: 0.8125rem;
+  border-radius: 0;
+  background: transparent;
+  color: $color-text-muted;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+    font-weight: 600;
+  }
+}
+
+// ─── Calendar View ───────────────────
+.calendar-section {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-lg;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.cal-nav-btn {
+  @include button-base;
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  font-size: 1.25rem;
+  color: $color-text-secondary;
+  @include flex-center;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+}
+
+.cal-month-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  min-width: 160px;
+  text-align: center;
+}
+
+.cal-today-btn {
+  @include button-base;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border-radius: $radius-md;
+  background: rgba($color-accent-primary, 0.1);
+  color: $color-accent-primary-light;
+  font-weight: 600;
+  margin-left: auto;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.2);
+  }
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: $color-border-subtle;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.cal-header-day {
+  background: $color-bg-tertiary;
+  padding: $spacing-sm;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-text-muted;
+}
+
+.cal-cell {
+  background: $color-bg-primary;
+  min-height: 100px;
+  padding: $spacing-xs;
+  cursor: pointer;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+
+  &.empty {
+    background: $color-bg-secondary;
+    cursor: default;
+    &:hover { background: $color-bg-secondary; }
+  }
+
+  &.today {
+    background: rgba($color-accent-primary, 0.04);
+    .cal-date {
+      background: $color-accent-primary;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      @include flex-center;
+    }
+  }
+}
+
+.cal-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-secondary;
+  display: inline-flex;
+  margin-bottom: 2px;
+}
+
+.cal-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cal-task-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  background: rgba($color-accent-primary, 0.08);
+  color: $color-text-primary;
+  cursor: pointer;
+  @include smooth;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba($color-accent-primary, 0.18);
+  }
+
+  &.completed {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
+}
+
+.cal-chip-avatar {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.375rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.cal-chip-title {
+  @include text-truncate;
+  flex: 1;
+}
+
+.cal-more {
+  font-size: 0.5625rem;
+  color: $color-text-muted;
+  font-weight: 600;
+  padding: 1px 4px;
+}
+
+// ─── Stats Bar ──────────────────────────
+.stats-bar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+
+  &.done {
+    border-color: rgba(#00cec9, 0.3);
+    .stat-num { color: #00cec9; }
+  }
+  &.pending {
+    border-color: rgba(#feca57, 0.3);
+    .stat-num { color: #feca57; }
+  }
+}
+
+.stat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+}
+
+.stat-lbl {
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+// ═══════════════════════════════════════
+// LIST VIEW
+// ═══════════════════════════════════════
+.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.list-section {
+  border-bottom: 1px solid $color-border-subtle;
+
+  &:last-child { border-bottom: none; }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-xs;
+  position: sticky;
+  top: 0;
+  background: $color-bg-primary;
+  z-index: 2;
+}
+
+.collapse-btn {
+  width: 20px; height: 20px;
+  @include flex-center;
+  font-size: 0.625rem;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  @include smooth;
+  &:hover { background: $color-bg-hover; }
+}
+
+.section-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.section-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.section-count {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  background: $color-bg-tertiary;
+  padding: 1px 8px;
+  border-radius: $radius-full;
+}
+
+.section-del {
+  margin-left: auto;
+  width: 22px; height: 22px;
+  @include flex-center;
+  font-size: 0.875rem;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  opacity: 0;
+  @include smooth;
+
+  .section-header:hover & { opacity: 1; }
+  &:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; }
+}
+
+.section-tasks {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Task Row ────────────────────────
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 8px $spacing-md;
+  padding-left: 36px;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    .task-del { opacity: 1; }
+  }
+
+  &.completed .task-title {
+    text-decoration: line-through;
+    color: $color-text-muted;
+  }
+}
+
+.task-check {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid $color-border-default;
+  @include flex-center;
+  font-size: 0.625rem;
+  color: transparent;
+  flex-shrink: 0;
+  @include smooth;
+
+  &:hover { border-color: $color-accent-primary; }
+
+  &.checked {
+    background: $color-accent-primary;
+    border-color: $color-accent-primary;
+    color: white;
+  }
+
+  &.small {
+    width: 18px; height: 18px;
+    font-size: 0.5625rem;
+  }
+}
+
+.task-title {
+  flex: 1;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  min-width: 0;
+  @include text-truncate;
+}
+
+.task-due {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  flex-shrink: 0;
+
+  &.overdue { color: $color-accent-danger; font-weight: 600; }
+}
+
+.task-priority-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.high { background: #d63031; }
+  &.medium { background: #feca57; }
+  &.low { background: #00cec9; }
+}
+
+.task-del {
+  width: 20px; height: 20px;
+  @include flex-center;
+  font-size: 0.875rem;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  opacity: 0;
+  flex-shrink: 0;
+  @include smooth;
+  &:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; }
+}
+
+// ─── Add Task Inline ─────────────────
+.add-task-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 6px $spacing-md;
+  padding-left: 36px;
+}
+
+.add-task-trigger {
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  padding: 4px 0;
+  @include smooth;
+  &:hover { color: $color-accent-primary-light; }
+}
+
+.add-task-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid $color-border-accent;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  outline: none;
+  font-family: inherit;
+
+  &::placeholder { color: $color-text-muted; }
+
+  &.board {
+    width: 100%;
+    padding: $spacing-sm;
+    background: $color-bg-secondary;
+    border: 1px solid $color-border-subtle;
+    border-radius: $radius-md;
+  }
+}
+
+.add-task-save,
+.add-task-cancel {
+  width: 26px; height: 26px;
+  @include flex-center;
+  border-radius: $radius-sm;
+  font-size: 0.75rem;
+  @include smooth;
+}
+
+.add-task-save {
+  color: $color-accent-primary;
+  &:hover { background: rgba($color-accent-primary, 0.15); }
+}
+
+.add-task-cancel {
+  color: $color-text-muted;
+  &:hover { background: $color-bg-hover; }
+}
+
+// ═══════════════════════════════════════
+// BOARD VIEW (Kanban)
+// ═══════════════════════════════════════
+.board-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $spacing-md;
+  min-height: 400px;
+
+  @include mobile-only { grid-template-columns: 1fr; }
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: visible;
+}
+
+.board-col-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.col-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $color-text-secondary;
+}
+
+.col-count {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  background: $color-bg-tertiary;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+}
+
+.board-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  flex: 1;
+  min-height: 100px;
+  @include smooth;
+  border-radius: 0 0 $radius-lg $radius-lg;
+
+  &.drag-over {
+    background: rgba($color-accent-primary, 0.06);
+    border: 2px dashed rgba($color-accent-primary, 0.3);
+    border-top: none;
+  }
+}
+
+.board-card {
+  @include card($spacing-sm);
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  @include smooth;
+  user-select: none;
+
+  &:hover {
+    border-color: $color-border-default;
+    box-shadow: $shadow-md;
+    .drag-handle { opacity: 1; }
+  }
+
+  &.completed .board-card-title {
+    text-decoration: line-through;
+    color: $color-text-muted;
+  }
+
+  &.dragging {
+    opacity: 0.4;
+    transform: rotate(2deg);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.board-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-xs;
+}
+
+.board-card-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $color-text-primary;
+  line-height: 1.3;
+}
+
+.board-card-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.board-due {
+  font-size: 0.625rem;
+  color: $color-text-muted;
+  &.overdue { color: $color-accent-danger; }
+}
+
+.board-assignee-name {
+  font-size: 0.625rem;
+  color: $color-text-muted;
+  @include text-truncate;
+  max-width: 80px;
+}
+
+.board-meta-spacer {
+  flex: 1;
+}
+
+// ─── Drag Handle ─────────────────────
+.drag-handle {
+  font-size: 1rem;
+  line-height: 1;
+  color: $color-text-muted;
+  opacity: 0;
+  cursor: grab;
+  flex-shrink: 0;
+  @include smooth;
+  user-select: none;
+
+  &:active { cursor: grabbing; }
+}
+
+.empty-col-hint {
+  text-align: center;
+  padding: $spacing-lg $spacing-sm;
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  border: 1px dashed $color-border-subtle;
+  border-radius: $radius-md;
+}
+
+.section-del {
+  margin-left: auto;
+  width: 22px; height: 22px;
+  @include flex-center;
+  font-size: 0.875rem;
+  color: $color-text-muted;
+  border-radius: $radius-sm;
+  opacity: 0;
+  @include smooth;
+
+  .board-col-header:hover & { opacity: 1; }
+  &:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; }
+}
+
+.board-add-row {
+  padding: 0 $spacing-xs;
+}
+
+// ═══════════════════════════════════════
+// MODALS & PANELS
+// ═══════════════════════════════════════
+.modal-overlay,
+.panel-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+}
+
+.modal-overlay {
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  @include card($spacing-lg);
+  width: 90%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  h3 { font-size: 1.125rem; font-weight: 700; }
+}
+
+.modal-input {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  font-family: inherit;
+  outline: none;
+  @include smooth;
+
+  &:focus { border-color: $color-accent-primary; }
+  &::placeholder { color: $color-text-muted; }
+}
+
+.modal-actions {
+  display: flex;
+  gap: $spacing-sm;
+  justify-content: flex-end;
+}
+
+// ─── Task Panel (slide-in) ───────────
+.panel-overlay {
+  justify-content: flex-end;
+}
+
+.task-panel {
+  width: 400px;
+  max-width: 90vw;
+  height: 100%;
+  background: $color-bg-primary;
+  border-left: 1px solid $color-border-subtle;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.panel-header {
+  @include flex-between;
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-border-subtle;
+
+  h3 { font-size: 1rem; font-weight: 700; }
+}
+
+.panel-close {
+  width: 32px; height: 32px;
+  @include flex-center;
+  border-radius: $radius-md;
+  font-size: 1.25rem;
+  color: $color-text-muted;
+  @include smooth;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-text-muted;
+  }
+}
+
+.panel-input {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  font-family: inherit;
+  outline: none;
+  @include smooth;
+
+  &:focus { border-color: $color-accent-primary; }
+  &::placeholder { color: $color-text-muted; }
+
+  &.textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+}
+
+.panel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+}
+
+.panel-footer {
+  padding: $spacing-md $spacing-lg;
+  border-top: 1px solid $color-border-subtle;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-danger-sm {
+  @include button-base;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  border-radius: $radius-md;
+  color: $color-accent-danger;
+  background: rgba($color-accent-danger, 0.08);
+
+  &:hover {
+    background: rgba($color-accent-danger, 0.18);
+  }
+}
+
+// ─── Shared ──────────────────────────
+.btn-primary {
+  @include button-primary;
+  text-decoration: none;
+}
+
+.btn-ghost {
+  @include button-ghost;
+  text-decoration: none;
+}
+
+.not-found {
+  text-align: center;
+  padding: $spacing-2xl;
+
+  .nf-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: $spacing-md;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+  }
+}
+
+// ─── Slide-in animation ──────────────
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slideIn {
+  animation: slideInRight 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+select.panel-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238b95a9' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+// ═══════════════════════════════════════
+// TEAM MANAGEMENT
+// ═══════════════════════════════════════
+
+// Toolbar team button
+.team-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-avatars-mini {
+  display: inline-flex;
+  align-items: center;
+
+  .avatar-mini {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: white;
+    margin-right: -6px;
+    border: 2px solid $color-bg-secondary;
+    letter-spacing: -0.02em;
+
+    &:last-child { margin-right: 4px; }
+  }
+}
+
+// Assignee avatar on board cards
+.board-assignee {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  cursor: default;
+  margin-left: auto;
+}
+
+// Team panel styles
+.team-panel {
+  .panel-body {
+    gap: $spacing-lg;
+  }
+}
+
+.add-member-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+}
+
+.add-member-fields {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  .role-input {
+    font-size: 0.8125rem;
+  }
+}
+
+.add-member-btn {
+  align-self: flex-end;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+}
+
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.team-member-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    .member-remove, .leader-toggle { opacity: 1; }
+  }
+
+  &.is-leader {
+    background: rgba(#feca57, 0.06);
+    border: 1px solid rgba(#feca57, 0.2);
+    .leader-toggle { opacity: 1; }
+  }
+}
+
+.leader-crown {
+  font-size: 0.75rem;
+  margin-left: 2px;
+}
+
+.leader-toggle {
+  width: 28px;
+  height: 28px;
+  @include flex-center;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  opacity: 0;
+  flex-shrink: 0;
+  @include smooth;
+  filter: grayscale(1);
+
+  &:hover {
+    background: rgba(#feca57, 0.15);
+    filter: grayscale(0);
+  }
+
+  &.active {
+    filter: grayscale(0);
+  }
+}
+
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.member-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  @include text-truncate;
+}
+
+.member-role {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.member-tasks-count {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+.member-remove {
+  width: 28px;
+  height: 28px;
+  @include flex-center;
+  border-radius: $radius-md;
+  font-size: 1rem;
+  color: $color-text-muted;
+  opacity: 0;
+  flex-shrink: 0;
+  @include smooth;
+
+  &:hover {
+    background: rgba($color-accent-danger, 0.12);
+    color: $color-accent-danger;
+  }
+}
+
+.team-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xl;
+  text-align: center;
+
+  .team-empty-icon {
+    font-size: 2.5rem;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $color-text-muted;
+  }
+}
+

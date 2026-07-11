@@ -1,0 +1,2684 @@
+<div class="wizard-container" *ngIf="wizardForm">
+  <!-- CABECERA -->
+  <div class="wizard-header">
+    <div class="wizard-title">
+      <h2>{{ testId ? '✏️ Editar instrumento' : '🧪 Crear nuevo instrumento' }}</h2>
+      <p>{{ testId ? 'Modifica los datos de tu evaluación existente.' : 'Sigue los pasos para diseñar y publicar tu
+        evaluación.' }}</p>
+    </div>
+
+    <!-- Stepper Pro con labels -->
+    <div class="stepper-pro">
+      <div class="stepper-track">
+        <div class="stepper-progress" [style.width]="((currentStep - 1) / 6 * 100) + '%'"></div>
+      </div>
+      <div class="stepper-steps">
+        <div class="step-item" *ngFor="let step of stepLabels; let idx = index" (click)="setStep(idx + 1)"
+          [class.active]="currentStep === idx + 1" [class.completed]="currentStep > idx + 1"
+          [class.disabled]="idx + 1 > currentStep + 1">
+          <div class="step-dot">
+            <svg *ngIf="currentStep > idx + 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              style="width:14px;height:14px">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span *ngIf="currentStep <= idx + 1">{{ idx + 1 }}</span>
+          </div>
+          <span class="step-label">{{ step }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUERPO DEL PASO -->
+  <div class="wizard-body">
+    <form [formGroup]="wizardForm">
+
+      <!-- OVERLAY DE CARGA: Procesando preguntas -->
+      <div *ngIf="isParsing" style="
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(248, 250, 252, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        animation: fadeInOverlay 0.3s ease;">
+
+        <!-- Spinner animado -->
+        <div style="position: relative; width: 80px; height: 80px; margin-bottom: 32px;">
+          <div style="
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 4px solid #e2e8f0; border-top-color: var(--accent);
+            animation: spinLoader 0.8s linear infinite;"></div>
+          <div style="
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 28px;">📝</div>
+        </div>
+
+        <!-- Título -->
+        <h3 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #1e293b; text-align: center;">
+          Procesando preguntas...
+        </h3>
+
+        <!-- Subtítulo -->
+        <p
+          style="margin: 0 0 24px 0; font-size: 15px; color: #64748b; text-align: center; max-width: 400px; line-height: 1.5;">
+          Estamos analizando y estructurando tu texto en preguntas con opciones de respuesta.
+        </p>
+
+        <!-- Barra de progreso animada -->
+        <div style="width: 280px; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+          <div style="
+            width: 40%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent));
+            border-radius: 999px; animation: progressPulse 1.5s ease-in-out infinite;"></div>
+        </div>
+
+        <!-- Tip -->
+        <p style="margin-top: 20px; font-size: 12px; color: #94a3b8; font-weight: 500;">
+          💡 Entre más preguntas, más tardará el proceso
+        </p>
+      </div>
+
+      <!-- PASO 1: DATOS GENERALES -->
+      <div *ngIf="currentStep === 1" formGroupName="generales">
+        <div class="card-title">📋 Paso 1: Datos Generales</div>
+        <p style="color: #64748b; margin: -10px 0 24px; font-size: 14px;">
+          Define la identidad de tu evaluación. El nombre y descripción serán visibles para los candidatos.
+        </p>
+
+        <div class="form-group">
+          <label>Nombre del Test *</label>
+          <input type="text" class="form-control" formControlName="nombre"
+            placeholder="Ej: Test de Liderazgo Organizacional" />
+          <span *ngIf="
+              generales.get('nombre')?.invalid &&
+              generales.get('nombre')?.touched
+            " class="text-red" style="margin-top: 5px">⚠️ Falta llenar este campo obligatorio</span>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea class="form-control" formControlName="descripcion"
+            placeholder="Describe brevemente el objetivo de este test... Los candidatos verán esta descripción antes de iniciar."
+            maxlength="500"></textarea>
+          <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+            <span style="font-size: 12px; font-weight: 500;"
+              [style.color]="(generales.get('descripcion')?.value?.length || 0) > 450 ? '#ef4444' : '#94a3b8'">
+              {{ generales.get('descripcion')?.value?.length || 0 }} / 500
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group flex flex-col items-center my-6" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 24px 0;
+          ">
+          <label style="
+              margin-bottom: 12px;
+              font-size: 14px;
+              font-weight: 600;
+              color: #475569;
+            ">Avatar de la Prueba</label>
+          <div style="
+              width: 128px;
+              height: 128px;
+              border-radius: 50%;
+              overflow: hidden;
+              background-color: #f1f5f9;
+              box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              border: 2px solid #e2e8f0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+            <img [src]="currentAvatarUrl" alt="Avatar del Test" style="width: 100%; height: 100%; object-fit: cover"
+              loading="lazy" decoding="async" />
+          </div>
+          <small style="
+              color: #64748b;
+              margin-top: 12px;
+              font-size: 13px;
+              text-align: center;
+            ">Este avatar identificará tu test en el panel de forma
+            visual.</small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select class="form-control" formControlName="tipo">
+              <option value="Test Individual">Test Individual</option>
+              <option value="Batería">Batería de Pruebas</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Formulario de Captura Vinculado</label>
+            <select class="form-control" formControlName="formularioVinculado">
+              <option value="">Ninguno (Libre)</option>
+              <option value="1">Formulario Demográfico A</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+          ">
+          <input type="checkbox" id="reqPin" formControlName="requierePin" style="width: 20px; height: 20px" />
+          <label for="reqPin" style="margin: 0; cursor: pointer">Este test requiere de un PIN seguro para ser
+            presentado</label>
+        </div>
+      </div>
+
+      <!-- PASO 2: PREGUNTAS -->
+      <div *ngIf="currentStep === 2" formGroupName="preguntasGroup">
+        <div class="card-title">✍️ Paso 2: Generador de Preguntas</div>
+
+        <div class="parser-header" style="margin-bottom: 15px">
+          <div>
+            <p style="color: #64748b; margin-bottom: 10px">
+              Carga un archivo excel o pega aquí tus preguntas en texto plano,
+              nuestra IA las estructurará y evaluará por ti.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tabs / Segmented Control -->
+        <div style="
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 4px;
+            background: #f1f5f9;
+            border-radius: 8px;
+          ">
+          <button type="button" [ngStyle]="{
+              background: importMode === 'file' ? 'white' : 'transparent',
+              'box-shadow':
+                importMode === 'file' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              color: importMode === 'file' ? '#334155' : '#64748b',
+            }" style="
+              flex: 1;
+              padding: 8px;
+              border: none;
+              border-radius: 6px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s;
+            " (click)="importMode = 'file'">
+            📁 Archivo Excel/CSV
+          </button>
+          <button type="button" [ngStyle]="{
+              background: importMode === 'text' ? 'white' : 'transparent',
+              'box-shadow':
+                importMode === 'text' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              color: importMode === 'text' ? '#334155' : '#64748b',
+            }" style="
+              flex: 1;
+              padding: 8px;
+              border: none;
+              border-radius: 6px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s;
+            " (click)="importMode = 'text'">
+            📝 Pegar Texto Plano
+          </button>
+        </div>
+
+        <!-- Modo Archivo -->
+        <div *ngIf="importMode === 'file'">
+          <div class="dropzone" [ngClass]="{ 'border-red-500': fileError }" (dragover)="onDragOver($event)"
+            (drop)="onDrop($event)" (click)="triggerFileInput()" style="
+              border: 2px dashed #cbd5e1;
+              border-radius: 12px;
+              padding: 40px;
+              text-align: center;
+              cursor: pointer;
+              background: #f8fafc;
+              transition: all 0.2s;
+              margin-bottom: 20px;
+            ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="
+                width: 48px;
+                height: 48px;
+                color: #94a3b8;
+                margin: 0 auto 15px;
+              ">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p style="color: #475569; font-size: 15px; margin: 0">
+              Arrastra tu archivo Excel o CSV aquí, o haz clic para explorar
+            </p>
+            <div *ngIf="selectedFile" style="margin-top: 15px; font-weight: 600; color: var(--accent)">
+              📄 {{ selectedFile.name }} listo para procesar.
+            </div>
+            <input type="file" #fileInput hidden
+              accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, text/csv"
+              (change)="onFileSelected($event)" />
+          </div>
+
+          <div style="
+              font-size: 13px;
+              color: #64748b;
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            ">
+            <span>Formato soportado: .xlsx, .csv con columnas como "Pregunta" y
+              "Opciones".</span>
+            <button type="button" (click)="downloadTemplate()" style="
+                background: transparent;
+                border: none;
+                color: var(--accent);
+                cursor: pointer;
+                text-decoration: underline;
+                font-weight: 500;
+              ">
+              📄 Descargar Excel de ejemplo
+            </button>
+          </div>
+        </div>
+
+        <!-- Modo Texto -->
+        <div *ngIf="importMode === 'text'" class="form-group">
+          <textarea class="form-control" formControlName="textoPlano" style="
+              height: 250px;
+              padding: 16px;
+              border: 2px solid #e2e8f0;
+              border-radius: 12px;
+              font-size: 14px;
+              color: #334155;
+              font-family: monospace;
+              resize: vertical;
+              outline: none;
+              transition: border-color 0.2s;
+              width: 100%;
+              box-sizing: border-box;
+            "
+            placeholder="Ejemplo:&#10;&#10;1. ¿Cuál es el planeta más cercano al Sol?&#10;A. Venus&#10;B. Tierra&#10;C. Mercurio (Correcta)&#10;D. Marte&#10;&#10;2. Ante un problema imprevisto, tú:&#10;A. Analizas y planeas. (Puntaje: 4)&#10;B. Pides ayuda. (Puntaje: 3)&#10;C. Improvisas rápido. (Puntaje: 2)&#10;D. Te frustras y lo evitas. (Puntaje: 1)&#10;&#10;3. El agua hierve a 100 grados Celsius a nivel del mar.&#10;A. Falso&#10;B. Verdadero (Correcta)&#10;&#10;4. ¿Has participado anteriormente en un proceso de evaluación de desempeño corporativo?&#10;A. Sí&#10;B. No&#10;&#10;5. En una escala de 1 a 5, ¿qué tan satisfecho estás con la comunicación interna de tu equipo?&#10;A. 1 - Totalmente en desacuerdo (Puntaje: 1)&#10;B. 2 - En desacuerdo (Puntaje: 2)&#10;C. 3 - Neutral (Puntaje: 3)&#10;D. 4 - De acuerdo (Puntaje: 4)&#10;E. 5 - Totalmente de acuerdo (Puntaje: 5)&#10;&#10;6. Describe brevemente un desafío laboral importante que hayas enfrentado recientemente y explica qué estrategias utilizaste para resolverlo."></textarea>
+        </div>
+
+        <div *ngIf="fileError" style="color: #ef4444; margin-bottom: 15px; font-weight: 500">
+          ⚠️ {{ fileError }}
+        </div>
+
+        <p style="margin-top: 16px; font-size: 13px; color: #94a3b8; text-align: right;">
+          ✨ Las preguntas se extraerán automáticamente al avanzar al siguiente paso.
+        </p>
+      </div>
+
+      <!-- PASO 3: REVISIÓN DE PREGUNTAS Y SCORE -->
+      <div *ngIf="currentStep === 3" formGroupName="preguntasGroup">
+        <div class="card-title">🔍 Paso 3: Revisión y Puntajes</div>
+        <p style="color: #64748b; margin-bottom: 20px">
+          Verifica que las preguntas y opciones se hayan estructurado
+          correctamente y asígnale un
+          <strong>Puntaje</strong> a cada una para calcular el resultado final
+          de la evaluación.
+        </p>
+
+        <!-- Stats Summary Bar -->
+        <div *ngIf="preguntasArray.length > 0" style="
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+          ">
+          <div style="
+              flex: 1;
+              min-width: 140px;
+              background: linear-gradient(135deg, #eff6ff, #dbeafe);
+              border: 1px solid #bfdbfe;
+              border-radius: 12px;
+              padding: 14px 18px;
+              text-align: center;
+            ">
+            <div style="font-size: 24px; font-weight: 800; color: #1e40af;">{{ preguntasArray.length }}</div>
+            <div style="font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase;">Preguntas</div>
+          </div>
+          <div style="
+              flex: 1;
+              min-width: 140px;
+              background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+              border: 1px solid #bbf7d0;
+              border-radius: 12px;
+              padding: 14px 18px;
+              text-align: center;
+            ">
+            <div style="font-size: 24px; font-weight: 800; color: #166534;">{{ getTotalOpciones() }}</div>
+            <div style="font-size: 12px; color: #16a34a; font-weight: 600; text-transform: uppercase;">Opciones</div>
+          </div>
+          <div style="
+              flex: 1;
+              min-width: 140px;
+              background: linear-gradient(135deg, #fefce8, #fef9c3);
+              border: 1px solid #fde68a;
+              border-radius: 12px;
+              padding: 14px 18px;
+              text-align: center;
+            ">
+            <div style="font-size: 24px; font-weight: 800; color: #854d0e;">{{ getTotalPuntajeMax() }}</div>
+            <div style="font-size: 12px; color: #ca8a04; font-weight: 600; text-transform: uppercase;">Puntaje Máx</div>
+          </div>
+        </div>
+
+        <div class="questions-preview" formArrayName="preguntasArray" *ngIf="preguntasArray.length > 0" cdkDropList
+          (cdkDropListDropped)="dropPregunta($event)">
+          <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              margin-top: 10px;
+            ">
+            <h3>Preguntas Generadas ({{ preguntasArray.length }})</h3>
+            <p style="font-size: 13px; color: #64748b">
+              (Puedes arrastrar ☰ las preguntas y opciones para reordenar)
+            </p>
+          </div>
+
+          <div class="q-card" *ngFor="let q of preguntasArray.controls; let i = index" [formGroupName]="i" cdkDrag
+            style="
+              border: 1px solid #e2e8f0;
+              padding: 20px;
+              border-radius: 12px;
+              margin-bottom: 15px;
+              background: #f8fafc;
+              cursor: grab;
+            ">
+            <div class="q-header" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+              ">
+              <div style="display: flex; gap: 8px; align-items: center">
+                <div cdkDragHandle style="
+                    cursor: grab;
+                    color: #94a3b8;
+                    font-size: 18px;
+                    padding-right: 5px;
+                  ">
+                  ☰
+                </div>
+                <strong style="font-size: 16px; color: #1e293b">Pregunta {{ i + 1 }}</strong>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center">
+                <button type="button" class="btn-danger" (click)="removerPregunta(i)"
+                  style="padding: 6px 12px; font-size: 13px">
+                  Eliminar Pregunta
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px">
+              <input type="text" class="form-control" formControlName="textoPregunta" />
+            </div>
+
+            <!-- Opciones Draggables -->
+            <label style="
+                font-size: 14px;
+                color: #475569;
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: block;
+              ">Opciones de Respuesta:</label>
+            <div formArrayName="opciones" cdkDropList (cdkDropListDropped)="dropOpcion($event, i)"
+              style="display: flex; flex-direction: column; gap: 10px">
+              <div *ngFor="let op of getOpcionesArray(i).controls; let j = index" [formGroupName]="j" cdkDrag style="
+                  background: white;
+                  padding: 12px 15px;
+                  border-radius: 8px;
+                  border: 1px solid #cbd5e1;
+                  display: flex;
+                  align-items: center;
+                  gap: 15px;
+                  transition: box-shadow 0.2s;
+                ">
+                <div cdkDragHandle style="cursor: grab; color: #cbd5e1; font-weight: bold">
+                  ⋮⋮
+                </div>
+
+                <input type="text" class="form-control" formControlName="texto"
+                  style="flex: 1; margin: 0; padding: 8px" />
+
+                <div style="display: flex; align-items: center; gap: 6px">
+                  <label style="margin: 0; color: #64748b; font-size: 12px">Correcta:</label>
+                  <input type="checkbox" formControlName="correcta" style="width: 18px; height: 18px"
+                    title="Marcar como correcta" />
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 6px">
+                  <label style="
+                      margin: 0;
+                      font-weight: 600;
+                      color: var(--accent);
+                      font-size: 12px;
+                    ">Puntaje:</label>
+                  <input type="number" class="form-control" formControlName="puntaje"
+                    style="width: 70px; padding: 6px 10px" min="0" />
+                </div>
+
+                <button type="button" (click)="removerOpcion(i, j)" style="
+                    background: none;
+                    border: none;
+                    color: #f43f5e;
+                    font-size: 20px;
+                    cursor: pointer;
+                    line-height: 1;
+                  " title="Eliminar opción">
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top: 15px">
+              <button type="button" class="btn-outline" style="font-size: 13px; padding: 6px 12px"
+                (click)="agregarOpcionPregunta(i)">
+                + Añadir Opción
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 4: CONSTRUCTOR DE FORMULARIO -->
+      <div *ngIf="currentStep === 4">
+        <div class="card-title">📝 Paso 4: Formulario para Candidatos</div>
+        <p style="color: #64748b; margin: -10px 0 24px; font-size: 14px;">
+          Recopila datos de los candidatos antes o después de la evaluación. Este paso es opcional.
+        </p>
+
+        <!-- Toggle activar formulario -->
+        <div style="
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;
+            padding: 20px 24px; margin-bottom: 20px;
+          ">
+          <div>
+            <strong style="color: #1e293b; font-size: 15px;">¿Incluir formulario de datos?</strong>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">
+              Recopila nombre, correo, celular u otros datos del candidato.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" (click)="formularioActivo = true"
+              style="padding: 8px 20px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none;"
+              [style.background]="formularioActivo ? 'var(--accent)' : '#e2e8f0'"
+              [style.color]="formularioActivo ? 'white' : '#64748b'">
+              Sí
+            </button>
+            <button type="button" (click)="formularioActivo = false"
+              style="padding: 8px 20px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none;"
+              [style.background]="!formularioActivo ? 'var(--accent)' : '#e2e8f0'"
+              [style.color]="!formularioActivo ? 'white' : '#64748b'">
+              No
+            </button>
+          </div>
+        </div>
+
+        <!-- Si formulario activo: momento y constructor -->
+        <ng-container *ngIf="formularioActivo">
+          <!-- Selector de momento -->
+          <div style="
+              display: flex; align-items: center; gap: 16px;
+              background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px;
+              padding: 16px 24px; margin-bottom: 20px;
+            ">
+            <span style="font-size: 14px; font-weight: 600; color: #1e40af; white-space: nowrap;">
+              📋 Mostrar formulario:
+            </span>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" (click)="formularioMomento = 'inicio'"
+                style="padding: 8px 18px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;"
+                [style.background]="formularioMomento === 'inicio' ? '#1e40af' : 'white'"
+                [style.color]="formularioMomento === 'inicio' ? 'white' : '#1e40af'"
+                [style.border]="formularioMomento === 'inicio' ? 'none' : '1px solid #bfdbfe'">
+                🟢 Al inicio del test
+              </button>
+              <button type="button" (click)="formularioMomento = 'final'"
+                style="padding: 8px 18px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;"
+                [style.background]="formularioMomento === 'final' ? '#1e40af' : 'white'"
+                [style.color]="formularioMomento === 'final' ? 'white' : '#1e40af'"
+                [style.border]="formularioMomento === 'final' ? 'none' : '1px solid #bfdbfe'">
+                🏁 Al finalizar el test
+              </button>
+            </div>
+          </div>
+
+          <!-- Constructor de formulario -->
+          <div style="
+              background: white;
+              border-radius: 16px;
+              border: 1px solid #e2e8f0;
+              overflow: hidden;
+              min-height: 500px;
+              display: flex;
+              flex-direction: column;
+              margin-bottom: 20px;
+            ">
+            <app-admin-formularios [wizardMode]="true"></app-admin-formularios>
+          </div>
+        </ng-container>
+
+        <!-- Si formulario desactivado: mensaje amigable -->
+        <div *ngIf="!formularioActivo" style="
+            text-align: center; padding: 60px 40px;
+            background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 16px;
+          ">
+          <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+          <h3 style="color: #1e293b; font-size: 18px; margin: 0 0 8px;">Sin formulario de datos</h3>
+          <p style="color: #94a3b8; font-size: 14px; margin: 0; max-width: 400px; margin: 0 auto;">
+            Los candidatos irán directamente a la evaluación sin tener que llenar datos adicionales. Puedes activar esta
+            opción en cualquier momento.
+          </p>
+        </div>
+      </div>
+
+      <!-- PASO 5: PLANTILLAS (Diseño visual) -->
+      <div *ngIf="currentStep === 5" formGroupName="plantilla">
+        <div class="card-title">🎨 Paso 5: Diseño Visual</div>
+
+        <div style="
+            padding: 24px;
+            background: #e2e8f0;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            animation: slideDownConfig 0.3s ease-out;
+            margin-bottom: 24px;
+            margin-top: 20px;
+          ">
+          <div class="template-grid" style="
+              display: grid;
+              grid-template-columns: 1fr 400px;
+              gap: 30px;
+              align-items: start;
+            ">
+            <!-- Columna Izquierda: Controles -->
+            <div class="theme-picker-wrapper" style="
+              display: flex;
+              flex-direction: column;
+              gap: 24px;
+            ">
+
+              <!-- Card 0: Logo de Empresa (Branding) -->
+              <div style="
+                  background: white;
+                  padding: 24px;
+                  border-radius: 16px;
+                  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+                ">
+                <h4 style="
+                    margin: 0 0 6px 0;
+                    color: #1e293b;
+                    font-size: 16px;
+                    font-weight: 700;
+                  ">🏢 Logo de Empresa</h4>
+                <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">
+                  Se mostrará al usuario que responda el test. No será visible en el catálogo público.
+                </p>
+
+                <!-- Preview del logo actual -->
+                <div *ngIf="plantilla.get('companyLogoUrl')?.value" style="
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                  ">
+                  <img [src]="plantilla.get('companyLogoUrl')?.value" alt="Logo de empresa"
+                    style="max-height: 60px; max-width: 180px; object-fit: contain; border-radius: 8px; border: 1px solid #e2e8f0; padding: 6px; background: #f8fafc;" />
+                  <button type="button" (click)="removeCompanyLogo()" style="
+                      border: 1px solid #fecaca;
+                      background: #fef2f2;
+                      color: #dc2626;
+                      border-radius: 8px;
+                      padding: 6px 12px;
+                      font-size: 12px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    ">Eliminar</button>
+                </div>
+
+                <!-- Botón de carga -->
+                <div style="position: relative;">
+                  <button type="button" (click)="logoFileInput.click()" style="
+                      width: 100%;
+                      padding: 14px;
+                      border: 1px dashed #cbd5e1;
+                      background: #f8fafc;
+                      border-radius: 12px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                      cursor: pointer;
+                      font-size: 13px;
+                      color: #64748b;
+                      font-weight: 500;
+                      transition: all 0.2s;
+                    ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="width: 18px; height: 18px;">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    {{ plantilla.get('companyLogoUrl')?.value ? 'Cambiar Logo' : 'Subir Logo de Empresa' }}
+                  </button>
+                  <input type="file" #logoFileInput hidden accept="image/*" (change)="onLogoSelected($event)" />
+                </div>
+              </div>
+
+              <!-- Card 1: Estilo Principal -->
+              <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+              ">
+                <h3 style="
+                  margin: 0 0 10px 0;
+                  font-size: 18px;
+                  color: #0f172a;
+                  font-weight: 700;
+                  border-bottom: 1px solid #f1f5f9;
+                  padding-bottom: 15px;
+                ">
+                  1. Colores y Fondos
+                </h3>
+
+                <div class="config-col">
+                  <!-- NUEVA SECCIÓN: COLOR PRINCIPAL -->
+                  <div style="margin-top: 0px">
+                    <label class="config-label" style="
+                      display: block;
+                      font-size: 18px;
+                      margin-bottom: 12px;
+                      color: #1e293b;
+                    ">Color Principal</label>
+                    <p class="config-help" style="margin-bottom: 16px; font-size: 13px; color: #64748b">
+                      Este color se usará para botones, acentos y fondos
+                      decorativos.
+                    </p>
+
+                    <div style="
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 12px;
+                      align-items: center;
+                    ">
+                      <!-- Burbujas de colores predefinidos -->
+                      <div *ngFor="let color of predefinedColors" (click)="plantilla.get('themeColor')?.setValue(color)"
+                        style="
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: transform 0.2s;
+                      " [style.background]="color" [style.box-shadow]="
+                        plantilla.get('themeColor')?.value === color
+                          ? '0 0 0 3px white, 0 0 0 5px ' + color
+                          : 'none'
+                      " [style.transform]="
+                        plantilla.get('themeColor')?.value === color
+                          ? 'scale(1.1)'
+                          : 'scale(1)'
+                      ">
+                        <svg *ngIf="plantilla.get('themeColor')?.value === color" viewBox="0 0 24 24" fill="none"
+                          stroke="white" stroke-width="3" style="width: 18px; height: 18px">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </div>
+
+                      <!-- Separador -->
+                      <div style="
+                        width: 1px;
+                        height: 30px;
+                        background: #e2e8f0;
+                        margin: 0 5px;
+                      "></div>
+
+                      <!-- Selector de color personalizado -->
+                      <div style="position: relative; cursor: pointer">
+                        <div style="
+                          width: 36px;
+                          height: 36px;
+                          border-radius: 50%;
+                          border: 2px dashed #cbd5e1;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          background: conic-gradient(
+                            from 90deg,
+                            red,
+                            yellow,
+                            lime,
+                            aqua,
+                            blue,
+                            magenta,
+                            red
+                          );
+                        " [style.box-shadow]="
+                          !predefinedColors.includes(
+                            plantilla.get('themeColor')?.value
+                          ) && plantilla.get('themeColor')?.value
+                            ? '0 0 0 3px white, 0 0 0 5px ' +
+                              plantilla.get('themeColor')?.value
+                            : 'none'
+                        ">
+                          <div style="
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            background: white;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                          ">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+                              style="width: 14px; height: 14px">
+                              <line x1="12" y1="5" x2="12" y2="19"></line>
+                              <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                          </div>
+                        </div>
+                        <input type="color" formControlName="themeColor" style="
+                          position: absolute;
+                          top: 0;
+                          left: 0;
+                          width: 100%;
+                          height: 100%;
+                          opacity: 0;
+                          cursor: pointer;
+                        " />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- NUEVA SECCIÓN: FONDO DE LA ENCUESTA -->
+                  <div style="margin-top: 32px; width: 100%">
+                    <h4 style="
+                      margin-top: 0;
+                      margin-bottom: 20px;
+                      color: #1e293b;
+                      font-size: 18px;
+                      text-align: left;
+                    ">
+                      Textura / Fondo (Opcional)
+                    </h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px">
+                      <!-- Option: Default Gris claro -->
+                      <button type="button" (click)="
+                        plantilla.get('backgroundTemplate')?.setValue('default')
+                      " [style.border]="
+                        plantilla.get('backgroundTemplate')?.value === 'default'
+                          ? '2px solid var(--accent)'
+                          : '2px solid transparent'
+                      " style="
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 12px;
+                        border: 2px solid transparent;
+                        padding: 4px;
+                        background: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      ">
+                        <div style="
+                          width: 100%;
+                          height: 100%;
+                          background: #f8fafc;
+                          border-radius: 8px;
+                          border: 1px solid #e2e8f0;
+                        "></div>
+                      </button>
+
+                      <!-- Option: Grid -->
+                      <button type="button" (click)="
+                        plantilla.get('backgroundTemplate')?.setValue('grid')
+                      " [style.border]="
+                        plantilla.get('backgroundTemplate')?.value === 'grid'
+                          ? '2px solid var(--accent)'
+                          : '2px solid transparent'
+                      " style="
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 12px;
+                        border: 2px solid transparent;
+                        padding: 4px;
+                        background: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      ">
+                        <div style="
+                          width: 100%;
+                          height: 100%;
+                          border-radius: 8px;
+                          border: 1px solid #e2e8f0;
+                          background-color: #f8fafc;
+                          background-image:
+                            linear-gradient(#e2e8f0 1px, transparent 1px),
+                            linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+                          background-size: 10px 10px;
+                        "></div>
+                      </button>
+
+                      <!-- Option: Dots -->
+                      <button type="button" (click)="
+                        plantilla.get('backgroundTemplate')?.setValue('dots')
+                      " [style.border]="
+                        plantilla.get('backgroundTemplate')?.value === 'dots'
+                          ? '2px solid var(--accent)'
+                          : '2px solid transparent'
+                      " style="
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 12px;
+                        border: 2px solid transparent;
+                        padding: 4px;
+                        background: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      ">
+                        <div style="
+                          width: 100%;
+                          height: 100%;
+                          border-radius: 8px;
+                          border: 1px solid #e2e8f0;
+                          background-color: #f8fafc;
+                          background-image: radial-gradient(
+                            #cbd5e1 1px,
+                            transparent 1px
+                          );
+                          background-size: 10px 10px;
+                        "></div>
+                      </button>
+
+                      <!-- Option: Waves -->
+                      <button type="button" (click)="
+                        plantilla.get('backgroundTemplate')?.setValue('waves')
+                      " [style.border]="
+                        plantilla.get('backgroundTemplate')?.value === 'waves'
+                          ? '2px solid var(--accent)'
+                          : '2px solid transparent'
+                      " style="
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 12px;
+                        border: 2px solid transparent;
+                        padding: 4px;
+                        background: white;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      ">
+                        <div style="
+                          width: 100%;
+                          height: 100%;
+                          border-radius: 8px;
+                          border: 1px solid #e2e8f0;
+                          background-color: #f8fafc;
+                          background-image: repeating-radial-gradient(
+                            circle at 0 0,
+                            transparent 0,
+                            #f8fafc 10px,
+                            #e2e8f0 10px,
+                            #e2e8f0 11px
+                          );
+                        "></div>
+                      </button>
+
+                      <!-- Option: Solid Color -->
+                      <div class="opcion-fondo-color" style="
+                          position: relative;
+                          width: 50px;
+                          height: 50px;
+                          border-radius: 12px;
+                          overflow: hidden;
+                          cursor: pointer;
+                        " [style.border]="
+                          plantilla.get('backgroundTemplate')?.value === 'color'
+                            ? '2px solid var(--accent)'
+                            : '2px solid #e2e8f0'
+                        ">
+                        <div style="
+                            width: 100%;
+                            height: 100%;
+                            background: conic-gradient(
+                              red,
+                              yellow,
+                              lime,
+                              aqua,
+                              blue,
+                              magenta,
+                              red
+                            );
+                            border-radius: 10px;
+                            opacity: 0.8;
+                          "></div>
+                        <!-- Color Picker hidden input -->
+                        <input type="color" formControlName="customBackgroundColor" (change)="
+                          plantilla.get('backgroundTemplate')?.setValue('color')
+                        " style="
+                          position: absolute;
+                          top: 0;
+                          left: 0;
+                          width: 100%;
+                          height: 100%;
+                          opacity: 0;
+                          cursor: pointer;
+                          z-index: 2;
+                        " />
+                      </div>
+
+                      <!-- Default abstract images -->
+                      @for (
+                      img of [
+                      "/assets/bg1.jpg",
+                      "/assets/bg2.jpg",
+                      "/assets/bg3.jpg",
+                      "/assets/bg4.jpg",
+                      ];
+                      track img
+                      ) {
+                      <button type="button" (click)="
+                          plantilla
+                            .get('backgroundTemplate')
+                            ?.setValue('image');
+                          plantilla.get('customBackgroundUrl')?.setValue(img)
+                        " [style.border]="
+                          plantilla.get('backgroundTemplate')?.value ===
+                            'image' &&
+                          plantilla.get('customBackgroundUrl')?.value === img
+                            ? '2px solid var(--accent)'
+                            : '2px solid transparent'
+                        " style="
+                          width: 50px;
+                          height: 50px;
+                          border-radius: 12px;
+                          border: 2px solid transparent;
+                          padding: 4px;
+                          background: white;
+                          cursor: pointer;
+                          transition: all 0.2s;
+                        ">
+                        <div [style.background-image]="'url(' + img + ')'" style="
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 8px;
+                            background-size: cover;
+                            background-position: center;
+                            border: 1px solid #e2e8f0;
+                          "></div>
+                      </button>
+                      }
+
+                      <!-- Option: Custom Image Upload -->
+                      <div style="position: relative; flex-grow: 1; max-width: 140px">
+                        <button type="button" (click)="
+                          plantilla
+                            .get('backgroundTemplate')
+                            ?.setValue('custom-image');
+                          bgFileInput.click()
+                        " [style.border]="
+                          plantilla.get('backgroundTemplate')?.value ===
+                          'custom-image'
+                            ? '2px solid var(--accent)'
+                            : '1px dashed #cbd5e1'
+                        " [style.background]="
+                          plantilla.get('backgroundTemplate')?.value ===
+                          'custom-image'
+                            ? '#eff6ff'
+                            : '#f8fafc'
+                        " style="
+                          width: 100%;
+                          height: 50px;
+                          border-radius: 12px;
+                          display: flex;
+                          flex-direction: column;
+                          align-items: center;
+                          justify-content: center;
+                          gap: 8px;
+                          cursor: pointer;
+                          font-size: 13px;
+                          color: #64748b;
+                          font-weight: 500;
+                          transition: all 0.2s;
+                        ">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width: 20px; height: 20px; color: #94a3b8">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                          </svg>
+                          Subir Fondo
+                        </button>
+                        <input type="file" #bgFileInput hidden accept="image/*"
+                          (change)="onBackgroundSelected($event)" />
+                      </div>
+                    </div>
+
+                    <!-- Opacity and Blur sliders (only if custom image is selected) -->
+                    <div *ngIf="
+                      plantilla.get('backgroundTemplate')?.value ===
+                        'custom-image' &&
+                      plantilla.get('customBackgroundUrl')?.value
+                    " style="
+                      margin-top: 16px;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 12px;
+                      padding: 12px;
+                      background: #f8fafc;
+                      border-radius: 8px;
+                      border: 1px solid #e2e8f0;
+                    ">
+                      <div>
+                        <label style="
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: #475569;
+                          display: flex;
+                          justify-content: space-between;
+                        ">
+                          <span>Opacidad de la Imagen</span>
+                          <span>{{
+                            plantilla.get("backgroundOpacity")?.value
+                            }}%</span>
+                        </label>
+                        <input type="range" min="0" max="100" formControlName="backgroundOpacity"
+                          style="width: 100%; margin-top: 6px" />
+                      </div>
+                      <div>
+                        <label style="
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: #475569;
+                          display: flex;
+                          justify-content: space-between;
+                        ">
+                          <span>Desenfoque (Blur)</span>
+                          <span>{{ plantilla.get("backgroundBlur")?.value }}px</span>
+                        </label>
+                        <input type="range" min="0" max="20" formControlName="backgroundBlur"
+                          style="width: 100%; margin-top: 6px" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Presentación y Navegación -->
+              <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+              ">
+                <h3 style="
+                  margin: 0 0 10px 0;
+                  font-size: 18px;
+                  color: #0f172a;
+                  font-weight: 700;
+                  border-bottom: 1px solid #f1f5f9;
+                  padding-bottom: 15px;
+                ">
+                  2. Presentación y Navegación
+                </h3>
+
+                <div class="config-col">
+                  <!-- NUEVA SECCIÓN: MODO DE PRESENTACIÓN -->
+                  <div style="margin-top: 0px">
+                    <label class="config-label" style="
+                      display: block;
+                      font-size: 18px;
+                      margin-bottom: 12px;
+                      color: #1e293b;
+                    ">Modo de Presentación de Preguntas</label>
+                    <p class="config-help" style="margin-bottom: 16px; font-size: 13px; color: #64748b">
+                      Transforma cómo se mostrará el test al usuario, afectando la
+                      navegación.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px">
+                      <button type="button" (click)="
+                        plantilla.get('presentationMode')?.setValue('scroll')
+                      " [style.background-color]="
+                        plantilla.get('presentationMode')?.value === 'scroll'
+                          ? '#eff6ff'
+                          : 'white'
+                      " [style.border]="
+                        plantilla.get('presentationMode')?.value === 'scroll'
+                          ? '2px solid var(--accent)'
+                          : '1px solid #e2e8f0'
+                      " [style.color]="
+                        plantilla.get('presentationMode')?.value === 'scroll'
+                          ? '#1e40af'
+                          : '#475569'
+                      " style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px 16px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease-in-out;
+                        width: 100%;
+                      ">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          style="width: 20px; height: 20px; flex-shrink: 0">
+                          <rect x="7" y="3" width="10" height="4" rx="1"></rect>
+                          <rect x="7" y="10" width="10" height="4" rx="1"></rect>
+                          <rect x="7" y="17" width="10" height="4" rx="1"></rect>
+                        </svg>
+                        Desplazamiento Continuo
+                      </button>
+
+                      <button type="button" (click)="
+                        plantilla.get('presentationMode')?.setValue('card')
+                      " [style.background-color]="
+                        plantilla.get('presentationMode')?.value === 'card'
+                          ? '#eff6ff'
+                          : 'white'
+                      " [style.border]="
+                        plantilla.get('presentationMode')?.value === 'card'
+                          ? '2px solid var(--accent)'
+                          : '1px solid #e2e8f0'
+                      " [style.color]="
+                        plantilla.get('presentationMode')?.value === 'card'
+                          ? '#1e40af'
+                          : '#475569'
+                      " style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px 16px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease-in-out;
+                        width: 100%;
+                      ">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          style="width: 20px; height: 20px; flex-shrink: 0">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="12" y1="8" x2="12" y2="16"></line>
+                          <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        Tarjeta por Tarjeta (Wizard)
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- NUEVA SECCIÓN: ANIMACIÓN -->
+                  <div style="margin-top: 32px; width: 100%"
+                    *ngIf="plantilla.get('presentationMode')?.value === 'card'">
+                    <label class="config-label" style="
+                      display: block;
+                      font-size: 18px;
+                      margin-bottom: 12px;
+                      color: #1e293b;
+                    ">Transiciones y Animaciones</label>
+                    <p class="config-help" style="margin-bottom: 16px; font-size: 13px; color: #64748b">
+                      Efectos visuales al avanzar entre preguntas.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px" [formGroup]="plantilla">
+                      <select formControlName="animationStyle" class="config-input" style="
+                        background: white;
+                        padding: 12px 16px;
+                        font-size: 14px;
+                        width: 100%;
+                        border-radius: 12px;
+                        border: 1px solid #e2e8f0;
+                        color: #475569;
+                        outline: none;
+                        cursor: pointer;
+                      ">
+                        <option value="none">Sin Animación</option>
+                        <option value="fade">Desvanecimiento Suave (Fade)</option>
+                        <option value="slide-up">Deslizar hacia Arriba</option>
+                        <option value="slide-right">
+                          Deslizar desde la Derecha
+                        </option>
+                        <option value="zoom">Efecto Zoom Dinámico</option>
+                      </select>
+                    </div>
+                    <!-- NUEVA SECCIÓN: BOTONES DE NAVEGACIÓN -->
+                    <div style="margin-top: 32px; width: 100%"
+                      *ngIf="plantilla.get('presentationMode')?.value === 'card'">
+                      <label class="config-label" style="
+                      display: block;
+                      font-size: 18px;
+                      margin-bottom: 12px;
+                      color: #1e293b;
+                    ">Botones de Navegación</label>
+                      <p class="config-help" style="margin-bottom: 16px; font-size: 13px; color: #64748b">
+                        Controla si el usuario puede ver los botones "Anterior" y "Siguiente" durante el test.
+                      </p>
+
+                      <div style="
+                      display: flex;
+                      gap: 8px;
+                      flex-direction: column;
+                    " [formGroup]="plantilla">
+                        <button type="button" (click)="
+                        plantilla.get('allowNavButtons')?.setValue(true)
+                      " [style.background-color]="
+                        plantilla.get('allowNavButtons')?.value === true
+                          ? '#eff6ff'
+                          : 'white'
+                      " [style.border]="
+                        plantilla.get('allowNavButtons')?.value === true
+                          ? '2px solid var(--accent)'
+                          : '1px solid #e2e8f0'
+                      " [style.color]="
+                        plantilla.get('allowNavButtons')?.value === true
+                          ? '#1e40af'
+                          : '#475569'
+                      " style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px 16px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease-in-out;
+                        width: 100%;
+                      ">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width: 20px; height: 20px; flex-shrink: 0">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                          </svg>
+                          Mostrar botones (Anterior / Siguiente)
+                        </button>
+                      </div>
+                    </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Tiempo Límite -->
+              <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+              ">
+                <h3 style="
+                  margin: 0 0 10px 0;
+                  font-size: 18px;
+                  color: #0f172a;
+                  font-weight: 700;
+                  border-bottom: 1px solid #f1f5f9;
+                  padding-bottom: 15px;
+                ">
+                  3. Tiempo Límite
+                </h3>
+
+                <div class="config-col">
+                  <label class="config-label" style="
+                    display: block;
+                    font-size: 18px;
+                    margin-bottom: 12px;
+                    color: #1e293b;
+                  ">Activar Tiempo Límite</label>
+                  <p class="config-help" style="margin-bottom: 16px; font-size: 13px; color: #64748b">
+                    Si activas esta opción, el candidato tendrá un tiempo máximo para completar todo el test.
+                    Al cumplirse el tiempo, el test se enviará automáticamente con las respuestas registradas hasta ese
+                    momento.
+                  </p>
+
+                  <div style="display: flex; gap: 8px; flex-direction: column">
+                    <button type="button" (click)="plantilla.get('tiempoLimiteActivo')?.setValue(false)"
+                      [style.background-color]="plantilla.get('tiempoLimiteActivo')?.value === false ? '#f0fdf4' : 'white'"
+                      [style.border]="plantilla.get('tiempoLimiteActivo')?.value === false ? '2px solid #22c55e' : '1px solid #e2e8f0'"
+                      [style.color]="plantilla.get('tiempoLimiteActivo')?.value === false ? '#166534' : '#475569'"
+                      style="
+                        display: flex; align-items: center; gap: 12px;
+                        padding: 12px 16px; border-radius: 12px;
+                        font-size: 14px; font-weight: 600;
+                        cursor: pointer; transition: all 0.2s ease-in-out; width: 100%;
+                      ">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width: 20px; height: 20px; flex-shrink: 0">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12"></polyline>
+                      </svg>
+                      Sin tiempo límite (el candidato toma el tiempo que necesite)
+                    </button>
+
+                    <button type="button" (click)="plantilla.get('tiempoLimiteActivo')?.setValue(true)"
+                      [style.background-color]="plantilla.get('tiempoLimiteActivo')?.value === true ? '#fef2f2' : 'white'"
+                      [style.border]="plantilla.get('tiempoLimiteActivo')?.value === true ? '2px solid #ef4444' : '1px solid #e2e8f0'"
+                      [style.color]="plantilla.get('tiempoLimiteActivo')?.value === true ? '#991b1b' : '#475569'" style="
+                        display: flex; align-items: center; gap: 12px;
+                        padding: 12px 16px; border-radius: 12px;
+                        font-size: 14px; font-weight: 600;
+                        cursor: pointer; transition: all 0.2s ease-in-out; width: 100%;
+                      ">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width: 20px; height: 20px; flex-shrink: 0">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      Activar tiempo límite
+                    </button>
+                  </div>
+
+                  <!-- Configuración de minutos cuando está activo -->
+                  <div *ngIf="plantilla.get('tiempoLimiteActivo')?.value === true" style="margin-top: 20px;">
+                    <label style="
+                      display: block; font-size: 14px; font-weight: 600;
+                      color: #334155; margin-bottom: 8px;
+                    ">⏱️ Duración máxima (en minutos)</label>
+                    <input type="number" formControlName="tiempoLimiteMinutos" min="1" max="480" placeholder="Ej: 30"
+                      style="
+                        background: #f8fafc; border: 1px solid #e2e8f0;
+                        padding: 12px 18px; border-radius: 12px;
+                        font-size: 16px; color: #1e293b; outline: none;
+                        width: 120px; font-weight: 600;
+                        transition: border-color 0.2s;
+                      " />
+                    <span style="font-size: 14px; color: #64748b; margin-left: 8px;">minutos</span>
+
+                    <!-- Toggle: Mostrar reloj al usuario -->
+                    <div style="
+                      margin-top: 18px; padding: 16px;
+                      background: #f8fafc; border: 1px solid #e2e8f0;
+                      border-radius: 12px; display: flex; align-items: center;
+                      justify-content: space-between; gap: 12px;
+                    ">
+                      <div style="flex: 1;">
+                        <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                          👁️ Mostrar reloj al evaluado
+                        </div>
+                        <div style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                          Si desactivas esta opción, el candidato no verá el contador de tiempo en pantalla, pero el
+                          límite seguirá activo internamente.
+                        </div>
+                      </div>
+                      <label style="
+                        position: relative; display: inline-block;
+                        width: 48px; height: 26px; flex-shrink: 0; cursor: pointer;
+                      ">
+                        <input type="checkbox" formControlName="mostrarReloj"
+                          style="opacity: 0; width: 0; height: 0;" />
+                        <span [style.background]="plantilla.get('mostrarReloj')?.value ? '#22c55e' : '#cbd5e1'" style="
+                            position: absolute; cursor: pointer;
+                            top: 0; left: 0; right: 0; bottom: 0;
+                            border-radius: 26px; transition: background 0.3s;
+                          ">
+                          <span
+                            [style.transform]="plantilla.get('mostrarReloj')?.value ? 'translateX(22px)' : 'translateX(2px)'"
+                            style="
+                              position: absolute; content: '';
+                              height: 22px; width: 22px;
+                              left: 0; top: 2px;
+                              background-color: white; border-radius: 50%;
+                              transition: transform 0.3s;
+                              box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                            "></span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <div style="
+                      margin-top: 14px;
+                      padding: 14px 16px;
+                      background: #fef2f2;
+                      border: 1px solid #fecaca;
+                      border-radius: 10px;
+                      font-size: 13px;
+                      color: #991b1b;
+                      line-height: 1.6;
+                    ">
+                      ⚠️ <strong>Importante:</strong> Al activar el tiempo límite, el candidato verá una pantalla
+                      informativa
+                      antes de iniciar. Una vez arrancado el conteo, al cumplirse el tiempo el test se enviará
+                      automáticamente con las respuestas registradas hasta ese momento.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+            </div> <!-- Fin columna izquierda -->
+
+            <!-- Columna Derecha: Previsualización en tiempo real -->
+            <div style="position: sticky; top: 24px;">
+              <div
+                style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+                <h4 style="
+                  margin-top: 0;
+                  color: #0f172a;
+                  font-size: 18px;
+                  font-weight: 700;
+                  border-bottom: 1px solid #f1f5f9;
+                  padding-bottom: 15px;
+                ">
+                  Previsualización Dinámica
+                  <span style="font-size:13px;font-weight:400;opacity:0.6;margin-left:5px;">(En tiempo real)</span>
+                </h4>
+
+                <div class="preview-mockup-window" style="margin-top: 20px">
+                  <div [style.background]="getLiveBackgroundStyle()" [style.background-size]="
+                      plantilla.get('backgroundTemplate')?.value === 'custom-image'
+                        ? 'cover'
+                        : 'auto'
+                    " [style.background-position]="
+                      plantilla.get('backgroundTemplate')?.value === 'custom-image'
+                        ? 'center'
+                        : '0 0'
+                    " style="
+                      position: relative;
+                      overflow: hidden;
+                      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                      border-radius: 12px;
+                      padding: 25px;
+                      border: 1px solid #e2e8f0;
+                      min-height: 450px;
+                    ">
+                    <!-- Blur/Opacity overlay for custom image -->
+                    <div *ngIf="
+                        plantilla.get('backgroundTemplate')?.value === 'custom-image' &&
+                        plantilla.get('customBackgroundUrl')?.value
+                      " style="
+                        position: absolute;
+                        top: -10%;
+                        left: -10%;
+                        width: 120%;
+                        height: 120%;
+                        z-index: 0;
+                        content: &quot;&quot;;
+                        pointer-events: none;
+                      " [style.background-color]="
+                        'rgba(255, 255, 255, ' +
+                        (100 - (plantilla.get('backgroundOpacity')?.value || 100)) / 100 +
+                        ')'
+                      " [style.backdrop-filter]="
+                        'blur(' + (plantilla.get('backgroundBlur')?.value || 0) + 'px)'
+                      " [style.-webkit-backdrop-filter]="
+                        'blur(' + (plantilla.get('backgroundBlur')?.value || 0) + 'px)'
+                      "></div>
+
+                    <div style="
+                        position: relative;
+                        z-index: 1;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                      ">
+                      <div style="flex-grow: 1; margin-right: 20px">
+                        <div style="
+                            height: 6px;
+                            background: rgba(226, 232, 240, 0.7);
+                            border-radius: 3px;
+                            overflow: hidden;
+                          ">
+                          <div [style.width]="'50%'" style="height: 100%" [style.background]="
+                              plantilla.get('themeColor')?.value || 'var(--accent)'
+                            "></div>
+                        </div>
+                      </div>
+                      <div style="
+                          background: rgba(241, 245, 249, 0.85);
+                          padding: 6px 12px;
+                          border-radius: 20px;
+                          font-size: 13px;
+                          color: #475569;
+                          font-weight: 600;
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                        ">
+                        Demostración
+                      </div>
+                    </div>
+
+                    <!-- ========== MODO SCROLL: Todas las preguntas ========== -->
+                    <div *ngIf="plantilla.get('presentationMode')?.value !== 'card'"
+                      style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 20px;">
+                      <!-- PREGUNTA 1 -->
+                      <div style="
+                          padding: 15px;
+                          border-radius: 8px;
+                          background: rgba(248, 250, 252, 0.85);
+                          border: 1px solid rgba(226, 232, 240, 0.7);
+                          backdrop-filter: blur(8px);
+                        ">
+                        <strong style="color: #334155; font-size: 16px">1. ¿Cómo calificaría nuestro servicio general en
+                          la última semana?</strong>
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" /> Excelente
+                          </div>
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" /> Bueno o Muy Bueno
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- PREGUNTA 2 -->
+                      <div style="
+                          padding: 15px;
+                          border-radius: 8px;
+                          background: rgba(248, 250, 252, 0.85);
+                          border: 1px solid rgba(226, 232, 240, 0.7);
+                          backdrop-filter: blur(8px);
+                        ">
+                        <strong style="color: #334155; font-size: 16px">2. ¿Recomendaría nuestros servicios a un colega
+                          o amigo?</strong>
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" checked /> Definitivamente Sí
+                          </div>
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" /> Probablemente
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style="display: flex; justify-content: flex-end;">
+                        <button type="button" [style.background]="
+                            plantilla.get('themeColor')?.value || 'var(--accent)'
+                          "
+                          style="border: none; border-radius: 8px; padding: 10px 20px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                          Finalizar y Enviar
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- ========== MODO CARD: Una pregunta a la vez ========== -->
+                    <div *ngIf="plantilla.get('presentationMode')?.value === 'card'"
+                      style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px;">
+                      <!-- Pregunta única visible -->
+                      <div style="
+                          padding: 20px;
+                          border-radius: 12px;
+                          background: rgba(248, 250, 252, 0.9);
+                          border: 1px solid rgba(226, 232, 240, 0.7);
+                          backdrop-filter: blur(8px);
+                          min-height: 180px;
+                        ">
+                        <strong style="color: #334155; font-size: 16px">1. ¿Cómo calificaría nuestro servicio general en
+                          la última semana?</strong>
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" /> Excelente
+                          </div>
+                          <div
+                            style="padding: 10px 15px; background: rgba(255,255,255,0.9); border: 1px solid rgba(203,213,225,0.7); border-radius: 6px; color: #475569; font-size: 14px;">
+                            <input type="radio" disabled style="margin-right: 8px" /> Bueno o Muy Bueno
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Navegación de tarjetas -->
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <button type="button" disabled style="
+                            border: 1px solid #e2e8f0;
+                            border-radius: 8px;
+                            padding: 8px 16px;
+                            background: #f8fafc;
+                            color: #94a3b8;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: not-allowed;
+                          ">← Anterior</button>
+                        <span style="font-size: 13px; color: #64748b; font-weight: 600;">1 / 2</span>
+                        <button type="button" [style.background]="
+                            plantilla.get('themeColor')?.value || 'var(--accent)'
+                          "
+                          style="border: none; border-radius: 8px; padding: 8px 16px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                          Siguiente →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div> <!-- Fin preview card -->
+            </div> <!-- Fin columna derecha sticky -->
+          </div> <!-- Fin grid -->
+        </div>
+      </div>
+      </div> <!-- Fin Paso 5: Diseño Visual -->
+
+      <!-- PASO 6: RESULTADOS Y PUNTUACIÓN -->
+      <div *ngIf="currentStep === 6" formGroupName="resultados">
+        <div class="card-title">🏆 Paso 6: Puntuación y Resultados</div>
+
+        <div style="
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+          ">
+          <div style="flex: 1">
+            <label style="font-weight: 600; display: block; margin-bottom: 10px">Evaluación por Tiempo</label>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <input type="checkbox" formControlName="evaluaTiempo" id="evalT" />
+              <label for="evalT" style="margin: 0">Descontar puntos si se demora demasiado</label>
+            </div>
+          </div>
+          <div style="flex: 1" *ngIf="resultados.get('evaluaTiempo')?.value">
+            <label style="font-weight: 600; display: block; margin-bottom: 10px">Peso del Tiempo (%)</label>
+            <input type="number" class="form-control" formControlName="pesoTiempo" placeholder="Ej: 20" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 15px;
+            ">
+            <label style="font-weight: 600; font-size: 18px; margin: 0">Clasificación de Puntajes</label>
+            <button type="button" class="btn-outline" (click)="agregarRango()">
+              + Añadir Rango
+            </button>
+          </div>
+
+          <div class="rangos-container" formArrayName="rangosPuntaje">
+            <div *ngFor="let rng of rangosPuntaje.controls; let i = index" [formGroupName]="i"
+              style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; margin-bottom: 16px;">
+
+              <!-- Fila 1: Título del resultado -->
+              <div style="margin-bottom: 16px;">
+                <label
+                  style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
+                  🏷️ Título del resultado
+                </label>
+                <input type="text" class="form-control" formControlName="resultadoAsociado"
+                  placeholder="Ej: Nivel Avanzado / Competente"
+                  style="font-size: 17px; font-weight: 700; color: #0f172a; padding: 14px 18px;" />
+                <span *ngIf="
+                    rng.get('resultadoAsociado')?.invalid &&
+                    rng.get('resultadoAsociado')?.touched
+                  " class="text-red">⚠️ El título es obligatorio</span>
+              </div>
+
+              <!-- Fila 2: Min, Max y botón Eliminar -->
+              <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; flex-direction: column; flex: 1;">
+                  <label
+                    style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Desde
+                    %</label>
+                  <input type="number" class="form-control" formControlName="min" placeholder="0" />
+                  <span *ngIf="rng.get('min')?.invalid && rng.get('min')?.touched" class="text-red">⚠️ Requerido</span>
+                </div>
+                <div style="display: flex; flex-direction: column; flex: 1;">
+                  <label
+                    style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Hasta
+                    %</label>
+                  <input type="number" class="form-control" formControlName="max" placeholder="100" />
+                  <span *ngIf="rng.get('max')?.invalid && rng.get('max')?.touched" class="text-red">⚠️ Requerido</span>
+                </div>
+                <div style="display: flex; align-items: flex-end; padding-bottom: 4px;">
+                  <button *ngIf="i > 0" type="button" class="btn-danger" (click)="removerRango(i)"
+                    style="padding: 10px 14px; border-radius: 10px;">
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <!-- Fila 3: Descripción del resultado -->
+              <div>
+                <label
+                  style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
+                  📝 Descripción del resultado
+                </label>
+                <textarea class="form-control" formControlName="descripcionResultado"
+                  placeholder="Explica al candidato qué significa este resultado. Ej: 'Has demostrado un dominio sólido de las competencias evaluadas, mostrando capacidad analítica y toma de decisiones...'"
+                  style="min-height: 80px; resize: vertical; font-size: 14px; line-height: 1.5;"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 40px">
+          <label style="font-weight: 600; font-size: 18px">Métodos de Entrega de Resultados al Finalizar</label>
+          <div class="metodos-pills">
+            <div class="pill" *ngFor="let m of metodosDisponibles" [class.active]="
+                resultados.get('metodosEntrega')?.value?.includes(m)
+              " (click)="toggleMetodo(m)">
+              {{ m }}
+            </div>
+          </div>
+
+          <!-- Configuraciones específicas por método de entrega -->
+          <div formGroupName="metodosConfig" style="
+              margin-top: 25px;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            ">
+            <!-- Block for PDF -->
+            <div *ngIf="resultados.get('metodosEntrega')?.value?.includes('PDF')" class="method-config-box">
+              <label>📄 Adjuntar Reporte PDF (Sube o arrastra el archivo)</label>
+              <input type="file" class="form-control" formControlName="pdfCarga" accept=".pdf" />
+            </div>
+
+            <!-- Block for Link -->
+            <div *ngIf="resultados.get('metodosEntrega')?.value?.includes('Link')" class="method-config-box">
+              <label>🔗 URL de Redirección (Link)</label>
+              <input type="url" class="form-control" formControlName="linkUrl"
+                placeholder="https://ejemplo.com/recursos" />
+            </div>
+
+            <!-- Block for Email -->
+            <div *ngIf="resultados.get('metodosEntrega')?.value?.includes('Email')" class="method-config-box">
+              <label>✉️ Plantilla o Mensaje de Email Adicional</label>
+              <textarea class="form-control" formControlName="emailPlantilla" rows="3"
+                placeholder="Escribe el mensaje que acompañará los resultados por correo..."></textarea>
+            </div>
+
+            <!-- Block for Certificado QR -->
+            <div *ngIf="
+                resultados
+                  .get('metodosEntrega')
+                  ?.value?.includes('CertificadoQR')
+              " class="method-config-box">
+              <label>🏅 Subir Diseño Base de Certificado (Imagen/PDF)</label>
+              <input type="file" class="form-control" formControlName="qrCarga" accept=".jpg,.png,.pdf" />
+            </div>
+
+            <!-- Block for Graficos -->
+            <div *ngIf="
+                resultados.get('metodosEntrega')?.value?.includes('Graficos')
+              " class="method-config-box">
+              <label>📊 Configuración de Gráficos a Mostrar</label>
+              <select class="form-control" formControlName="graficosConfig">
+                <option value="Radar">Radar Comparativo</option>
+                <option value="Barras">Gráfico de Barras</option>
+                <option value="Pastel">Gráfico de Pastel</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 7: PANTALLA FINAL -->
+      <div *ngIf="currentStep === 7">
+        <div class="card-title">🏁 Paso 7: Presentación de Resultados</div>
+        <p style="color: #64748b; margin: -10px 0 24px; font-size: 14px;">
+          Selecciona cómo se presentarán los resultados al candidato y personaliza el contenido.
+        </p>
+
+        <!-- Template Selector -->
+        <div style="margin-bottom: 28px;">
+          <label style="font-weight: 700; font-size: 16px; color: #1e293b; display: block; margin-bottom: 16px;">
+            📐 Elige una plantilla de resultados
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+
+            <!-- Template 1: Testea Default -->
+            <div (click)="pantallaFinal.templateResultado = 'testea-default'"
+              style="cursor: pointer; border-radius: 14px; padding: 3px; transition: all 0.2s;"
+              [style.border]="pantallaFinal.templateResultado === 'testea-default' ? '2px solid #0d9488' : '2px solid #e2e8f0'"
+              [style.background]="pantallaFinal.templateResultado === 'testea-default' ? '#f0fdfa' : 'white'">
+              <div
+                style="height: 110px; border-radius: 11px; overflow: hidden; display: flex; background: #f0f2f5; padding: 8px;">
+                <div
+                  style="width: 35%; background: linear-gradient(160deg, #e8f5f2, #d1ecf5, #e0e7ff); border-radius: 6px 0 0 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px;">
+                  <div
+                    style="width: 18px; height: 18px; border-radius: 5px; background: rgba(255,255,255,0.7); margin-bottom: 4px;">
+                  </div>
+                  <div
+                    style="width: 80%; height: 4px; background: rgba(255,255,255,0.5); border-radius: 2px; margin-bottom: 2px;">
+                  </div>
+                  <div style="width: 50%; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px;"></div>
+                </div>
+                <div
+                  style="flex: 1; background: white; border-radius: 0 6px 6px 0; padding: 8px; display: flex; flex-direction: column; gap: 4px;">
+                  <div style="width: 70%; height: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+                  <div style="width: 100%; height: 3px; background: #f1f5f9; border-radius: 2px;"></div>
+                  <div style="width: 90%; height: 3px; background: #f1f5f9; border-radius: 2px;"></div>
+                  <div style="flex:1;"></div>
+                  <div style="display: flex; gap: 3px;">
+                    <div
+                      style="flex: 1; height: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px;">
+                    </div>
+                    <div style="flex: 1; height: 10px; background: #0f172a; border-radius: 3px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding: 10px 8px 8px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Testea Estándar</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Dos columnas con hero</div>
+              </div>
+            </div>
+
+            <!-- Template 2: Minimal Clean -->
+            <div (click)="pantallaFinal.templateResultado = 'minimal-clean'"
+              style="cursor: pointer; border-radius: 14px; padding: 3px; transition: all 0.2s;"
+              [style.border]="pantallaFinal.templateResultado === 'minimal-clean' ? '2px solid var(--accent)' : '2px solid #e2e8f0'"
+              [style.background]="pantallaFinal.templateResultado === 'minimal-clean' ? '#eff6ff' : 'white'">
+              <div
+                style="height: 110px; border-radius: 11px; overflow: hidden; background: white; padding: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid #f1f5f9;">
+                <div
+                  style="width: 30px; height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent)); border-radius: 2px;">
+                </div>
+                <div style="width: 60%; height: 4px; background: #1e293b; border-radius: 2px; margin-top: 4px;"></div>
+                <div style="width: 40%; height: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+                <div style="width: 80%; height: 3px; background: #f1f5f9; border-radius: 2px; margin-top: 4px;"></div>
+                <div style="width: 75%; height: 3px; background: #f1f5f9; border-radius: 2px;"></div>
+                <div style="width: 50%; height: 10px; background: #1e293b; border-radius: 3px; margin-top: 6px;"></div>
+              </div>
+              <div style="padding: 10px 8px 8px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Minimalista</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Columna única centrada</div>
+              </div>
+            </div>
+
+            <!-- Template 3: Certificate -->
+            <div (click)="pantallaFinal.templateResultado = 'certificate'"
+              style="cursor: pointer; border-radius: 14px; padding: 3px; transition: all 0.2s;"
+              [style.border]="pantallaFinal.templateResultado === 'certificate' ? '2px solid var(--accent)' : '2px solid #e2e8f0'"
+              [style.background]="pantallaFinal.templateResultado === 'certificate' ? '#fffbeb' : 'white'">
+              <div
+                style="height: 110px; border-radius: 11px; overflow: hidden; background: #fefce8; padding: 8px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  style="width: 85%; height: 85%; border: 2px solid #d4a574; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; padding: 6px;">
+                  <div style="font-size: 8px; color: var(--accent); font-weight: 700; letter-spacing: 1px;">★ CERTIFICADO ★
+                  </div>
+                  <div style="width: 60%; height: 4px; background: #1e293b; border-radius: 2px;"></div>
+                  <div style="width: 40%; height: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+                  <div style="width: 20px; height: 1px; background: #d4a574; margin: 2px 0;"></div>
+                  <div style="width: 70%; height: 3px; background: #f1f5f9; border-radius: 2px;"></div>
+                </div>
+              </div>
+              <div style="padding: 10px 8px 8px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Certificado</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Estilo diploma elegante</div>
+              </div>
+            </div>
+
+            <!-- Template 4: Score Focus -->
+            <div (click)="pantallaFinal.templateResultado = 'score-focus'"
+              style="cursor: pointer; border-radius: 14px; padding: 3px; transition: all 0.2s;"
+              [style.border]="pantallaFinal.templateResultado === 'score-focus' ? '2px solid var(--accent)' : '2px solid #e2e8f0'"
+              [style.background]="pantallaFinal.templateResultado === 'score-focus' ? '#f5f3ff' : 'white'">
+              <div
+                style="height: 110px; border-radius: 11px; overflow: hidden; background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+                <div
+                  style="width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                  <div style="font-size: 10px; font-weight: 900; color: white;">85</div>
+                </div>
+                <div
+                  style="width: 50%; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; margin-top: 4px;">
+                </div>
+                <div style="width: 70%; height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+              </div>
+              <div style="padding: 10px 8px 8px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Score Focus</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Puntaje como protagonista</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid: Options + Preview -->
+        <div style="display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start;">
+
+          <!-- Columna Izquierda: Opciones -->
+
+          <!-- Card: Opciones de visualización -->
+          <div style="background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+            <h4 style="margin: 0 0 16px; color: #1e293b; font-size: 16px; font-weight: 700;">⚙️ Opciones</h4>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div><strong style="font-size: 14px; color: #1e293b;">Mostrar puntaje</strong>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: #94a3b8;">El candidato verá su resultado numérico
+                  </p>
+                </div>
+                <button type="button" (click)="pantallaFinal.mostrarPuntaje = !pantallaFinal.mostrarPuntaje"
+                  style="width: 48px; height: 28px; border-radius: 14px; border: none; cursor: pointer; transition: all 0.3s; position: relative;"
+                  [style.background]="pantallaFinal.mostrarPuntaje ? 'var(--accent)' : '#cbd5e1'">
+                  <div
+                    style="width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 3px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                    [style.left]="pantallaFinal.mostrarPuntaje ? '23px' : '3px'"></div>
+                </button>
+              </div>
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div><strong style="font-size: 14px; color: #1e293b;">Botón compartir</strong>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: #94a3b8;">Permite compartir la evaluación</p>
+                </div>
+                <button type="button"
+                  (click)="pantallaFinal.mostrarBotonCompartir = !pantallaFinal.mostrarBotonCompartir"
+                  style="width: 48px; height: 28px; border-radius: 14px; border: none; cursor: pointer; transition: all 0.3s; position: relative;"
+                  [style.background]="pantallaFinal.mostrarBotonCompartir ? 'var(--accent)' : '#cbd5e1'">
+                  <div
+                    style="width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 3px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                    [style.left]="pantallaFinal.mostrarBotonCompartir ? '23px' : '3px'"></div>
+                </button>
+              </div>
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div><strong style="font-size: 14px; color: #1e293b;">Descargar PDF</strong>
+                  <p style="margin: 2px 0 0; font-size: 12px; color: #94a3b8;">Permite descargar resultados en PDF</p>
+                </div>
+                <button type="button" (click)="pantallaFinal.mostrarDescargarPDF = !pantallaFinal.mostrarDescargarPDF"
+                  style="width: 48px; height: 28px; border-radius: 14px; border: none; cursor: pointer; transition: all 0.3s; position: relative;"
+                  [style.background]="pantallaFinal.mostrarDescargarPDF ? 'var(--accent)' : '#cbd5e1'">
+                  <div
+                    style="width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 3px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                    [style.left]="pantallaFinal.mostrarDescargarPDF ? '23px' : '3px'"></div>
+                </button>
+              </div>
+              <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;">
+                  <div><strong style="font-size: 14px; color: #1e293b;">Botón de llamado a la acción</strong>
+                    <p style="margin: 2px 0 0; font-size: 12px; color: #94a3b8;">Redirige al candidato a una URL
+                      personalizada</p>
+                  </div>
+                  <button type="button" (click)="pantallaFinal.mostrarBotonCTA = !pantallaFinal.mostrarBotonCTA"
+                    style="width: 48px; height: 28px; border-radius: 14px; border: none; cursor: pointer; transition: all 0.3s; position: relative;"
+                    [style.background]="pantallaFinal.mostrarBotonCTA ? 'var(--accent)' : '#cbd5e1'">
+                    <div
+                      style="width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 3px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                      [style.left]="pantallaFinal.mostrarBotonCTA ? '23px' : '3px'"></div>
+                  </button>
+                </div>
+                <div *ngIf="pantallaFinal.mostrarBotonCTA"
+                  style="padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px;">
+                  <div>
+                    <label
+                      style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px;">Texto
+                      del botón</label>
+                    <input type="text" class="form-control" [(ngModel)]="pantallaFinal.ctaTexto"
+                      [ngModelOptions]="{standalone: true}" placeholder="Ej: Visitar sitio web"
+                      style="font-size: 14px; padding: 10px 14px;" />
+                  </div>
+                  <div>
+                    <label
+                      style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px;">URL
+                      de destino</label>
+                    <input type="url" class="form-control" [(ngModel)]="pantallaFinal.ctaUrl"
+                      [ngModelOptions]="{standalone: true}" placeholder="https://ejemplo.com"
+                      style="font-size: 14px; padding: 10px 14px;" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Preview en vivo -->
+          <div style="position: sticky; top: 24px;">
+            <div
+              style="background: white; border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <span
+                style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 12px;">👁️
+                Vista previa</span>
+
+              <!-- PREVIEW: Testea Default -->
+              <div *ngIf="pantallaFinal.templateResultado === 'testea-default'"
+                style="background: #f0f2f5; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; min-height: 380px; padding: 14px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  style="width: 100%; display: flex; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06);">
+                  <div
+                    style="width: 38%; padding: 20px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: linear-gradient(160deg, #e8f5f2, #d1ecf5, #e0e7ff);">
+                    <div
+                      style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; color: #0d9488;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        style="width:18px;height:18px;">
+                        <path
+                          d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+                        <path
+                          d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+                      </svg>
+                    </div>
+                    <div
+                      style="font-size: 11px; font-weight: 700; color: #134e4a; line-height: 1.3; margin-bottom: 6px;">
+                      {{ rangosPuntaje.length > 0 ? rangosPuntaje.at(0).get('resultadoAsociado')?.value || 'Título
+                      resultado' : 'Título resultado' }}</div>
+                    <div
+                      style="padding: 2px 8px; border-radius: 50px; background: rgba(255,255,255,0.6); color: #0d9488; font-size: 7px; font-weight: 600; text-transform: uppercase;">
+                      Resultado</div>
+                  </div>
+                  <div style="flex: 1; padding: 16px 14px; display: flex; flex-direction: column; font-size: 10px;">
+                    <div *ngIf="pantallaFinal.mostrarPuntaje" style="margin-bottom: 8px;"><span
+                        style="padding: 2px 8px; border-radius: 50px; background: #f0fdf4; color: #16a34a; font-size: 9px; font-weight: 700; border: 1px solid #bbf7d0;">85
+                        / 100</span></div>
+                    <div
+                      style="font-size: 9px; color: #475569; line-height: 1.5; flex: 1; margin-bottom: 8px; overflow: hidden; max-height: 120px;">
+                      {{ rangosPuntaje.length > 0 ? (rangosPuntaje.at(0).get('descripcionResultado')?.value ||
+                      'Descripción del resultado...') : 'Descripción del resultado...' }}</div>
+                    <div style="display: flex; gap: 4px;">
+                      <div *ngIf="pantallaFinal.mostrarBotonCompartir"
+                        style="flex:1; padding:5px; border-radius:5px; text-align:center; font-size:8px; font-weight:600; color:#475569; border:1px solid #e2e8f0;">
+                        Compartir</div>
+                      <div *ngIf="pantallaFinal.mostrarDescargarPDF"
+                        style="flex:1; padding:5px; border-radius:5px; text-align:center; font-size:8px; font-weight:600; color:white; background:#0f172a;">
+                        Descargar PDF</div>
+                    </div>
+                    <div *ngIf="pantallaFinal.mostrarBotonCTA" style="margin-top: 6px;">
+                      <div
+                        style="padding:5px; border-radius:5px; text-align:center; font-size:8px; font-weight:600; color:white; background:var(--accent);">
+                        {{ pantallaFinal.ctaTexto || 'Visitar sitio web' }}</div>
+                    </div>
+                    <div style="text-align: right; font-size: 7px; color: #cbd5e1; font-weight: 600; margin-top: 6px;">
+                      Testea Pro</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PREVIEW: Minimal Clean -->
+              <div *ngIf="pantallaFinal.templateResultado === 'minimal-clean'"
+                style="background: #fafbfc; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; min-height: 380px; padding: 14px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  style="width: 85%; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); text-align: center;">
+                  <div
+                    style="width: 40px; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent)); border-radius: 2px; margin: 0 auto 14px;">
+                  </div>
+                  <div style="font-size: 14px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">{{
+                    rangosPuntaje.length > 0 ? rangosPuntaje.at(0).get('resultadoAsociado')?.value || 'Título del
+                    resultado' : 'Título del resultado' }}</div>
+                  <div *ngIf="pantallaFinal.mostrarPuntaje"
+                    style="font-size: 10px; color: var(--accent); font-weight: 700; margin-bottom: 10px;">85 / 100 puntos
+                  </div>
+                  <div style="width: 30px; height: 1px; background: #e2e8f0; margin: 10px auto;"></div>
+                  <div
+                    style="font-size: 10px; color: #64748b; line-height: 1.6; text-align: left; margin-bottom: 14px; max-height: 100px; overflow: hidden;">
+                    {{ rangosPuntaje.length > 0 ? (rangosPuntaje.at(0).get('descripcionResultado')?.value ||
+                    'Descripción del resultado...') : 'Descripción del resultado...' }}</div>
+                  <div *ngIf="pantallaFinal.mostrarDescargarPDF"
+                    style="padding: 6px 16px; background: #1e293b; color: white; border-radius: 6px; font-size: 9px; font-weight: 600; display: inline-block;">
+                    Descargar PDF</div>
+                  <div *ngIf="pantallaFinal.mostrarBotonCTA"
+                    style="padding: 6px 16px; background: var(--accent); color: white; border-radius: 6px; font-size: 9px; font-weight: 600; display: inline-block; margin-top: 6px;">
+                    {{ pantallaFinal.ctaTexto || 'Visitar sitio web' }}</div>
+                </div>
+              </div>
+
+              <!-- PREVIEW: Certificate -->
+              <div *ngIf="pantallaFinal.templateResultado === 'certificate'"
+                style="background: #fefce8; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; min-height: 380px; padding: 14px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  style="width: 90%; background: white; border: 2px solid #d4a574; border-radius: 8px; padding: 24px; text-align: center;">
+                  <div
+                    style="font-size: 8px; color: var(--accent); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+                    ★ Certificado de Evaluación ★</div>
+                  <div style="width: 50px; height: 1px; background: #d4a574; margin: 0 auto 12px;"></div>
+                  <div style="font-size: 14px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">{{
+                    rangosPuntaje.length > 0 ? rangosPuntaje.at(0).get('resultadoAsociado')?.value || 'Título del
+                    resultado' : 'Título del resultado' }}</div>
+                  <div *ngIf="pantallaFinal.mostrarPuntaje"
+                    style="font-size: 20px; font-weight: 900; color: var(--accent); margin: 8px 0;">85<span
+                      style="font-size: 12px; color: #94a3b8;"> / 100</span></div>
+                  <div style="width: 40px; height: 1px; background: #d4a574; margin: 10px auto;"></div>
+                  <div
+                    style="font-size: 9px; color: #64748b; line-height: 1.5; text-align: left; max-height: 80px; overflow: hidden; margin-bottom: 12px;">
+                    {{ rangosPuntaje.length > 0 ? (rangosPuntaje.at(0).get('descripcionResultado')?.value ||
+                    'Descripción del resultado...') : 'Descripción del resultado...' }}</div>
+                  <div style="font-size: 8px; color: #94a3b8; margin-top: 10px;">{{ pantallaFinal.subtitulo || 'Gracias
+                    por tu participación' }}</div>
+                </div>
+              </div>
+
+              <!-- PREVIEW: Score Focus -->
+              <div *ngIf="pantallaFinal.templateResultado === 'score-focus'"
+                style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; min-height: 380px; padding: 14px; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 85%; text-align: center;">
+                  <div
+                    style="width: 70px; height: 70px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.15); margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 22px; font-weight: 900; color: white;">85</div>
+                  </div>
+                  <div
+                    style="font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+                    Tu puntuación</div>
+                  <div style="font-size: 13px; font-weight: 800; color: white; margin-bottom: 10px;">{{
+                    rangosPuntaje.length > 0 ? rangosPuntaje.at(0).get('resultadoAsociado')?.value || 'Título del
+                    resultado' : 'Título del resultado' }}</div>
+                  <div
+                    style="width: 30px; height: 2px; background: rgba(255,255,255,0.2); margin: 0 auto 10px; border-radius: 1px;">
+                  </div>
+                  <div
+                    style="font-size: 9px; color: rgba(255,255,255,0.6); line-height: 1.6; text-align: left; max-height: 80px; overflow: hidden; margin-bottom: 14px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                    {{ rangosPuntaje.length > 0 ? (rangosPuntaje.at(0).get('descripcionResultado')?.value ||
+                    'Descripción del resultado...') : 'Descripción del resultado...' }}</div>
+                  <div style="display: flex; gap: 6px; justify-content: center;">
+                    <div *ngIf="pantallaFinal.mostrarBotonCompartir"
+                      style="padding: 6px 14px; border-radius: 6px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2);">
+                      Compartir</div>
+                    <div *ngIf="pantallaFinal.mostrarDescargarPDF"
+                      style="padding: 6px 14px; border-radius: 6px; font-size: 9px; font-weight: 600; color: #1e1b4b; background: white;">
+                      Descargar PDF</div>
+                    <div *ngIf="pantallaFinal.mostrarBotonCTA"
+                      style="padding: 6px 14px; border-radius: 6px; font-size: 9px; font-weight: 600; color: white; background: var(--accent);">
+                      {{ pantallaFinal.ctaTexto || 'Visitar sitio web' }}</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PASO 8: ÉXITO -->
+      <div *ngIf="currentStep === 8" class="success-screen">
+        <div class="success-icon">✓</div>
+        <h2>¡Test Publicado Exitosamente!</h2>
+        <p style="
+            color: #64748b;
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+          ">
+          Tu instrumento está en vivo y la base de datos ha sincronizado tu
+          diseño, puntajes y preguntas parseadas.
+        </p>
+
+        <div class="success-actions" *ngIf="!generales.get('requierePin')?.value">
+          <button type="button" class="btn-primary btn-xl" (click)="previsualizarTest()">
+            👀 Probar Test
+          </button>
+          <button type="button" class="btn-outline btn-xl" (click)="compartirTest()">
+            🔗 Copiar Link
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 9: BORRADOR -->
+      <div *ngIf="currentStep === 9" class="success-screen">
+        <div class="success-icon" style="background: #f1f5f9; color: #475569; border-color: #cbd5e1">
+          💾
+        </div>
+        <h2 style="color: #334155">Test Guardado como Borrador</h2>
+        <p style="
+            color: #64748b;
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+          ">
+          Has progresado en tu instrumento. Fue agrupado silenciosamente en tu
+          gestor y guardado con éxito para que lo continúes publicando más
+          adelante.
+        </p>
+
+        <div class="success-actions">
+          <button type="button" class="btn-outline btn-xl" routerLink="/admin-home/tests" style="text-decoration: none">
+            🔙 Volver al Listado
+          </button>
+        </div>
+      </div>
+    </form>
+    <!-- Notificación de Error Toast -->
+    <div class="toast-error" *ngIf="errorMessage">
+      <div class="toast-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="toast-content">
+        <strong>Huy, ocurrió un error</strong>
+        <p>{{ errorMessage }}</p>
+      </div>
+      <button class="toast-close" type="button" (click)="errorMessage = null">
+        &times;
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTONES DE NAVEGACION INFERIOR -->
+  <div class="wizard-footer" *ngIf="currentStep < 8">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="btn-outline" (click)="prevStep()" [disabled]="currentStep === 1 || isSaving"
+        style="display: flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Atrás
+      </button>
+      <span style="font-size: 13px; color: #94a3b8; font-weight: 500;">
+        Paso {{ currentStep }} de 7
+        <span
+          style="margin-left: 6px; padding: 2px 8px; background: #f1f5f9; border-radius: 20px; font-size: 11px; font-weight: 700; color: #64748b;">
+          {{ ((currentStep / 7) * 100) | number:'1.0-0' }}%
+        </span>
+      </span>
+    </div>
+
+    <div style="display: flex; gap: 15px">
+      <!-- Guardar Cambios: visible en todo momento si estamos editando un test existente -->
+      <button class="btn-primary" style="background: var(--accent); display: flex; align-items: center; gap: 6px;"
+        *ngIf="testId && currentStep <= 7" (click)="guardarCambiosTest()" [disabled]="isSaving || isParsing">
+        <svg *ngIf="!isSaving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          style="width: 16px; height: 16px;">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        {{ isSaving ? "Guardando..." : "Guardar Progreso" }}
+      </button>
+
+      <!-- Guardar Borrador: visible en todo momento si es un test nuevo (sin ID en backend) -->
+      <button class="btn-outline"
+        style="border-color: var(--accent); color: var(--accent); background: #f0fdf4; display: flex; align-items: center; gap: 6px;"
+        *ngIf="!testId && currentStep <= 7" (click)="submitFullTest(true)" [disabled]="isSaving">
+        <svg *ngIf="!isSaving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          style="width: 16px; height: 16px;">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        {{ isSaving ? "Guardando..." : "Guardar Progreso" }}
+      </button>
+
+      <button class="btn-primary" *ngIf="currentStep < 7" (click)="nextStep()" [disabled]="isSaving || isParsing">
+        Siguiente
+      </button>
+
+      <button class="btn-primary" style="
+          background: linear-gradient(135deg, var(--accent), var(--accent));
+          padding: 10px 24px;
+          border-radius: 50px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 4px 15px rgba(59,130,246,0.35);
+          transition: all 0.3s;
+          border: none;
+          color: white;
+          cursor: pointer;
+        " *ngIf="currentStep === 7" (click)="submitFullTest(false)" [disabled]="isSaving">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z" />
+        </svg>
+        {{ isSaving ? "Publicando..." : "Publicar Test" }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Previsualización de Cuestionario -->
+<div class="modal-overlay" *ngIf="showPreviewModal" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  ">
+  <div class="modal-content" style="
+      background: white;
+      border-radius: 24px;
+      padding: 30px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      box-sizing: border-box;
+    ">
+    <div class="modal-header" style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+      ">
+      <h2 class="modal-title" style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0">
+        Previsualización de Evaluación
+      </h2>
+      <button class="modal-close" (click)="cerrarPrevisualizacion()" style="
+          background: transparent;
+          border: none;
+          font-size: 24px;
+          color: #94a3b8;
+          cursor: pointer;
+        ">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body" style="margin-bottom: 30px">
+      <!-- Mode badge -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <p style="color: #64748b; margin: 0;">
+          Así es como verán los participantes la evaluación:
+        </p>
+        <span style="
+          font-size: 11px; font-weight: 700; text-transform: uppercase;
+          padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px;"
+          [style.background]="plantilla.get('presentationMode')?.value === 'card' ? '#eff6ff' : '#f0fdf4'"
+          [style.color]="plantilla.get('presentationMode')?.value === 'card' ? '#1e40af' : '#166534'"
+          [style.border]="plantilla.get('presentationMode')?.value === 'card' ? '1px solid #bfdbfe' : '1px solid #bbf7d0'">
+          {{ plantilla.get('presentationMode')?.value === 'card' ? '🃏 Tarjeta por Tarjeta' : '📜 Scroll Continuo' }}
+        </span>
+      </div>
+
+      <div style="
+          background: #f8fafc;
+          padding: 25px;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          min-height: 280px;
+        " [style.border-top]="'4px solid ' + (plantilla.get('themeColor')?.value || 'var(--accent)')">
+
+        <!-- === MODO SCROLL: Todas las preguntas === -->
+        <ng-container *ngIf="plantilla.get('presentationMode')?.value !== 'card'">
+          <div *ngFor="let p of preguntasArray.controls; index as idx" style="
+              margin-bottom: 20px;
+              padding: 20px;
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            ">
+            <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 16px;">
+              {{ idx + 1 }}. {{ p.value.textoPregunta }}
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label *ngFor="let option of p.value.opciones" style="
+                display: flex; align-items: center; gap: 10px;
+                padding: 10px 14px; border-radius: 10px;
+                background: #f8fafc; border: 1px solid #e2e8f0;
+                font-size: 14px; color: #334155; cursor: pointer;
+                transition: all 0.15s;">
+                <input type="radio" [name]="'preview_q_' + idx" disabled
+                  style="accent-color: var(--color-primario, var(--accent));" />
+                {{ option.texto }}
+              </label>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- === MODO CARD: Una pregunta a la vez === -->
+        <ng-container *ngIf="plantilla.get('presentationMode')?.value === 'card'">
+          <!-- Progress bar -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 600; color: #64748b;">
+                Pregunta {{ previewQuestionIndex + 1 }} de {{ preguntasArray.length }}
+              </span>
+              <span style="font-size: 12px; font-weight: 700; color: var(--accent);">
+                {{ ((previewQuestionIndex + 1) / preguntasArray.length * 100) | number:'1.0-0' }}%
+              </span>
+            </div>
+            <div style="height: 6px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
+              <div style="height: 100%; border-radius: 6px; transition: width 0.4s ease;"
+                [style.width]="((previewQuestionIndex + 1) / preguntasArray.length * 100) + '%'"
+                [style.background]="plantilla.get('themeColor')?.value || 'var(--accent)'"></div>
+            </div>
+          </div>
+
+          <!-- Question card -->
+          <!-- Question card -->
+          <div *ngIf="preguntasArray.controls.length > 0" style="
+              padding: 28px;
+              background: white;
+              border-radius: 16px;
+              box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.06);
+            ">
+            <h4 style="margin: 0 0 20px 0; color: #1e293b; font-size: 18px; font-weight: 700; line-height: 1.4;">
+              {{ previewQuestionIndex + 1 }}. {{ preguntasArray.controls[previewQuestionIndex] ? preguntasArray.controls[previewQuestionIndex].value?.textoPregunta : '' }}
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <label
+              *ngFor="let option of (preguntasArray.controls[previewQuestionIndex] ? preguntasArray.controls[previewQuestionIndex].value?.opciones : []); let optIdx = index"
+                class="preview-option-card">
+                <div style="
+                  width: 22px; height: 22px; border-radius: 50%;
+                  border: 2px solid #cbd5e1; flex-shrink: 0;
+                "></div>
+                {{ option.texto }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Navigation buttons -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;"
+            *ngIf="plantilla.get('allowNavButtons')?.value !== false">
+            <button type="button" (click)="previewQuestionIndex = previewQuestionIndex - 1"
+              [disabled]="previewQuestionIndex === 0" style="
+                display: flex; align-items: center; gap: 6px;
+                padding: 10px 18px; border-radius: 10px;
+                border: 1px solid #e2e8f0; background: white;
+                color: #475569; font-weight: 600; font-size: 14px;
+                cursor: pointer; transition: all 0.2s;" [style.opacity]="previewQuestionIndex === 0 ? '0.4' : '1'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:16px;height:16px">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Anterior
+            </button>
+            <button type="button" (click)="previewQuestionIndex = previewQuestionIndex + 1"
+              [disabled]="previewQuestionIndex >= preguntasArray.length - 1" style="
+                display: flex; align-items: center; gap: 6px;
+                padding: 10px 18px; border-radius: 10px;
+                border: none; color: white;
+                font-weight: 600; font-size: 14px;
+                cursor: pointer; transition: all 0.2s;"
+              [style.background]="plantilla.get('themeColor')?.value || 'var(--accent)'"
+              [style.opacity]="previewQuestionIndex >= preguntasArray.length - 1 ? '0.4' : '1'">
+              Siguiente
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="width:16px;height:16px">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+          <!-- Auto-advance note when nav buttons are hidden -->
+          <div *ngIf="plantilla.get('allowNavButtons')?.value === false" style="
+            text-align: center; margin-top: 16px; font-size: 13px; color: #94a3b8;">
+            ⚡ Al seleccionar una respuesta, se avanza automáticamente
+          </div>
+        </ng-container>
+
+        <div *ngIf="preguntasArray.controls.length === 0"
+          style="color: #94a3b8; font-size: 13px; text-align: center; padding: 40px 0;">
+          No hay preguntas configuradas todavía.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+      ">
+      <button class="btn-cancelar" (click)="cerrarPrevisualizacion()" style="
+          background: transparent;
+          border: none;
+          color: #64748b;
+          font-weight: 600;
+          cursor: pointer;
+        ">
+        Cerrar
+      </button>
+      <button class="btn-success" (click)="submitFullTest(false)" [disabled]="isSaving" style="
+          background: #22c55e;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 50px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: all 0.2s;
+        ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          style="width: 18px; height: 18px; margin-right: 6px">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        {{ isSaving ? "Guardando..." : "Guardar y Publicar" }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Compartir -->
+<div class="modal-overlay" *ngIf="showShareModal" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  ">
+  <div class="modal-content" style="
+      max-width: 500px;
+      background: white;
+      border-radius: 24px;
+      padding: 30px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      box-sizing: border-box;
+    ">
+    <div class="modal-header" style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e2e8f0;
+      ">
+      <h2 class="modal-title" style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 20px;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0;
+        ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="width: 28px; height: 28px">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        ¡Evaluación Publicada!
+      </h2>
+      <button class="modal-close" (click)="cerrarShareModal()" style="
+          background: transparent;
+          border: none;
+          font-size: 24px;
+          color: #94a3b8;
+          cursor: pointer;
+        ">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body" style="margin-bottom: 30px">
+      <p style="color: #64748b; font-size: 15px">
+        Tu evaluación está lista. Compártela mediante el siguiente enlace único:
+      </p>
+      <div class="share-link-box" style="
+          display: flex;
+          gap: 10px;
+          margin-top: 20px;
+          box-sizing: border-box;
+          width: 100%;
+        ">
+        <input type="text" readonly [value]="currentSurveyUrl" style="
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            outline: none;
+            background: #f8fafc;
+            color: #475569;
+            width: 100%;
+            box-sizing: border-box;
+          " />
+        <button class="btn-copy" (click)="copiarEnlaceModal()" style="
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+          ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="
+              width: 16px;
+              height: 16px;
+              margin-right: 5px;
+              vertical-align: middle;
+            ">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          Copiar
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer" style="
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding-top: 20px;
+      ">
+      <button class="btn-primary" (click)="cerrarShareModal()" style="
+          width: 100%;
+          text-align: center;
+          justify-content: center;
+          background: var(--accent);
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 50px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+        ">
+        Ir al tablero principal
+      </button>
+    </div>
+  </div>
+</div>

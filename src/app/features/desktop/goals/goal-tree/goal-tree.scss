@@ -1,0 +1,379 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Goal Tree — Hierarchical Visualization
+// ═══════════════════════════════════════════
+
+.goal-tree-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+// — Page Header —
+.page-header {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+}
+
+.back-link {
+  display: block;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  text-decoration: none;
+  margin-bottom: $spacing-xs;
+  @include smooth;
+
+  &:hover { color: $color-accent-primary-light; }
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+}
+
+.header-actions {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  @include button-base;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  border-radius: 0;
+  background: transparent;
+  color: $color-text-muted;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+  }
+}
+
+.btn-primary {
+  @include button-primary;
+  text-decoration: none;
+}
+
+// — Tree Stats —
+.tree-stats {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 $spacing-md;
+  border-right: 1px solid $color-border-subtle;
+
+  &:last-child { border-right: none; }
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// ═══════════════════════════════════════
+// TREE VIEW
+// ═══════════════════════════════════════
+
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tree-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+// — Connector Lines —
+.tree-connector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: $spacing-sm;
+}
+
+.connector-line {
+  width: 20px;
+  height: 2px;
+  background: $color-border-default;
+}
+
+.connector-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $color-accent-primary;
+  flex-shrink: 0;
+}
+
+// — Tree Card —
+.tree-card {
+  flex: 1;
+  @include flex-between;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  @include smooth;
+  gap: $spacing-md;
+
+  &:hover {
+    background: $color-bg-hover;
+    border-color: $color-border-subtle;
+  }
+
+  &.depth-0 {
+    background: $color-bg-secondary;
+    border-color: $color-border-subtle;
+    padding: $spacing-md;
+    border-radius: $radius-lg;
+    margin-bottom: 2px;
+    box-shadow: $shadow-inset;
+
+    &:hover {
+      border-color: $color-border-default;
+      box-shadow: $shadow-md;
+    }
+  }
+}
+
+.tree-card-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
+.tree-mode {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.tree-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tree-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  @include text-truncate;
+
+  .depth-0 & {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.tree-meta-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.tree-tasks {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+.tree-card-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.tree-progress-bar {
+  width: 100px;
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  @include mobile-only {
+    width: 60px;
+  }
+}
+
+.tree-progress-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: width 600ms ease;
+}
+
+.tree-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  min-width: 32px;
+  text-align: right;
+}
+
+// ═══════════════════════════════════════
+// MAP VIEW
+// ═══════════════════════════════════════
+
+.map-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+}
+
+.map-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.map-root-node {
+  width: 100%;
+  max-width: 400px;
+}
+
+.map-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  text-decoration: none;
+  color: inherit;
+  @include smooth;
+
+  &.root {
+    background: $color-bg-secondary;
+    border: 1px solid $color-border-accent;
+    box-shadow: $shadow-glow-primary;
+    flex-direction: column;
+    text-align: center;
+    gap: $spacing-sm;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
+    }
+  }
+
+  &.child {
+    background: $color-bg-secondary;
+    border: 1px solid $color-border-subtle;
+    min-width: 180px;
+
+    &:hover {
+      border-color: $color-border-default;
+      background: $color-bg-hover;
+    }
+  }
+}
+
+.map-icon {
+  font-size: 1.25rem;
+
+  .root & { font-size: 1.5rem; }
+}
+
+.map-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  @include text-truncate;
+  flex: 1;
+
+  .root & {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.map-bar {
+  width: 100%;
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.map-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-accent-primary, $color-accent-primary-light);
+  border-radius: $radius-full;
+}
+
+.map-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  flex-shrink: 0;
+}
+
+.map-children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  justify-content: center;
+  padding-left: $spacing-xl;
+  border-left: 2px solid $color-border-subtle;
+  margin-left: 0;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -$spacing-md;
+    left: -2px;
+    width: 2px;
+    height: $spacing-md;
+    background: $color-border-subtle;
+  }
+}

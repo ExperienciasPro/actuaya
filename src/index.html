@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>ActuaYa — Productividad con Enfoque</title>
+    <meta name="description" content="Planifica en el escritorio, ejecuta en el móvil. Tu sistema de productividad y gestión comercial con cero fricción." />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F0FAF7" />
+    <meta name="color-scheme" content="light" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <base href="/" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/apple-touch-icon-v4.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/assets/icons/apple-touch-icon-v4.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preconnect" href="https://api.actuaya.co" />
+    <link rel="dns-prefetch" href="https://api.actuaya.co" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <um-root>
+      <!-- SPLASH SCREEN: Se muestra inmediatamente al abrir la PWA mientras Angular procesa el Javascript -->
+      <style>
+        .pwa-splash {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #F0FAF7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 999999;
+          font-family: sans-serif;
+        }
+        .pwa-splash img {
+          width: 140px;
+          height: auto;
+          animation: splashPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes splashPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(0.95); }
+        }
+      </style>
+      <div class="pwa-splash">
+        <img src="/assets/icons/logo-full.png" alt="Cargando..." />
+      </div>
+    </um-root>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.project-create-page { max-width: 680px; margin: 0 auto; }
+.page-header { margin-bottom: $spacing-xl; h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 4px; } }
+.back-link { display: inline-block; font-size: 0.8125rem; color: $color-text-muted; text-decoration: none; margin-bottom: $spacing-sm; @include smooth; &:hover { color: $color-accent-primary-light; } }
+.header-subtitle { font-size: 0.875rem; color: $color-text-secondary; }
+
+.create-form { @include card($spacing-xl); display: flex; flex-direction: column; gap: $spacing-lg; }
+.form-section { display: flex; flex-direction: column; gap: $spacing-xs; position: relative; }
+.form-label { font-size: 0.8125rem; font-weight: 600; color: $color-text-primary; }
+.form-input { @include input-base; }
+.textarea { resize: vertical; min-height: 80px; }
+.char-count { position: absolute; right: 0; top: 0; font-size: 0.6875rem; color: $color-text-muted; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: $spacing-md; @include mobile-only { grid-template-columns: 1fr; } }
+
+// — Stages —
+.stages-list { display: flex; flex-direction: column; gap: $spacing-sm; }
+.stage-item { display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-sm; border-radius: $radius-md; background: $color-bg-tertiary; border-left: 3px solid; }
+.stage-order { width: 24px; height: 24px; border-radius: 50%; background: $color-bg-hover; @include flex-center; font-size: 0.75rem; font-weight: 700; color: $color-text-muted; flex-shrink: 0; }
+.stage-input { flex: 1; }
+.color-input { width: 32px; height: 32px; border: none; border-radius: $radius-sm; cursor: pointer; background: transparent; padding: 0; &::-webkit-color-swatch-wrapper { padding: 0; } &::-webkit-color-swatch { border: none; border-radius: 4px; } }
+.remove-btn { width: 28px; height: 28px; border-radius: $radius-sm; @include flex-center; font-size: 1.125rem; color: $color-text-muted; @include smooth; &:hover:not(:disabled) { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; } &:disabled { opacity: 0.3; cursor: not-allowed; } }
+.add-stage-btn { @include button-ghost; align-self: flex-start; margin-top: $spacing-xs; &:disabled { opacity: 0.4; cursor: not-allowed; } }
+
+.form-actions { display: flex; justify-content: flex-end; gap: $spacing-sm; padding-top: $spacing-lg; border-top: 1px solid $color-border-subtle; }
+.btn-primary { @include button-primary; text-decoration: none; }
+.btn-ghost { @include button-ghost; text-decoration: none; }

@@ -1,0 +1,252 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Field OT List — Mobile-First
+// ═══════════════════════════════════════════
+
+:host {
+  display: block;
+  min-height: 100%;
+  padding-bottom: 80px;
+}
+
+.ot-list-page {
+  padding: $spacing-md;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+// ─── Hero Header ───
+.ot-hero {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .hero-icon {
+    font-size: 2.4rem;
+    width: 56px;
+    height: 56px;
+    @include flex-center;
+    border-radius: $radius-lg;
+    background: linear-gradient(135deg, rgba(108, 60, 233, 0.12), rgba(0, 213, 146, 0.1));
+  }
+
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary, $color-text-primary);
+    margin: 0;
+  }
+
+  .hero-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary, $color-text-secondary);
+    margin: 2px 0 0;
+  }
+}
+
+// ─── Quick Create ───
+.quick-create {
+  margin-bottom: $spacing-md;
+}
+
+.btn-new-ot {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--border-default, $color-border-default);
+  border-radius: $radius-lg;
+  background: transparent;
+  color: $color-accent-primary;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  @include smooth;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(108, 60, 233, 0.06);
+  }
+}
+
+.create-form {
+  @include card;
+  margin-bottom: $spacing-lg;
+  @include flex-column;
+  gap: $spacing-sm;
+}
+
+.ot-input {
+  @include input-base;
+  font-size: 1rem;
+  padding: 14px $spacing-md;
+  border-radius: $radius-md;
+}
+
+.ot-textarea {
+  resize: none;
+  min-height: 56px;
+}
+
+.btn-submit {
+  @include button-primary;
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  border-radius: $radius-md;
+}
+
+// ─── Tab Bar ───
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: $spacing-md;
+  background: var(--bg-tertiary, $color-bg-tertiary);
+  border-radius: $radius-lg;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  background: transparent;
+  border-radius: $radius-md;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary, $color-text-secondary);
+  cursor: pointer;
+  @include smooth;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  &.active {
+    background: var(--bg-secondary, $color-bg-secondary);
+    color: $color-accent-primary;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.tab-count {
+  @include badge(rgba(108, 60, 233, 0.12), $color-accent-primary);
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  min-width: 18px;
+}
+
+.tab.active .tab-count {
+  background: $color-accent-primary;
+  color: #fff;
+}
+
+// ─── OT Card ───
+.ot-card-list {
+  @include flex-column;
+  gap: $spacing-sm;
+}
+
+.ot-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  @include card($spacing-md);
+  cursor: pointer;
+  border: 1px solid var(--border-subtle, $color-border-subtle);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-sm;
+  }
+}
+
+.card-top {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.card-time {
+  font-size: 0.7rem;
+  color: var(--text-muted, $color-text-muted);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, $color-text-primary);
+  margin: 0 0 4px;
+  @include text-truncate(2);
+}
+
+.card-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary, $color-text-secondary);
+  @include text-truncate(2);
+  margin: 0 0 $spacing-sm;
+}
+
+.card-footer {
+  @include flex-between;
+}
+
+.card-id {
+  font-size: 0.7rem;
+  color: var(--text-muted, $color-text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.card-arrow {
+  font-size: 1.1rem;
+  color: $color-accent-primary;
+  font-weight: 700;
+}
+
+// ─── Empty State ───
+.empty-state {
+  @include flex-column-center;
+  padding: $spacing-3xl $spacing-lg;
+  text-align: center;
+  color: var(--text-muted, $color-text-muted);
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-md;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    margin: 0 0 4px;
+    color: var(--text-secondary, $color-text-secondary);
+  }
+
+  p {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+}
+
+// ─── Animation ───
+.animate-fadeInUp {
+  animation: fadeInUp 300ms ease-out both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

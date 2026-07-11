@@ -1,0 +1,246 @@
+// ═══════════════════════════════════════════
+// ActuaYa — SCSS Mixins
+// ═══════════════════════════════════════════
+
+@use 'variables' as *;
+@use 'sass:color';
+
+// — Responsive Breakpoints —
+@mixin mobile-only {
+  @media (max-width: #{$bp-tablet - 1px}) { @content; }
+}
+
+@mixin tablet-up {
+  @media (min-width: $bp-tablet) { @content; }
+}
+
+@mixin desktop-up {
+  @media (min-width: $bp-desktop) { @content; }
+}
+
+@mixin wide-up {
+  @media (min-width: $bp-wide) { @content; }
+}
+
+// — Flexbox helpers —
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+// — Grid helpers —
+@mixin grid($columns: 1, $gap: $spacing-md) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+@mixin grid-auto-fill($min: 280px, $gap: $spacing-md) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min, 1fr));
+  gap: $gap;
+}
+
+// — Truncate text —
+@mixin text-truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// — Smooth transition —
+@mixin smooth($properties: all) {
+  transition: $properties $transition-base;
+}
+
+// — Card style —
+@mixin card($padding: $spacing-lg) {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: $padding;
+  box-shadow: $shadow-sm;
+  @include smooth;
+
+  &:hover {
+    border-color: $color-border-default;
+    box-shadow: $shadow-md;
+  }
+}
+
+// — Glass effect —
+@mixin glass($bg: $color-surface-glass) {
+  background: $bg;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid $color-border-subtle;
+}
+
+// — Button base —
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  @include smooth(all);
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// — Primary button —
+@mixin button-primary {
+  @include button-base;
+  background: $color-accent-primary;
+  color: #fff;
+  box-shadow: $shadow-glow-primary;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, $color-accent-primary 85%, white);
+    transform: translateY(-1px);
+    box-shadow: 0 0 30px $color-accent-primary-glow;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+// — Ghost button —
+@mixin button-ghost {
+  @include button-base;
+  background: transparent;
+  color: $color-text-secondary;
+  border: 1px solid $color-border-default;
+
+  &:hover:not(:disabled) {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+    border-color: $color-border-strong;
+  }
+}
+
+// — Interactive state —
+@mixin interactive {
+  cursor: pointer;
+  @include smooth;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// — Scrollbar (dark theme) —
+@mixin custom-scrollbar($width: 6px) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $color-border-default;
+    border-radius: $radius-full;
+
+    &:hover {
+      background: $color-border-strong;
+    }
+  }
+}
+
+// — Focus ring —
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $color-accent-primary;
+    outline-offset: 2px;
+  }
+}
+
+// — Input style —
+@mixin input-base {
+  width: 100%;
+  padding: 10px $spacing-md;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-default;
+  border-radius: $radius-md;
+  color: $color-text-primary;
+  font-size: 0.875rem;
+  @include smooth;
+  @include focus-ring;
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+
+  &:focus {
+    border-color: $color-accent-primary;
+    box-shadow: 0 0 0 3px $color-accent-primary-glow;
+    outline: none;
+  }
+}
+
+// — Badge —
+@mixin badge($bg: $color-accent-primary, $color: #fff) {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  background: $bg;
+  color: $color;
+}
+
+// — Skeleton loader —
+@mixin skeleton($height: 16px) {
+  height: $height;
+  border-radius: $radius-sm;
+  background: linear-gradient(90deg, $color-bg-tertiary 25%, $color-bg-hover 50%, $color-bg-tertiary 75%);
+  background-size: 400% 100%;
+  animation: skeletonWave 1.5s ease-in-out infinite;
+}

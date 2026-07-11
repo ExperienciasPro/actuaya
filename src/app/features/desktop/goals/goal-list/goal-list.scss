@@ -1,0 +1,663 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+// ═══════════════════════════════════════════
+// Goal List — Panoramic View
+// ═══════════════════════════════════════════
+
+.goal-list-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// — Page Header —
+.page-header {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+}
+
+.header-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.btn-primary {
+  @include button-primary;
+  text-decoration: none;
+}
+
+.btn-ghost {
+  @include button-ghost;
+  text-decoration: none;
+}
+
+// — Filters Bar —
+.filters-bar {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  flex-wrap: wrap;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-border-subtle;
+}
+
+.filter-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  @include button-base;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  font-size: 0.8125rem;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $color-text-muted;
+  border: 1px solid $color-border-subtle;
+
+  &:hover {
+    color: $color-text-primary;
+    border-color: $color-border-default;
+    background: $color-bg-hover;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+    border-color: rgba($color-accent-primary, 0.3);
+  }
+
+  &.mode.active {
+    background: rgba($color-accent-secondary, 0.12);
+    color: $color-accent-secondary-light;
+    border-color: rgba($color-accent-secondary, 0.25);
+
+    .chip-inline-progress {
+      background: rgba($color-accent-secondary-light, 0.2);
+    }
+  }
+}
+
+.chip-inline-progress {
+  width: 90px;
+  height: 8px;
+  background: rgba($color-text-muted, 0.2);
+  border-radius: $radius-full;
+  overflow: hidden;
+  display: flex;
+}
+
+.chip-inline-fill {
+  height: 100%;
+  background: currentColor;
+  border-radius: $radius-full;
+  transition: width 0.3s ease;
+}
+
+// — Goal Grid —
+.goal-grid {
+  @include grid-auto-fill(320px, $spacing-md);
+}
+
+// — Goal Card —
+.goal-card {
+  @include card($spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, $color-accent-primary, transparent);
+    opacity: 0;
+    transition: opacity $transition-base;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+.card-top {
+  @include flex-between;
+}
+
+.mode-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.goal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  text-decoration: none;
+  line-height: 1.3;
+  @include smooth;
+
+  &:hover {
+    color: $color-accent-primary-light;
+  }
+}
+
+.goal-desc {
+  font-size: 0.8125rem;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+// — Progress Section —
+.goal-progress-section {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm 0;
+}
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.progress-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.progress-bar-inline {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 12px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 2px;
+}
+
+// — Card Meta —
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+}
+
+.tags-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tag-chip {
+  padding: 1px 8px;
+  border-radius: $radius-full;
+  font-size: 0.625rem;
+  font-weight: 600;
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+  letter-spacing: 0.02em;
+}
+
+// — Card Actions —
+.card-actions {
+  display: flex;
+  gap: 4px;
+  padding-top: $spacing-sm;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.action-btn {
+  @include flex-center;
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-md;
+  font-size: 0.9rem;
+  color: $color-text-muted;
+  @include smooth;
+  text-decoration: none;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.danger:hover {
+    background: rgba($color-accent-danger, 0.12);
+    color: $color-accent-danger;
+  }
+}
+
+// ═══════════════════════════════════════
+// VIEW TOGGLE
+// ═══════════════════════════════════════
+.view-toggle {
+  display: flex;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  @include button-base;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  border-radius: 0;
+  background: transparent;
+  color: $color-text-muted;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: rgba($color-accent-primary, 0.15);
+    color: $color-accent-primary-light;
+  }
+}
+
+// ═══════════════════════════════════════
+// TREE STATS
+// ═══════════════════════════════════════
+.tree-stats {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 $spacing-md;
+  border-right: 1px solid $color-border-subtle;
+
+  &:last-child { border-right: none; }
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// ═══════════════════════════════════════
+// TREE VIEW
+// ═══════════════════════════════════════
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  padding: $spacing-md 0;
+}
+
+.tree-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-node.root-node {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  box-shadow: $shadow-sm;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $color-border-default;
+  }
+}
+
+.tree-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: $radius-lg;
+  background: $color-bg-secondary;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $color-bg-hover;
+    border-color: $color-border-default;
+    transform: translateX(4px);
+  }
+
+  &.depth-0 {
+    background: transparent;
+    padding: 0;
+    
+    &:hover {
+      background: transparent;
+      border-color: transparent;
+      transform: none;
+    }
+
+    .tree-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+  }
+}
+
+.tree-children-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+  padding-left: 32px;
+  gap: 12px;
+  position: relative;
+}
+
+.tree-child-wrapper {
+  position: relative;
+
+  &:not(.is-last)::before {
+    content: '';
+    position: absolute;
+    top: -16px; 
+    bottom: -12px; 
+    left: -16px;
+    width: 2px;
+    background: $color-border-default;
+  }
+
+  &.is-last::before {
+    content: '';
+    position: absolute;
+    top: -16px;
+    height: 44px; // Reaches down to middle of the card (16 + 28)
+    left: -16px;
+    width: 16px;
+    border-left: 2px solid $color-border-default;
+    border-bottom: 2px solid $color-border-default;
+    border-bottom-left-radius: 12px;
+  }
+
+  &:not(.is-last)::after {
+    content: '';
+    position: absolute;
+    top: 26px;
+    left: -16px;
+    width: 16px;
+    height: 2px;
+    background: $color-border-default;
+  }
+  
+  .tree-node-dot {
+    position: absolute;
+    top: 23px; 
+    left: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $color-accent-primary;
+    border: 2px solid $color-bg-primary;
+    z-index: 10;
+  }
+}
+
+.tree-card-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  min-width: 0;
+}
+
+.tree-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  background: $color-bg-tertiary;
+}
+
+.tree-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tree-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  @include text-truncate;
+}
+
+.tree-meta-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.tree-tasks {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+}
+
+.tree-card-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.tree-progress-bar {
+  width: 100px;
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  @include mobile-only {
+    width: 60px;
+  }
+}
+
+.tree-progress-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: width 600ms ease;
+}
+
+.tree-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  min-width: 32px;
+  text-align: right;
+}
+
+// ═══════════════════════════════════════
+// MAP VIEW
+// ═══════════════════════════════════════
+.map-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+}
+
+.map-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.map-root-node {
+  width: 100%;
+  max-width: 400px;
+}
+
+.map-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  text-decoration: none;
+  color: inherit;
+  @include smooth;
+
+  &.root {
+    background: $color-bg-secondary;
+    border: 1px solid $color-border-accent;
+    box-shadow: $shadow-glow-primary;
+    flex-direction: column;
+    text-align: center;
+    gap: $spacing-sm;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
+    }
+  }
+
+  &.child {
+    background: $color-bg-secondary;
+    border: 1px solid $color-border-subtle;
+    min-width: 180px;
+
+    &:hover {
+      border-color: $color-border-default;
+      background: $color-bg-hover;
+    }
+  }
+}
+
+.map-icon {
+  font-size: 1.25rem;
+
+  .root & { font-size: 1.5rem; }
+}
+
+.map-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  @include text-truncate;
+  flex: 1;
+
+  .root & {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.map-bar {
+  width: 100%;
+  height: 4px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.map-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-accent-primary, $color-accent-primary-light);
+  border-radius: $radius-full;
+}
+
+.map-pct {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  font-family: 'Space Grotesk', sans-serif;
+  flex-shrink: 0;
+}
+
+.map-children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  justify-content: center;
+  padding-left: $spacing-xl;
+  border-left: 2px solid $color-border-subtle;
+  margin-left: 0;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -$spacing-md;
+    left: -2px;
+    width: 2px;
+    height: $spacing-md;
+    background: $color-border-subtle;
+  }
+}
+

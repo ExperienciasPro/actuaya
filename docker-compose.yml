@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # SERVICIO 1: Base de Datos MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: actuaya-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=actuaya_db
+
+  # SERVICIO 2: NodeJS Backend
+  backend:
+    image: node:18-alpine
+    container_name: actuaya-backend
+    working_dir: /usr/src/app/backend
+    volumes:
+      - ./backend:/usr/src/app/backend
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && node server.js"
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/actuaya_db
+      - AUTH_TOKEN=um_api_2026
+
+  # SERVICIO 3: Angular Frontend
+  frontend:
+    image: node:18-alpine
+    container_name: actuaya-frontend
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "4200:4200"
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=development
+
+volumes:
+  mongodb_data:

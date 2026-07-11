@@ -1,0 +1,316 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.budget-page { max-width: 1200px; margin: 0 auto; }
+
+// ─── Header ──────────────────────────
+.bp-header {
+  @include flex-between;
+  margin-bottom: $spacing-xl;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+.header-left {
+  h1 { font-size: 1.75rem; font-weight: 700; }
+}
+.header-sub { font-size: 0.875rem; color: $color-text-muted; margin-top: 4px; }
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+  padding: 4px;
+}
+.year-btn {
+  width: 36px; height: 36px;
+  @include flex-center;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  @include smooth;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+}
+.year-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: $color-text-primary;
+  min-width: 56px;
+  text-align: center;
+}
+
+// ─── Summary Cards ───────────────────
+.summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  @include mobile-only { grid-template-columns: 1fr; }
+}
+.summary-card {
+  @include card($spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  position: relative;
+  overflow: hidden;
+}
+.sum-icon { font-size: 2rem; flex-shrink: 0; }
+.sum-info { display: flex; flex-direction: column; }
+.sum-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-text-muted;
+  font-weight: 600;
+}
+.sum-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: $color-text-primary;
+}
+.income-card  { border-left: 3px solid #00cec9; }
+.invest-card  { border-left: 3px solid #6c5ce7; }
+.balance-card {
+  border-left: 3px solid #00b894;
+  flex-wrap: wrap;
+  &.negative { border-left-color: #d63031; }
+  &.negative .sum-value { color: #d63031; }
+}
+.balance-bar {
+  width: 100%;
+  height: 6px;
+  background: $color-bg-tertiary;
+  border-radius: $radius-full;
+  margin-top: $spacing-xs;
+}
+.balance-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  background: linear-gradient(90deg, #00cec9, #6c5ce7);
+  @include smooth;
+}
+.balance-pct {
+  font-size: 0.6875rem;
+  color: $color-text-muted;
+  font-weight: 500;
+}
+
+// ─── Tables Grid ─────────────────────
+.tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  @include mobile-only { grid-template-columns: 1fr; }
+}
+.table-section {
+  @include card(0);
+  overflow: hidden;
+}
+.table-header {
+  @include flex-between;
+  padding: $spacing-md $spacing-lg;
+  h2 { font-size: 0.9375rem; font-weight: 700; }
+  &.income  { border-bottom: 2px solid #00cec9; }
+  &.invest  { border-bottom: 2px solid #6c5ce7; }
+}
+.table-total {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: $color-text-primary;
+}
+
+.table-body {
+  padding: $spacing-sm 0;
+}
+
+// ─── Table Row ───────────────────────
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-lg;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    .row-actions { opacity: 1; }
+  }
+
+  &.editing {
+    background: rgba($color-accent-primary, 0.04);
+    grid-template-columns: 1fr 140px auto;
+  }
+
+  &.add-row {
+    background: rgba($color-accent-primary, 0.04);
+    grid-template-columns: 1fr 140px auto;
+  }
+}
+
+.row-name {
+  font-size: 0.875rem;
+  color: $color-text-primary;
+  cursor: pointer;
+  @include text-truncate;
+}
+.row-amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  text-align: right;
+  cursor: pointer;
+}
+.row-input {
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  color: $color-text-primary;
+  font-family: inherit;
+  outline: none;
+  @include smooth;
+
+  &:focus { border-color: $color-accent-primary; }
+  &::placeholder { color: $color-text-muted; }
+  &.amount { text-align: right; font-family: 'Space Grotesk', sans-serif; font-weight: 600; }
+}
+
+.row-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  @include smooth;
+
+  .editing &,
+  .add-row & { opacity: 1; }
+}
+
+.action-btn {
+  width: 34px; height: 34px;
+  @include flex-center;
+  border-radius: $radius-md;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  @include smooth;
+
+  &.save  { color: white; background: #00cec9; &:hover { background: darken(#00cec9, 8%); } }
+  &.cancel { color: white; background: $color-text-muted; &:hover { background: darken(#8b95a9, 10%); } }
+  &.edit  { color: $color-text-muted; &:hover { color: $color-accent-primary; background: rgba($color-accent-primary, 0.08); } }
+  &.del   { color: $color-text-muted; &:hover { color: $color-accent-danger; background: rgba($color-accent-danger, 0.08); } }
+}
+
+.add-trigger {
+  display: block;
+  width: 100%;
+  padding: $spacing-sm $spacing-lg;
+  font-size: 0.8125rem;
+  color: $color-text-muted;
+  text-align: left;
+  @include smooth;
+  &:hover { color: $color-accent-primary-light; background: $color-bg-hover; }
+}
+
+// ─── Breakdown Section ───────────────
+.breakdown-section {
+  @include card($spacing-lg);
+  margin-bottom: $spacing-lg;
+  h2 { font-size: 1rem; font-weight: 700; margin-bottom: $spacing-md; }
+}
+.stacked-bar {
+  display: flex;
+  height: 32px;
+  border-radius: $radius-full;
+  overflow: hidden;
+  background: $color-bg-tertiary;
+  margin-bottom: $spacing-md;
+}
+.stacked-segment {
+  height: 100%;
+  min-width: 4px;
+  @include smooth;
+  cursor: default;
+  &:hover { filter: brightness(1.15); }
+}
+
+.breakdown-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+.legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+}
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.chip-name { color: $color-text-secondary; }
+.chip-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: $color-text-primary;
+}
+
+// ─── Actions & Toast ─────────────────
+.year-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.btn-import {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #00cec9, #6c5ce7);
+  color: white;
+  border: none;
+  border-radius: $radius-lg;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 206, 201, 0.25);
+  @include smooth;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(108, 92, 231, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.toast {
+  position: fixed;
+  bottom: $spacing-xl;
+  right: $spacing-xl;
+  background: $color-surface-raised;
+  border: 1px solid $color-border-subtle;
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: $shadow-lg;
+  z-index: $z-toast;
+}

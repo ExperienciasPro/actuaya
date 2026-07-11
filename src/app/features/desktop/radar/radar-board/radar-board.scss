@@ -1,0 +1,88 @@
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
+
+.radar-board { height: calc(100vh - #{$topbar-height} - #{$spacing-xl * 2}); display: flex; flex-direction: column; }
+
+.page-header { @include flex-between; margin-bottom: $spacing-lg; flex-wrap: wrap; gap: $spacing-md; }
+.header-left { h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; } }
+.subtitle { font-size: 0.875rem; color: $color-text-muted; }
+.btn-table { @include button-ghost; text-decoration: none; }
+
+// — Kanban Grid —
+.kanban-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: $spacing-md; flex: 1; min-height: 0; }
+
+.kanban-column { display: flex; flex-direction: column; min-height: 0; }
+
+.column-header {
+  display: flex; align-items: center; gap: $spacing-sm; padding: $spacing-sm $spacing-md;
+  border-radius: $radius-lg $radius-lg 0 0; margin-bottom: 0;
+  h2 { font-size: 0.8125rem; font-weight: 600; flex: 1; }
+}
+.col-dot { width: 8px; height: 8px; border-radius: 50%; }
+.col-count { @include badge(rgba(#fff, 0.1), $color-text-secondary); }
+.radar-col { background: rgba($color-text-muted, 0.08); .col-dot { background: $color-text-muted; } }
+.contacted-col { background: rgba($color-accent-info, 0.08); .col-dot { background: linear-gradient(135deg, $color-accent-info, #00cec9); } }
+.snoozed-col { background: rgba($color-accent-warning, 0.08); .col-dot { background: $color-accent-warning; } }
+
+.column-body {
+  flex: 1; overflow-y: auto; @include custom-scrollbar;
+  background: $color-bg-secondary; border: 1px solid $color-border-subtle;
+  border-top: none; border-radius: 0 0 $radius-lg $radius-lg;
+  padding: $spacing-sm; display: flex; flex-direction: column; gap: $spacing-sm;
+}
+
+// — Kanban Cards —
+.kanban-card {
+  background: $color-bg-tertiary; border: 1px solid $color-border-subtle;
+  border-radius: $radius-md; padding: $spacing-md; @include smooth;
+  display: flex; flex-direction: column; gap: $spacing-sm;
+  &:hover { border-color: $color-border-default; box-shadow: $shadow-sm; }
+  &.overdue { border-left: 3px solid #ff6348; }
+  &.contacted { border-left: 3px solid $color-accent-info; }
+  &.snoozed { opacity: 0.7; }
+}
+.overdue-tag { font-size: 0.625rem; font-weight: 700; color: #ff6348; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.card-top { display: flex; align-items: center; gap: $spacing-sm; }
+.card-avatar {
+  width: 32px; height: 32px; border-radius: $radius-full; @include flex-center; flex-shrink: 0;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  &.radar { background: rgba($color-text-muted, 0.15); color: $color-text-muted; }
+  &.contacted { background: linear-gradient(135deg, rgba($color-accent-info, 0.2), rgba(#00cec9, 0.2)); color: $color-accent-info; }
+  &.snoozed { background: rgba($color-accent-warning, 0.15); color: $color-accent-warning; }
+}
+.card-info { display: flex; flex-direction: column; min-width: 0; }
+.card-name { font-size: 0.875rem; font-weight: 600; color: $color-text-primary; @include text-truncate; }
+.card-tag { font-size: 0.625rem; color: $color-text-muted; }
+.card-phone { font-size: 0.75rem; color: $color-text-secondary; font-family: 'Space Grotesk', sans-serif; }
+.card-meta { font-size: 0.6875rem; color: $color-text-muted; }
+
+// — Card Actions —
+.card-actions { display: flex; gap: $spacing-xs; flex-wrap: wrap; }
+.ca-btn {
+  @include button-base; padding: 4px 8px; font-size: 0.6875rem; border-radius: $radius-sm;
+  background: $color-bg-hover; color: $color-text-secondary;
+  &:hover { background: $color-bg-active; color: $color-text-primary; }
+  &.contact { background: rgba($color-accent-info, 0.12); color: $color-accent-info;
+    &:hover { background: rgba($color-accent-info, 0.2); } }
+  &.promote { background: rgba($color-accent-secondary, 0.12); color: $color-accent-secondary;
+    &:hover { background: rgba($color-accent-secondary, 0.2); } }
+  &.snooze { &:hover { background: rgba($color-accent-warning, 0.15); } }
+  &.delete { &:hover { background: rgba($color-accent-danger, 0.15); color: $color-accent-danger; } }
+}
+
+.column-empty { @include flex-center; padding: $spacing-xl; font-size: 0.8125rem; color: $color-text-muted; font-style: italic; }
+
+// — Promote Modal —
+.modal-backdrop { position: fixed; inset: 0; background: $color-surface-overlay; z-index: $z-modal-backdrop; @include flex-center; }
+.promote-modal {
+  background: $color-bg-secondary; border: 1px solid $color-border-subtle; border-radius: $radius-xl;
+  padding: $spacing-xl; width: 420px; max-width: 90vw;
+  h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: $spacing-xs; }
+}
+.promote-name { font-size: 0.875rem; color: $color-text-secondary; margin-bottom: $spacing-lg; }
+.modal-label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.06em; margin: $spacing-md 0 $spacing-xs; display: block; }
+.qi { @include input-base; }
+.modal-actions { display: flex; gap: $spacing-sm; justify-content: flex-end; margin-top: $spacing-xl; }
+.btn-cancel { @include button-ghost; }
+.btn-promote { @include button-primary; &:disabled { opacity: 0.4; } }

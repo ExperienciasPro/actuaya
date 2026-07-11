@@ -1,0 +1,583 @@
+<div class="sub-manager">
+  <!-- ═══════════════════════════════════════ -->
+  <!-- DASHBOARD VIEW                          -->
+  <!-- ═══════════════════════════════════════ -->
+  @if (viewMode() === 'dashboard') {
+    <!-- Header -->
+    <div class="page-header animate-fadeInUp">
+      <div class="header-top">
+        <div>
+          <h1>📋 Gestor de Suscripciones</h1>
+          <p class="header-subtitle">Gestión centralizada de suscripciones multi-app</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-backup" (click)="exportBackup()" title="Exportar datos">
+            💾 Exportar
+          </button>
+          <button class="btn-backup" (click)="triggerImport()" title="Importar backup">
+            📂 Importar
+          </button>
+          <button class="btn-create" (click)="openNew()">
+            <um-icon name="plus" [size]="18"></um-icon>
+            Nueva Suscripción
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row animate-fadeInUp stagger-1">
+      <div class="stat-card" (click)="clearFilters()">
+        <div class="stat-icon total-icon">📊</div>
+        <div>
+          <p class="stat-label">Total</p>
+          <p class="stat-value">{{ stats().total }}</p>
+        </div>
+      </div>
+      <div class="stat-card clickable" [class.active-filter]="filterStatus() === STATUS_ACTIVE"
+           (click)="setStatusFilter(STATUS_ACTIVE)">
+        <div class="stat-icon active-icon">✅</div>
+        <div>
+          <p class="stat-label">Activas</p>
+          <p class="stat-value accent-green">{{ stats().active }}</p>
+        </div>
+      </div>
+      <div class="stat-card clickable" [class.active-filter]="filterStatus() === STATUS_EXPIRED"
+           (click)="setStatusFilter(STATUS_EXPIRED)">
+        <div class="stat-icon expired-icon">⚠️</div>
+        <div>
+          <p class="stat-label">Vencidas</p>
+          <p class="stat-value accent-pink">{{ stats().expired }}</p>
+        </div>
+      </div>
+      <div class="stat-card clickable" [class.active-filter]="filterStatus() === STATUS_TRIAL"
+           (click)="setStatusFilter(STATUS_TRIAL)">
+        <div class="stat-icon trial-icon">🧪</div>
+        <div>
+          <p class="stat-label">Prueba</p>
+          <p class="stat-value accent-yellow">{{ stats().trial }}</p>
+        </div>
+      </div>
+      <div class="stat-card clickable" [class.active-filter]="filterUrgent()"
+           (click)="toggleUrgentFilter()">
+        <div class="stat-icon urgent-icon">🔔</div>
+        <div>
+          <p class="stat-label">Renovación Urgente</p>
+          <p class="stat-value accent-pink">{{ stats().urgent }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Summary -->
+    <div class="revenue-row animate-fadeInUp stagger-2">
+      <div class="revenue-card">
+        <span class="revenue-label">Ingresos Mensuales</span>
+        <div class="revenue-values">
+          <span class="revenue-value">{{ formatCurrency(stats().revenueMonthlyCOP, 'COP') }}</span>
+          @if (stats().revenueMonthlyUSD > 0) {
+            <span class="revenue-value secondary">{{ formatCurrency(stats().revenueMonthlyUSD, 'USD') }}</span>
+          }
+        </div>
+        <span class="revenue-note">Normalizado por periodicidad</span>
+      </div>
+      <div class="revenue-card">
+        <span class="revenue-label">Ingresos Anuales</span>
+        <div class="revenue-values">
+          <span class="revenue-value">{{ formatCurrency(stats().revenueAnnualCOP, 'COP') }}</span>
+          @if (stats().revenueAnnualUSD > 0) {
+            <span class="revenue-value secondary">{{ formatCurrency(stats().revenueAnnualUSD, 'USD') }}</span>
+          }
+        </div>
+        <span class="revenue-note">Mensual × 12</span>
+      </div>
+      <div class="revenue-card accent">
+        <span class="revenue-label">Total Recaudado</span>
+        <div class="revenue-values">
+          <span class="revenue-value">{{ formatCurrency(stats().totalCollectedCOP, 'COP') }}</span>
+          @if (stats().totalCollectedUSD > 0) {
+            <span class="revenue-value secondary">{{ formatCurrency(stats().totalCollectedUSD, 'USD') }}</span>
+          }
+        </div>
+        <span class="revenue-note">Suma de todos los pagos</span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar animate-fadeInUp stagger-2">
+      <div class="filter-group">
+        <span class="filter-label">App:</span>
+        <div class="filter-chips">
+          @for (app of appOptions; track app) {
+            <button class="chip" [class.chip-active]="filterApp() === app"
+                    (click)="setAppFilter(app)">
+              {{ appIcons[app] }} {{ appLabels[app] }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="filter-search">
+        <input type="text" placeholder="🔍 Buscar empresa, NIT, contacto..."
+               [ngModel]="searchQuery()"
+               (ngModelChange)="searchQuery.set($event)" />
+      </div>
+      @if (filterApp() || filterStatus() || filterUrgent() || searchQuery()) {
+        <button class="chip chip-clear" (click)="clearFilters()">✕ Limpiar filtros</button>
+      }
+    </div>
+
+    <!-- Data Table -->
+    <div class="section-card animate-fadeInUp stagger-3">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Tipo</th>
+              <th>App</th>
+              <th>Estado</th>
+              <th>Contacto</th>
+              <th>Embajador</th>
+              <th>Valor</th>
+              <th>Antigüedad</th>
+              <th>Renovación</th>
+              <th>Salud</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sub of filteredSubscriptions(); track sub.id) {
+              <tr class="clickable-row" [class.row-expired]="sub.status === 'EXPIRED'"
+                  [class.row-suspended]="sub.status === 'SUSPENDED'"
+                  (click)="openDetailModal(sub)">
+                <td>
+                  <div class="company-cell">
+                    <strong>{{ sub.company.name }}</strong>
+                    <span class="nit-tag">NIT: {{ sub.company.nit }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="type-cell">
+                    <span class="type-badge" [class.marca-blanca]="sub.clientType === 'MARCA_BLANCA'">
+                      {{ clientTypeIcons[sub.clientType] || '👤' }} {{ clientTypeLabels[sub.clientType] || 'Persona' }}
+                    </span>
+                    @if (sub.clientType === 'MARCA_BLANCA' && sub.appLoginUrl) {
+                      <a class="login-url-link" [href]="sub.appLoginUrl" target="_blank" title="Abrir login del cliente">
+                        🔗
+                      </a>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="app-chip">{{ appIcons[sub.app] }} {{ appLabels[sub.app] }}</span>
+                </td>
+                <td>
+                  <um-subscription-status-badge [variant]="sub.status"></um-subscription-status-badge>
+                </td>
+                <td>
+                  <div class="contact-cell">
+                    <span>{{ sub.contact.name }}</span>
+                    <span class="contact-email">{{ sub.contact.email }}</span>
+                    <button class="btn-wa" (click)="openWhatsApp(sub.contact.whatsapp)" title="Abrir WhatsApp">
+                      📱
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <div class="ambassador-cell">
+                    @if (sub.ambassadorName) {
+                      <span class="ambassador-name">🤝 {{ sub.ambassadorName }}</span>
+                      @if (sub.ambassadorCommission) {
+                        <span class="commission-tag">{{ sub.ambassadorCommission }}%</span>
+                        <span class="commission-value">{{ formatCurrency(sub.amount * sub.ambassadorCommission / 100, sub.currency) }}</span>
+                      }
+                    } @else {
+                      <span class="muted">Sin asignar</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="value-cell">
+                    <span class="mono">{{ formatCurrency(sub.amount, sub.currency) }}</span>
+                    <span class="frequency-tag">{{ frequencyLabels[sub.paymentFrequency] || 'Mensual' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="tenure-tag">📅 {{ formatTenure(sub.startDate) }}</span>
+                </td>
+                <td class="date-cell">
+                  {{ formatDate(sub.nextRenewalDate) }}
+                </td>
+                <td>
+                  @let health = getRenewalHealth(sub.nextRenewalDate);
+                  <span class="health-tag" [class]="getRenewalClass(health)">
+                    {{ health.label }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns" (click)="$event.stopPropagation()">
+                    <button class="btn-icon" title="Editar" (click)="openEdit(sub)">✏️</button>
+                    <button class="btn-icon danger" title="Eliminar" (click)="confirmDelete(sub.id)">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="11" class="empty-cell">
+                  <div class="empty-state">
+                    <span class="empty-icon">📋</span>
+                    <p>No hay suscripciones que coincidan con los filtros</p>
+                    <button class="btn-sm" (click)="clearFilters()">Limpiar filtros</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- DETAIL / FORM VIEW                      -->
+  <!-- ═══════════════════════════════════════ -->
+  @if (viewMode() === 'detail') {
+    <div class="detail-view animate-fadeInUp">
+      <div class="detail-header">
+        <button class="btn-back" (click)="goBack()">
+          ← Volver al Dashboard
+        </button>
+        <h2>{{ isEditing() ? '✏️ Editar Suscripción' : '➕ Nueva Suscripción' }}</h2>
+      </div>
+
+      <div class="form-grid">
+        <!-- Company Section -->
+        <div class="form-section">
+          <h3 class="form-section-title">🏢 Datos de la Empresa</h3>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Nombre de la Empresa *</label>
+              <input type="text" [ngModel]="formData().companyName"
+                     (ngModelChange)="updateFormField('companyName', $event)"
+                     placeholder="Ej: Constructora Andina S.A.S" />
+            </div>
+            <div class="form-field">
+              <label>NIT *</label>
+              <input type="text" [ngModel]="formData().companyNit"
+                     (ngModelChange)="updateFormField('companyNit', $event)"
+                     placeholder="Ej: 900123456-7" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="form-section">
+          <h3 class="form-section-title">👤 Datos de Contacto</h3>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Nombre del Contacto *</label>
+              <input type="text" [ngModel]="formData().contactName"
+                     (ngModelChange)="updateFormField('contactName', $event)"
+                     placeholder="Ej: Carlos Pérez" />
+            </div>
+            <div class="form-field">
+              <label>Email *</label>
+              <input type="email" [ngModel]="formData().contactEmail"
+                     (ngModelChange)="updateFormField('contactEmail', $event)"
+                     placeholder="Ej: carlos@empresa.com" />
+            </div>
+            <div class="form-field">
+              <label>WhatsApp *</label>
+              <input type="text" [ngModel]="formData().contactWhatsapp"
+                     (ngModelChange)="updateFormField('contactWhatsapp', $event)"
+                     placeholder="Ej: +573001234567" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscription Section -->
+        <div class="form-section">
+          <h3 class="form-section-title">📋 Datos de la Suscripción</h3>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Solución / App *</label>
+              <select [ngModel]="formData().app"
+                      (ngModelChange)="updateFormField('app', $event)">
+                @for (app of appOptions; track app) {
+                  <option [value]="app">{{ appIcons[app] }} {{ appLabels[app] }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Estado *</label>
+              <select [ngModel]="formData().status"
+                      (ngModelChange)="updateFormField('status', $event)">
+                @for (status of statusOptions; track status) {
+                  <option [value]="status">{{ statusLabels[status] }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Tipo de Cliente *</label>
+              <select [ngModel]="formData().clientType"
+                      (ngModelChange)="updateFormField('clientType', $event)">
+                @for (ct of clientTypeOptions; track ct) {
+                  <option [value]="ct">{{ clientTypeIcons[ct] }} {{ clientTypeLabels[ct] }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Marca Blanca: Login URL (obligatorio) -->
+          @if (isMarcaBlanca()) {
+            <div class="form-row">
+              <div class="form-field full-width">
+                <label class="label-with-badge">
+                  🔗 URL de Inicio de Sesión del Cliente *
+                  <span class="required-badge">Obligatorio para Marca Blanca</span>
+                </label>
+                <input type="url" [ngModel]="formData().appLoginUrl"
+                       (ngModelChange)="updateFormField('appLoginUrl', $event)"
+                       placeholder="Ej: https://micliente.actuaya.co/login"
+                       [class.field-error]="isMarcaBlanca() && !formData().appLoginUrl?.trim()" />
+                <span class="field-hint">Link directo al inicio de sesión de la app personalizada del cliente.</span>
+              </div>
+            </div>
+          }
+          <div class="form-row">
+            <div class="form-field">
+              <label>Fecha de Inicio *</label>
+              <input type="date" [ngModel]="formData().startDate"
+                     (ngModelChange)="updateFormField('startDate', $event)" />
+            </div>
+            <div class="form-field">
+              <label>Próxima Renovación *</label>
+              <input type="date" [ngModel]="formData().nextRenewalDate"
+                     (ngModelChange)="updateFormField('nextRenewalDate', $event)" />
+            </div>
+            <div class="form-field">
+              <label>Último Pago *</label>
+              <input type="date" [ngModel]="formData().lastPaymentDate"
+                     (ngModelChange)="updateFormField('lastPaymentDate', $event)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="form-section">
+          <h3 class="form-section-title">💰 Datos de Pago</h3>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Monto *</label>
+              <input umCurrencyInput [ngModel]="formData().amount"
+                     (ngModelChange)="updateFormField('amount', $event)"
+                     placeholder="Ej: 3.000.000" />
+            </div>
+            <div class="form-field">
+              <label>Periodicidad *</label>
+              <select [ngModel]="formData().paymentFrequency"
+                      (ngModelChange)="updateFormField('paymentFrequency', $event)">
+                @for (freq of frequencyOptions; track freq) {
+                  <option [value]="freq">{{ frequencyIcons[freq] }} {{ frequencyLabels[freq] }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Moneda *</label>
+              <select [ngModel]="formData().currency"
+                      (ngModelChange)="updateFormField('currency', $event)">
+                @for (cur of currencies; track cur) {
+                  <option [value]="cur">{{ cur }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-field full-width">
+            <label>Notas (opcional)</label>
+            <textarea [ngModel]="formData().notes"
+                      (ngModelChange)="updateFormField('notes', $event)"
+                      placeholder="Notas internas sobre esta suscripción..."
+                      rows="3"></textarea>
+          </div>
+        </div>
+
+        <!-- Ambassador / Seller Section -->
+        <div class="form-section">
+          <h3 class="form-section-title">🤝 Embajador / Vendedor</h3>
+          <p class="form-hint">Asigna un embajador para rastrear comisiones en venta y renovaciones.</p>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Nombre del Embajador</label>
+              <input type="text" [ngModel]="formData().ambassadorName"
+                     (ngModelChange)="updateFormField('ambassadorName', $event)"
+                     placeholder="Ej: María López" />
+            </div>
+            <div class="form-field">
+              <label>Comisión (%)</label>
+              <input type="number" [ngModel]="formData().ambassadorCommission"
+                     (ngModelChange)="updateFormField('ambassadorCommission', $event)"
+                     placeholder="Ej: 10" min="0" max="100" step="0.5" />
+            </div>
+          </div>
+          @if (formData().ambassadorName && formData().ambassadorCommission && formData().amount) {
+            <div class="commission-preview">
+              <span class="commission-preview-label">💰 Comisión estimada:</span>
+              <span class="commission-preview-value">
+                {{ formatCurrency(formData().amount * formData().ambassadorCommission / 100, formData().currency) }}
+              </span>
+              <span class="commission-preview-note">por mes (venta y renovación)</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="goBack()">Cancelar</button>
+        <button class="btn-primary" (click)="saveSubscription()" [disabled]="!isFormValid()">
+          {{ isEditing() ? 'Guardar Cambios' : 'Crear Suscripción' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Subscriber Detail Modal -->
+  @if (detailSubscription(); as ds) {
+    <div class="modal-backdrop" (click)="closeDetailModal()">
+      <div class="detail-modal" (click)="$event.stopPropagation()">
+        <div class="detail-modal-header">
+          <div class="detail-modal-title">
+            <h3>{{ ds.company.name }}</h3>
+            <span class="nit-tag">NIT: {{ ds.company.nit }}</span>
+          </div>
+          <div class="detail-modal-badges">
+            <um-subscription-status-badge [variant]="ds.status"></um-subscription-status-badge>
+            <span class="type-badge" [class.marca-blanca]="ds.clientType === 'MARCA_BLANCA'">
+              {{ clientTypeIcons[ds.clientType] || '👤' }} {{ clientTypeLabels[ds.clientType] || 'Persona' }}
+            </span>
+            <span class="app-chip">{{ appIcons[ds.app] }} {{ appLabels[ds.app] }}</span>
+          </div>
+          <button class="detail-close-btn" (click)="closeDetailModal()">✕</button>
+        </div>
+
+        <div class="detail-modal-body">
+          <!-- Contact -->
+          <div class="detail-section">
+            <h4>👤 Contacto</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Nombre</span>
+                <span class="detail-value">{{ ds.contact.name }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Email</span>
+                <span class="detail-value mono-sm">{{ ds.contact.email }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">WhatsApp</span>
+                <span class="detail-value">
+                  <button class="btn-wa-inline" (click)="openWhatsApp(ds.contact.whatsapp)">
+                    📱 {{ ds.contact.whatsapp }}
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subscription -->
+          <div class="detail-section">
+            <h4>📋 Suscripción</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Valor</span>
+                <span class="detail-value bold">{{ formatCurrency(ds.amount, ds.currency) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Antigüedad</span>
+                <span class="detail-value">{{ formatTenure(ds.startDate) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Inicio</span>
+                <span class="detail-value">{{ formatDate(ds.startDate) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Próxima Renovación</span>
+                <span class="detail-value">{{ formatDate(ds.nextRenewalDate) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Último Pago</span>
+                <span class="detail-value">{{ formatDate(ds.lastPaymentDate) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Salud</span>
+                @let dHealth = getRenewalHealth(ds.nextRenewalDate);
+                <span class="health-tag" [class]="getRenewalClass(dHealth)">{{ dHealth.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Marca Blanca URL -->
+          @if (ds.clientType === 'MARCA_BLANCA' && ds.appLoginUrl) {
+            <div class="detail-section">
+              <h4>🔗 Acceso Marca Blanca</h4>
+              <a class="detail-login-url" [href]="ds.appLoginUrl" target="_blank">
+                {{ ds.appLoginUrl }}
+                <span class="external-icon">↗</span>
+              </a>
+            </div>
+          }
+
+          <!-- Ambassador -->
+          @if (ds.ambassadorName) {
+            <div class="detail-section">
+              <h4>🤝 Embajador</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Nombre</span>
+                  <span class="detail-value">{{ ds.ambassadorName }}</span>
+                </div>
+                @if (ds.ambassadorCommission) {
+                  <div class="detail-item">
+                    <span class="detail-label">Comisión</span>
+                    <span class="detail-value">{{ ds.ambassadorCommission }}% → {{ formatCurrency(ds.amount * ds.ambassadorCommission / 100, ds.currency) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Notes -->
+          @if (ds.notes) {
+            <div class="detail-section">
+              <h4>📝 Notas</h4>
+              <p class="detail-notes">{{ ds.notes }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="detail-modal-footer">
+          <button class="btn-secondary" (click)="closeDetailModal()">Cerrar</button>
+          <button class="btn-primary" (click)="editFromDetail()">✏️ Editar Suscripción</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (confirmDeleteId()) {
+    <div class="modal-backdrop" (click)="cancelDelete()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>🗑️ Confirmar Eliminación</h3>
+        <p class="modal-subtitle">¿Estás seguro de que deseas eliminar esta suscripción? Esta acción no se puede deshacer.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+          <button class="btn-danger-solid" (click)="executeDelete()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Toast -->
+  @if (toast()) {
+    <div class="toast animate-fadeInUp">{{ toast() }}</div>
+  }
+</div>

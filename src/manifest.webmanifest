@@ -1,0 +1,24 @@
+{
+  "name": "ActuaYa — Productividad con Enfoque",
+  "short_name": "ActuaYa",
+  "description": "Tu plataforma de productividad y gestión empresarial. Planifica en el escritorio, ejecuta en el móvil.",
+  "start_url": "/m/today",
+  "display": "standalone",
+  "background_color": "#1B2B6B",
+  "theme_color": "#1B2B6B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/icons/apple-touch-icon-v4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/apple-touch-icon-v4.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

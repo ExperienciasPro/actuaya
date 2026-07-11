@@ -1,0 +1,635 @@
+@use '../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════
+// Soy Cliente — Portal de Equipos
+// ═══════════════════════════════════════════
+// Clean, friendly design for end-clients
+
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.cliente-page {
+  padding: $spacing-lg $spacing-xl;
+  max-width: 1100px;
+}
+
+// ─── Header ───
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-xl;
+}
+
+.header-left {
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $color-text-primary;
+    margin: 0;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+  margin: 4px 0 0;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+
+.whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: $radius-full;
+  background: #25d366;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+  box-shadow: 0 2px 12px rgba(37, 211, 102, 0.3);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
+    background: #20c05c;
+  }
+
+  .wa-icon {
+    font-size: 1.1rem;
+  }
+}
+
+// ─── Tabs ───
+.tabs-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: $spacing-xl;
+  border-bottom: 2px solid $color-border-subtle;
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $color-text-muted;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all $transition-fast;
+  border-radius: $radius-sm $radius-sm 0 0;
+
+  &:hover {
+    color: $color-text-secondary;
+    background: $color-bg-hover;
+  }
+
+  &.active {
+    color: $color-accent-primary;
+    border-bottom-color: $color-accent-primary;
+    font-weight: 700;
+  }
+
+  .tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    border-radius: $radius-full;
+    background: $color-accent-danger;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0 6px;
+  }
+}
+
+// ─── Summary Cards ───
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+
+  @media (max-width: 800px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 18px 20px;
+  transition: all $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-sm;
+  }
+
+  .sc-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .sc-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: $color-text-primary;
+    line-height: 1.1;
+  }
+
+  .sc-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+
+  &.alert {
+    border-color: rgba(231, 76, 60, 0.3);
+    background: rgba(231, 76, 60, 0.03);
+  }
+
+  &.warning {
+    border-color: rgba(255, 184, 34, 0.3);
+    background: rgba(255, 184, 34, 0.03);
+  }
+
+  &.success {
+    border-color: rgba(0, 213, 146, 0.3);
+    background: rgba(0, 213, 146, 0.03);
+  }
+}
+
+// ─── Equipment List ───
+.equipos-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.equipo-card {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: all $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $color-border-default;
+  }
+
+  &.vencido {
+    border-left: 4px solid #e74c3c;
+  }
+
+  &.proximo {
+    border-left: 4px solid #ffb822;
+  }
+
+  &.vigente {
+    border-left: 4px solid #00d592;
+  }
+}
+
+.equipo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: $color-bg-hover;
+  }
+}
+
+.equipo-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.equipo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: $color-bg-tertiary;
+  flex-shrink: 0;
+}
+
+.equipo-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    font-size: 0.92rem;
+    color: $color-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: $color-text-muted;
+    margin-top: 2px;
+  }
+}
+
+.equipo-status-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &.vigente {
+    background: rgba(0, 213, 146, 0.1);
+    color: #00b07d;
+  }
+
+  &.proximo {
+    background: rgba(255, 184, 34, 0.12);
+    color: #d4940c;
+  }
+
+  &.vencido {
+    background: rgba(231, 76, 60, 0.1);
+    color: #d9534f;
+  }
+}
+
+.expand-chevron {
+  font-size: 0.75rem;
+  color: $color-text-muted;
+  transition: transform $transition-fast;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+// ─── Equipment Detail Panel ───
+.equipo-detail {
+  padding: 0 20px 20px;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .di-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $color-text-muted;
+    letter-spacing: 0.04em;
+  }
+
+  .di-value {
+    font-size: 0.88rem;
+    color: $color-text-primary;
+    font-weight: 600;
+  }
+
+  .di-value.danger {
+    color: #e74c3c;
+    font-weight: 700;
+  }
+
+  .di-value.warning {
+    color: #d4940c;
+    font-weight: 700;
+  }
+
+  .di-value.success {
+    color: #00b07d;
+    font-weight: 700;
+  }
+}
+
+.equipo-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: $radius-full;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid $color-border-default;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $color-bg-hover;
+    border-color: $color-border-strong;
+    color: $color-text-primary;
+  }
+
+  &.primary {
+    background: $color-accent-primary;
+    color: #fff;
+    border-color: transparent;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent, #6c3ce9) 94%, black);
+      color: #fff;
+    }
+  }
+
+  &.wa {
+    background: #25d366;
+    color: #fff;
+    border-color: transparent;
+
+    &:hover {
+      background: #20c05c;
+      color: #fff;
+    }
+  }
+}
+
+// ─── Alerts Tab ───
+.alertas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alerta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  transition: all $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-sm;
+  }
+
+  &.urgente {
+    border-left: 4px solid #e74c3c;
+    background: rgba(231, 76, 60, 0.02);
+  }
+
+  &.proximo {
+    border-left: 4px solid #ffb822;
+    background: rgba(255, 184, 34, 0.02);
+  }
+
+  &.info {
+    border-left: 4px solid #3498db;
+  }
+}
+
+.alerta-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.alerta-body {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.88rem;
+    color: $color-text-primary;
+    margin-bottom: 2px;
+  }
+
+  span {
+    font-size: 0.78rem;
+    color: $color-text-secondary;
+  }
+}
+
+.alerta-action {
+  flex-shrink: 0;
+}
+
+.alerta-empty {
+  text-align: center;
+  padding: $spacing-2xl;
+  color: $color-text-muted;
+  font-size: 0.88rem;
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+}
+
+// ─── Documents Tab ───
+.docs-section {
+  margin-bottom: $spacing-xl;
+}
+
+.docs-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0 0 $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: $spacing-md;
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  transition: all $transition-fast;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: $shadow-sm;
+    border-color: $color-border-default;
+  }
+}
+
+.doc-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+
+  &.pdf { background: rgba(231, 76, 60, 0.1); }
+  &.xls { background: rgba(46, 204, 113, 0.1); }
+  &.img { background: rgba(52, 152, 219, 0.1); }
+  &.generic { background: $color-bg-tertiary; }
+}
+
+.doc-info {
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 0.82rem;
+    color: $color-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 0.7rem;
+    color: $color-text-muted;
+  }
+}
+
+.doc-download-icon {
+  font-size: 1rem;
+  color: $color-text-muted;
+  flex-shrink: 0;
+}
+
+.docs-empty {
+  text-align: center;
+  padding: $spacing-2xl;
+  color: $color-text-muted;
+  font-size: 0.85rem;
+
+  .empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+}
+
+// ─── WhatsApp floating ───
+.wa-floating {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: $z-sticky;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wa-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+  transition: all $transition-fast;
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(37, 211, 102, 0.55);
+  }
+}
+
+.wa-fab-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+// ─── Animations ───
+.animate-fadeInUp {
+  animation: fadeInUp 400ms ease-out both;
+}
+
+@for $i from 1 through 8 {
+  .stagger-#{$i} { animation-delay: #{$i * 50}ms; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}

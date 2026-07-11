@@ -1,0 +1,98 @@
+// ═══════════════════════════════════════════
+// ActuaYa — Design Tokens (Variables)
+// ═══════════════════════════════════════════
+
+// — Color Palette: "Soft Mint" —
+// Estética clara y fresca con acentos energéticos
+
+// Base colors — "Soft Mint" palette
+$color-bg-primary: #F0FAF7;          // Fondo principal menta suave
+$color-bg-secondary: #FFFFFF;        // Cards y paneles
+$color-bg-tertiary: #E6F5F0;        // Superficies elevadas
+$color-bg-hover: #D9F0E8;            // Hover states
+$color-bg-active: #C8E8DD;           // Active states
+
+// Surface colors
+$color-surface-raised: #E8F6F1;      // Sidebar, topbar
+$color-surface-overlay: rgba(0, 30, 20, 0.4);  // Modal backdrop
+$color-surface-glass: rgba(240, 250, 247, 0.9); // Glass panels
+
+// Accent colors
+$color-accent-primary: var(--accent, #6c3ce9);      // Deep violet — de la parte externa del logo
+$color-accent-primary-light: var(--accent-light, #8c60ff); // Violeta suave
+$color-accent-primary-glow: var(--accent-glow, rgba(108, 60, 233, 0.2)); // Resplandor
+
+$color-accent-secondary: #00d592;    // Verde flecha — del centro emergente del logo
+$color-accent-secondary-light: #3dedb2;
+
+$color-accent-warm: #f6218d;         // Rosa vibrante — anillo interno del logo
+$color-accent-danger: #e74c3c;       // Rojo — errores/eliminar
+$color-accent-warning: #ffb822;      // Naranja — advertencias
+$color-accent-info: #3498db;         // Azul — info
+
+// Text colors
+$color-text-primary: #1a2e35;        // Texto principal (oscuro)
+$color-text-secondary: #5a7a84;      // Texto secundario
+$color-text-muted: #8fa8b0;          // Texto desactivado
+$color-text-inverse: #F0FAF7;        // Texto sobre fondos oscuros
+$color-text-accent: $color-accent-primary;
+
+// Border colors
+$color-border-subtle: rgba(0, 40, 30, 0.1);
+$color-border-default: rgba(0, 40, 30, 0.15);
+$color-border-strong: rgba(0, 40, 30, 0.25);
+$color-border-accent: rgba(108, 60, 233, 0.35);
+
+// — Light Theme (CSS custom properties applied via .theme-light) —
+// Se controlarán vía CSS custom properties en _typography.scss
+
+// — Spacing Scale —
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// — Border Radius —
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 16px;
+$radius-xl: 24px;
+$radius-full: 9999px;
+
+// — Breakpoints —
+$bp-mobile: 480px;
+$bp-tablet: 768px;
+$bp-desktop: 1024px;
+$bp-wide: 1440px;
+
+// — Layout Dimensions —
+$sidebar-width: 260px;
+$sidebar-collapsed: 72px;
+$topbar-height: 60px;
+$bottom-nav-height: 64px;
+
+// — Transitions —
+$transition-fast: 150ms ease;
+$transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// — Shadows —
+$shadow-sm: 0 1px 3px rgba(0, 40, 30, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 40, 30, 0.1);
+$shadow-lg: 0 10px 30px rgba(0, 40, 30, 0.12);
+$shadow-xl: 0 20px 50px rgba(0, 40, 30, 0.16);
+$shadow-glow-primary: 0 0 20px rgba(108, 60, 233, 0.2);
+$shadow-glow-success: 0 0 20px rgba(0, 213, 146, 0.2);
+$shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+// — Z-Index Scale —
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-sidebar: 250;
+$z-modal-backdrop: 300;
+$z-modal: 400;
+$z-toast: 500;
