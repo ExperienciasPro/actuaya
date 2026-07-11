@@ -34,7 +34,7 @@ jobs:
           node-version: '22'
 
       - name: 📦 Instalar dependencias Angular
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: 🚀 Build producción
         run: npx ng build --configuration production
