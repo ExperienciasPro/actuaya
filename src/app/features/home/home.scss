@@ -46,8 +46,8 @@ $max-width: 1200px;
 // ───────────────────────────────────────────
 .landing {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: $c-text-muted;
-  background-color: $c-bg-white;
+  color: $c-text-dark;
+  background-color: #ffffff;
   overflow-x: hidden;
   padding-top: 72px;
   -webkit-font-smoothing: antialiased;
@@ -170,7 +170,7 @@ $max-width: 1200px;
   p {
     font-size: 1.08rem;
     line-height: 1.65;
-    color: $c-text-muted;
+    color: $c-text-dark;
     max-width: 620px;
     margin: 0 auto;
   }
@@ -206,7 +206,7 @@ $max-width: 1200px;
   align-items: center;
   gap: 10px;
   background: $gradient-purple;
-  color: $c-bg-white;
+  color: #ffffff;
   font-weight: 700;
   border-radius: $radius-pill;
   text-decoration: none;
@@ -304,7 +304,7 @@ $max-width: 1200px;
 
   a {
     text-decoration: none;
-    color: $c-text-muted;
+    color: $c-text-dark;
     font-size: 0.88rem;
     font-weight: 600;
     transition: color 200ms ease;
@@ -327,7 +327,7 @@ $max-width: 1200px;
 
 .btn-nav-login {
   text-decoration: none;
-  color: $c-text-muted;
+  color: $c-text-dark;
   font-size: 0.88rem;
   font-weight: 600;
   padding: 8px 18px;
@@ -347,7 +347,7 @@ $max-width: 1200px;
 .btn-nav-cta {
   text-decoration: none;
   background: $gradient-purple;
-  color: $c-bg-white;
+  color: #ffffff;
   font-size: 0.85rem;
   font-weight: 700;
   padding: 10px 24px;
@@ -484,7 +484,7 @@ $max-width: 1200px;
   .hero-desc {
     font-size: 1.05rem;
     line-height: 1.75;
-    color: $c-text-muted;
+    color: $c-text-dark;
     margin-bottom: 40px;
     max-width: 500px;
 
@@ -523,7 +523,7 @@ $max-width: 1200px;
   gap: 8px;
   font-size: 0.88rem;
   font-weight: 600;
-  color: $c-text-muted;
+  color: $c-text-dark;
 
   .green-dot {
     width: 8px;
@@ -691,7 +691,7 @@ $max-width: 1200px;
 
     span {
       font-size: 0.78rem;
-      color: $c-text-muted;
+      color: $c-text-dark;
       font-weight: 500;
     }
   }
@@ -736,7 +736,7 @@ $max-width: 1200px;
   p {
     font-size: 1.02rem;
     line-height: 1.7;
-    color: $c-text-muted;
+    color: $c-text-dark;
   }
   
   .mt-4 {
@@ -846,7 +846,7 @@ $max-width: 1200px;
   border-radius: $radius-pill;
   border: 1.5px solid $c-border;
   background: $c-bg-white;
-  color: $c-text-muted;
+  color: $c-text-dark;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
@@ -862,7 +862,7 @@ $max-width: 1200px;
 
   &.active {
     background: $gradient-purple;
-    color: $c-bg-white;
+    color: #ffffff;
     border-color: transparent;
     box-shadow: 0 4px 14px rgba($c-purple, 0.25);
   }
@@ -918,7 +918,7 @@ $max-width: 1200px;
     p {
       font-size: 0.88rem;
       line-height: 1.55;
-      color: $c-text-muted;
+      color: $c-text-dark;
       margin: 0;
     }
   }
@@ -1016,7 +1016,7 @@ $max-width: 1200px;
   p {
     font-size: 0.95rem;
     line-height: 1.65;
-    color: $c-text-muted;
+    color: $c-text-dark;
     margin-bottom: 24px; max-width: 550px;
   }
 }
@@ -1094,7 +1094,7 @@ $max-width: 1200px;
   p {
     font-size: 0.92rem;
     line-height: 1.6;
-    color: $c-text-muted;
+    color: $c-text-dark;
     margin: 0;
   }
 }
@@ -1180,7 +1180,7 @@ $max-width: 1200px;
     display: flex;
     align-items: center;
     text-decoration: none;
-    color: $c-bg-white;
+    color: #ffffff;
     margin-bottom: 20px;
   }
 
@@ -1202,7 +1202,7 @@ $max-width: 1200px;
   h4 {
     font-size: 0.85rem;
     font-weight: 700;
-    color: $c-bg-white;
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 20px;
@@ -1224,7 +1224,7 @@ $max-width: 1200px;
         transition: color 200ms ease;
 
         &:hover {
-          color: $c-bg-white;
+          color: #ffffff;
         }
       }
     }
