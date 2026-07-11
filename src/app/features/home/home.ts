@@ -86,7 +86,7 @@ interface ModuleCategory {
           <div class="hero-content reveal">
             <span class="hero-badge pulse-anim">✨ App web multipropósito</span>
             <h1>
-              Construye la plataforma que tu negocio realmente necesita.
+              Construye la plataforma que tu negocio necesita.
               <span class="gradient-pink">Sin pagar de más.</span>
             </h1>
             <p class="hero-desc">
