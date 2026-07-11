@@ -101,10 +101,6 @@ interface ModuleCategory {
                 Ver módulos ↓
               </a>
             </div>
-            <div class="hero-no-card">
-              <span class="green-dot"></span>
-              No necesitas tarjeta de crédito
-            </div>
           </div>
           <!-- La ilustración de fondo se maneja directamente en el CSS del hero container para fundirse e integrarse a la derecha -->
           <div class="hero-spacer"></div>
