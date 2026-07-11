@@ -635,10 +635,10 @@ $max-width: 1200px;
 // ═══════════════════════════════════════════
 .hero-values {
   width: 100%;
-  border-top: 1px solid rgba($c-border, 0.6);
-  background: rgba(255, 255, 255, 0.4);
-  padding: 24px 0 0;
-  margin-top: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+  background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px;
+  padding: 20px 24px;
+  margin-top: 100px; max-width: 1200px; margin-left: auto; margin-right: auto;
   position: relative;
   z-index: 10;
 }
