@@ -62,7 +62,7 @@ import { UserService } from '../../../core/services/user.service';
         <div class="mockup-container">
           <div class="css-phone">
             <div class="screen-mask">
-              <img class="inner-app-screenshot" src="/assets/images/mobile-preview.png" alt="ActuaYa Mobile App Preview" />
+              <img class="inner-app-screenshot" src="/assets/images/mobile-preview.webp" alt="ActuaYa Mobile App Preview" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>

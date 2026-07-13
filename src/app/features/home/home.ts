@@ -144,7 +144,7 @@ interface ModuleCategory {
           </div>
           <div class="pain-visual reveal-right delay-2">
             <div class="floating-wrapper-slow">
-              <img src="/assets/images/pain_points_illustration.png" alt="Software Complejo" class="pain-img" />
+              <img src="/assets/images/pain_points_illustration.webp" alt="Software Complejo" class="pain-img" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>

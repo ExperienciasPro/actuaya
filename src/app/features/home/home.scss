@@ -368,7 +368,7 @@ $max-width: 1200px;
   position: relative;
   padding: 140px 24px 120px;
   background: 
-    url('/assets/images/ilustracion-actuaya.png') no-repeat center / cover,
+    url('/assets/images/ilustracion-actuaya.webp') no-repeat center / cover,
     linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
   overflow: hidden;
 
@@ -376,7 +376,7 @@ $max-width: 1200px;
     padding: 100px 24px 80px;
     background: 
       radial-gradient(circle at bottom, rgba(#ffffff, 0.9) 0%, rgba(#ffffff, 0.3) 100%),
-      url('/assets/images/ilustracion-actuaya.png') no-repeat center / cover,
+      url('/assets/images/ilustracion-actuaya.webp') no-repeat center / cover,
       linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
   }
 
