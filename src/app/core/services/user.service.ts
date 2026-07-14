@@ -312,10 +312,10 @@ export class UserService {
       email: 'dayana.81m@gmail.com',
       role: 'user',
       isActive: true,
-      subscriptionStatus: 'trial',
+      subscriptionStatus: 'active',
       createdAt: '2026-06-29T00:00:00.000Z',
-      trialEndsAt: '2026-07-29T00:00:00.000Z',
-      subscriptionActivatedByAdmin: false,
+      trialEndsAt: '2099-12-31T23:59:59.000Z',
+      subscriptionActivatedByAdmin: true,
       password: 'Actua2025!',
     });
 
@@ -325,10 +325,10 @@ export class UserService {
       phone: '+573008112376',
       role: 'user',
       isActive: true,
-      subscriptionStatus: 'trial',
+      subscriptionStatus: 'active',
       createdAt: '2026-06-30T00:00:00.000Z',
-      trialEndsAt: '2026-07-30T00:00:00.000Z',
-      subscriptionActivatedByAdmin: false,
+      trialEndsAt: '2099-12-31T23:59:59.000Z',
+      subscriptionActivatedByAdmin: true,
       password: 'Actua2025!',
     });
   }
@@ -336,8 +336,8 @@ export class UserService {
   /** Ensure a user exists by email; if not, create them */
   private ensureUserExists(seed: Partial<UserProfile>): void {
     const users = this.getAllUsers();
-    const exists = users.find(u => u.email?.toLowerCase() === (seed.email || '').toLowerCase());
-    if (!exists) {
+    const existsIdx = users.findIndex(u => u.email?.toLowerCase() === (seed.email || '').toLowerCase());
+    if (existsIdx === -1) {
       this.saveUserToList({
         id: this.generateId(),
         name: seed.name || '',
@@ -357,6 +357,14 @@ export class UserService {
         trialEndsAt: seed.trialEndsAt ?? this.calculateTrialEnd(new Date()),
         subscriptionActivatedByAdmin: seed.subscriptionActivatedByAdmin ?? false,
       });
+    } else {
+      const existing = users[existsIdx];
+      if (seed.subscriptionStatus === 'active' && existing.subscriptionStatus !== 'active') {
+        existing.subscriptionStatus = 'active';
+        existing.subscriptionActivatedByAdmin = true;
+        existing.trialEndsAt = seed.trialEndsAt || '2099-12-31T23:59:59.000Z';
+        this.saveUserToList(existing);
+      }
     }
   }
 

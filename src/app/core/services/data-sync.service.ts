@@ -22,6 +22,7 @@ export class DataSyncService {
   private readonly API_URL = `${environment.apiUrl}/data`;
   private readonly AUTH_TOKEN = environment.authToken;
   private readonly UM_PREFIX = 'um_';
+  private hasSynced = false;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
@@ -82,6 +83,7 @@ export class DataSyncService {
 
       if (serverKeys.length === 0) {
         console.log('[DataSync] Servidor vacío, subiendo datos locales');
+        this.hasSynced = true; // Permite subir los datos iniciales sembrados
         await this.saveToServer();
         return { success: true, msg: 'Servidor vacío -> subió local', goals: 0, tasks: 0, radar: 0 };
       }
@@ -116,6 +118,7 @@ export class DataSyncService {
         try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo desde lista sincronizada:', err); }
 
         console.log(`[DataSync] Hidratadas incondicionalmente ${restored} claves desde el servidor`);
+        this.hasSynced = true; // Sincronización exitosa
       });
 
       return {
@@ -136,6 +139,10 @@ export class DataSyncService {
    * Usa debounce para no hacer demasiadas peticiones.
    */
   saveToServerDebounced(): void {
+    if (!this.hasSynced) {
+      console.log('[DataSync] Evitando guardar: la sincronización inicial está pendiente.');
+      return;
+    }
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
@@ -146,6 +153,10 @@ export class DataSyncService {
 
   /** Guarda inmediatamente al servidor */
   async saveToServer(): Promise<void> {
+    if (!this.hasSynced) {
+      console.log('[DataSync] Evitando guardar al servidor: la sincronización inicial está pendiente.');
+      return;
+    }
     try {
       const data = this.collectLocalData();
       const keyCount = Object.keys(data).length;
