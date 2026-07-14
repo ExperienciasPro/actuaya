@@ -176,10 +176,19 @@ export class UserService {
     this.setActiveProfile(updated);
   }
 
-  /** Clear active profile (logout) */
+  /** Clear active profile (logout) and wipe user-specific local storage data */
   clearProfile(): void {
     this.storage.remove(this.PROFILE_KEY);
     this.profile.set(null);
+
+    // Limpia todo el almacenamiento local del usuario para evitar fugas de datos al cerrar sesión
+    const keysToKeep = new Set(['um_users', 'um_subscribers', 'um_subscriptions', 'um_setup_intro_seen']);
+    const allKeys = this.storage.getAllKeys('um_');
+    for (const key of allKeys) {
+      if (!keysToKeep.has(key)) {
+        this.storage.remove(key);
+      }
+    }
   }
 
   // ─── Admin: User Management ────────────────────

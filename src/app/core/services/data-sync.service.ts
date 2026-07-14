@@ -90,12 +90,20 @@ export class DataSyncService {
 
       console.log('[DataSync] Datos del servidor:', serverKeys.length, 'claves');
 
-      const goalsArr = (serverData['um_goals'] as any[]) || [];
-      let tasksArr = (serverData['um_tasks'] as any[]) || [];
-      const radarArr = (serverData['um_radar'] as any[]) || [];
+      // Obtener el ID del usuario actualmente logueado
+      const userId = this.userService.profile()?.id;
+
+      // Extraer arreglos específicos del usuario (o genéricos si no está logueado aún)
+      const goalsKey = userId ? `um_goals_${userId}` : 'um_goals';
+      const tasksKey = userId ? `um_tasks_${userId}` : 'um_tasks';
+      const radarKey = userId ? `um_radar_${userId}` : 'um_radar';
+
+      const goalsArr = (serverData[goalsKey] as any[]) || [];
+      let tasksArr = (serverData[tasksKey] as any[]) || [];
+      const radarArr = (serverData[radarKey] as any[]) || [];
 
       // Purge orphan tasks whose associated goalId no longer exists
-      if (serverData['um_goals']) {
+      if (serverData[goalsKey]) {
         const validGoalIds = new Set(goalsArr.map(g => g.id));
         tasksArr = tasksArr.filter(t => !t.goalId || validGoalIds.has(t.goalId));
       }
@@ -104,10 +112,18 @@ export class DataSyncService {
       this.ngZone.run(() => {
         let restored = 0;
         for (const key of serverKeys) {
-          if (key.startsWith(this.UM_PREFIX) && !this.SESSION_LOCAL_KEYS.has(key)) {
-            const val = key === 'um_tasks' ? tasksArr : serverData[key];
-            this.storage.set(key, val);
+          // Las claves globales se restauran tal cual
+          if (key === 'um_users' || key === 'um_subscribers' || key === 'um_subscriptions') {
+            this.storage.set(key, serverData[key]);
             restored++;
+          } else if (userId && key.endsWith(`_${userId}`)) {
+            // Claves específicas de este usuario logueado
+            const baseKey = key.substring(0, key.length - userId.length - 1); // Remover sufijo _userId
+            if (baseKey.startsWith(this.UM_PREFIX) && !this.SESSION_LOCAL_KEYS.has(baseKey)) {
+              const val = baseKey === 'um_tasks' ? tasksArr : serverData[key];
+              this.storage.set(baseKey, val);
+              restored++;
+            }
           }
         }
 
@@ -157,20 +173,36 @@ export class DataSyncService {
       console.log('[DataSync] Evitando guardar al servidor: la sincronización inicial está pendiente.');
       return;
     }
-    try {
-      const data = this.collectLocalData();
-      const keyCount = Object.keys(data).length;
 
+    const userId = this.userService.profile()?.id;
+    if (!userId) {
+      console.log('[DataSync] Evitando guardar al servidor: no hay usuario logueado.');
+      return;
+    }
+
+    try {
+      const localData = this.collectLocalData();
+      const payload: Record<string, unknown> = {};
+
+      for (const [key, val] of Object.entries(localData)) {
+        if (key === 'um_users' || key === 'um_subscribers' || key === 'um_subscriptions') {
+          payload[key] = val; // Mantener claves globales compartidas
+        } else {
+          payload[`${key}_${userId}`] = val; // Enlazar el ID del usuario como sufijo
+        }
+      }
+
+      const keyCount = Object.keys(payload).length;
       if (keyCount === 0) return;
 
-      console.log(`[DataSync] Guardando ${keyCount} claves al servidor...`);
+      console.log(`[DataSync] Guardando ${keyCount} claves del usuario ${userId} al servidor...`);
       const response = await fetch(`${this.API_URL}?key=_bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': this.AUTH_TOKEN,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
