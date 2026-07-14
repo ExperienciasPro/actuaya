@@ -20,7 +20,7 @@ import { Router } from '@angular/router';
         </div>
         <div class="header-actions">
           <div class="board-view-toggle">
-            <button class="board-toggle-btn" [class.active]="boardView() === 'list'" (click)="boardView.set('list')">📋 Lista</button>
+            <button class="board-toggle-btn" [class.active]="boardView() === 'list'" (click)="boardView.set('list')">📋 Lista proyectos</button>
             <button class="board-toggle-btn" [class.active]="boardView() === 'tasks'" (click)="boardView.set('tasks')">⚡ Todas las Tareas</button>
             <button class="board-toggle-btn" [class.active]="boardView() === 'calendar'" (click)="boardView.set('calendar')">📅 Calendario</button>
           </div>
