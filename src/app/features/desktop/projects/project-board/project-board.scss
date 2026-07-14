@@ -41,7 +41,7 @@
   &:hover { background: $color-bg-hover; color: $color-text-primary; }
   &.active {
     background: rgba($color-accent-primary, 0.15);
-    color: $color-accent-primary-light;
+    color: $color-accent-primary;
     font-weight: 600;
   }
 }
@@ -85,7 +85,7 @@
   font-size: 0.75rem;
   border-radius: $radius-md;
   background: rgba($color-accent-primary, 0.1);
-  color: $color-accent-primary-light;
+  color: $color-accent-primary;
   font-weight: 600;
   margin-left: auto;
   &:hover { background: rgba($color-accent-primary, 0.2); }
