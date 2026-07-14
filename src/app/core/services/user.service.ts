@@ -77,6 +77,7 @@ export class UserService {
 
   constructor() {
     this.ensureSuperAdmin();
+    this.syncProfileToList();
   }
 
   // ─── Authentication ────────────────────────────
@@ -390,7 +391,28 @@ export class UserService {
     if (!current) return;
     const updated = this.getUserById(current.id);
     if (updated && JSON.stringify(updated) !== JSON.stringify(current)) {
-      this.setActiveProfile(updated);
+      // Evita sobreescribir un perfil real activo con un placeholder vacío de la lista
+      if (updated.name !== 'Usuario ActuaYa' || current.name === 'Usuario ActuaYa') {
+        this.setActiveProfile(updated);
+      }
+    }
+  }
+
+  /** Sincroniza los detalles del perfil activo al listado de usuarios si este último es un placeholder */
+  syncProfileToList(): void {
+    const current = this.profile();
+    if (!current || current.name === 'Usuario ActuaYa') return;
+
+    const users = this.getAllUsers();
+    const idx = users.findIndex(u => u.id === current.id);
+    if (idx >= 0) {
+      const inList = users[idx];
+      if (inList.name === 'Usuario ActuaYa' && current.name !== 'Usuario ActuaYa') {
+        users[idx] = { ...current };
+        this.storage.set(this.USERS_KEY, users);
+        this._usersSignal.set([...users]);
+        console.log('[UserService] Perfil del listado sanado con los datos del perfil activo:', current.name);
+      }
     }
   }
 
