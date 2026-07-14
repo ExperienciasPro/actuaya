@@ -22,6 +22,7 @@ import { Router } from '@angular/router';
           <div class="board-view-toggle">
             <button class="board-toggle-btn" [class.active]="boardView() === 'list'" (click)="boardView.set('list')">📋 Lista</button>
             <button class="board-toggle-btn" [class.active]="boardView() === 'calendar'" (click)="boardView.set('calendar')">📅 Calendario</button>
+            <button class="board-toggle-btn" [class.active]="boardView() === 'tasks'" (click)="boardView.set('tasks')">⚡ Todas las Tareas</button>
           </div>
           <button class="btn-primary" (click)="showCreateModal.set(true)">+ Nuevo Proyecto</button>
         </div>
@@ -33,38 +34,38 @@ import { Router } from '@angular/router';
           @for (project of projects(); track project.id; let i = $index) {
             <a class="project-row" [routerLink]="['/d/projects', project.id]"
                [style.animation-delay.ms]="i * 40">
-              <div class="row-left">
-                <div class="row-color" [style.background]="getStatusColor(project.status)"></div>
-                <div class="row-info">
-                  <span class="row-name">{{ project.name }}</span>
-                  @if (project.description) {
-                    <span class="row-desc">{{ project.description.slice(0, 80) }}{{ project.description.length > 80 ? '...' : '' }}</span>
-                  }
-                </div>
-              </div>
-              <div class="row-stats">
-                @if (getLeaderOf(project); as leader) {
-                  <div class="row-leader-badge" [title]="'Líder: ' + leader.name">
-                    <span class="row-leader-avatar" [style.background]="leader.color">{{ leader.avatar }}</span>
-                  </div>
-                }
-                <div class="task-stat">
-                  <span class="task-done">{{ getCompletedTasks(project) }}</span>
-                  <span class="task-sep">/</span>
-                  <span class="task-total">{{ project.tasks?.length || 0 }}</span>
-                  <span class="task-label">tareas</span>
-                </div>
-                <div class="row-progress">
-                  <div class="progress-track">
-                    <div class="progress-fill" [style.width.%]="project.progress"
-                         [style.background]="getStatusColor(project.status)"></div>
-                  </div>
-                  <span class="progress-pct">{{ project.progress }}%</span>
-                </div>
-              </div>
-              <div class="row-actions">
-                <button class="delete-btn" (click)="confirmDelete($event, project)" title="Eliminar">×</button>
-              </div>
+               <div class="row-left">
+                 <div class="row-color" [style.background]="getStatusColor(project.status)"></div>
+                 <div class="row-info">
+                   <span class="row-name">{{ project.name }}</span>
+                   @if (project.description) {
+                     <span class="row-desc">{{ project.description.slice(0, 80) }}{{ project.description.length > 80 ? '...' : '' }}</span>
+                   }
+                 </div>
+               </div>
+               <div class="row-stats">
+                 @if (getLeaderOf(project); as leader) {
+                   <div class="row-leader-badge" [title]="'Líder: ' + leader.name">
+                     <span class="row-leader-avatar" [style.background]="leader.color">{{ leader.avatar }}</span>
+                   </div>
+                 }
+                 <div class="task-stat">
+                   <span class="task-done">{{ getCompletedTasks(project) }}</span>
+                   <span class="task-sep">/</span>
+                   <span class="task-total">{{ project.tasks?.length || 0 }}</span>
+                   <span class="task-label">tareas</span>
+                 </div>
+                 <div class="row-progress">
+                   <div class="progress-track">
+                     <div class="progress-fill" [style.width.%]="project.progress"
+                          [style.background]="getStatusColor(project.status)"></div>
+                   </div>
+                   <span class="progress-pct">{{ project.progress }}%</span>
+                 </div>
+               </div>
+               <div class="row-actions">
+                 <button class="delete-btn" (click)="confirmDelete($event, project)" title="Eliminar">×</button>
+               </div>
             </a>
           }
         </div>
@@ -136,6 +137,103 @@ import { Router } from '@angular/router';
         </div>
       }
 
+      <!-- Consolidated Tasks View -->
+      @if (boardView() === 'tasks') {
+        <div class="tasks-view-section animate-fadeInUp stagger-1">
+          <!-- Filters Header -->
+          <div class="tasks-filters-bar">
+            <div class="filter-group search">
+              <input type="text" class="filter-input" [ngModel]="taskSearchQuery()" (ngModelChange)="taskSearchQuery.set($event)" placeholder="🔍 Buscar tarea..." />
+            </div>
+            
+            <div class="filter-group">
+              <select class="filter-select" [ngModel]="taskSelectedProject()" (ngModelChange)="taskSelectedProject.set($event)">
+                <option value="">📁 Todos los Proyectos</option>
+                @for (p of projects(); track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select class="filter-select" [ngModel]="taskSelectedPriority()" (ngModelChange)="taskSelectedPriority.set($event)">
+                <option value="">⚡ Todas las Prioridades</option>
+                <option value="high">🔴 Alta</option>
+                <option value="medium">🟡 Media</option>
+                <option value="low">🟢 Baja</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select class="filter-select" [ngModel]="taskSelectedStatus()" (ngModelChange)="taskSelectedStatus.set($event)">
+                <option value="all">🔄 Todos los Estados</option>
+                <option value="active">⏳ Pendientes</option>
+                <option value="completed">✅ Completadas</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select class="filter-select" [ngModel]="taskSortBy()" (ngModelChange)="taskSortBy.set($event)">
+                <option value="priority">🔥 Importancia</option>
+                <option value="oldest">📅 Más antiguas</option>
+                <option value="newest">🕒 Más nuevas</option>
+                <option value="project">📁 Por Proyecto</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tasks List -->
+          <div class="tasks-consolidated-list">
+            @for (item of filteredTasks(); track item.task.id; let i = $index) {
+              <div class="task-item-row" [class.completed]="item.task.completed" [style.animation-delay.ms]="i * 20">
+                <label class="task-checkbox-container">
+                  <input type="checkbox" [checked]="item.task.completed" (change)="toggleTask(item.projectId, item.task.id)" />
+                  <span class="task-custom-checkbox"></span>
+                </label>
+                
+                <div class="task-item-content">
+                  <div class="task-item-main">
+                    <span class="task-item-title">{{ item.task.title }}</span>
+                    @if (item.task.description) {
+                      <span class="task-item-desc">{{ item.task.description }}</span>
+                    }
+                  </div>
+                  
+                  <div class="task-item-meta">
+                    <a class="task-project-badge" [routerLink]="['/d/projects', item.projectId]" [style.border-color]="item.projectColor">
+                      <span class="project-dot" [style.background]="item.projectColor"></span>
+                      {{ item.projectName }}
+                    </a>
+
+                    @if (item.task.dueDate) {
+                      <span class="task-date-badge" [class.overdue]="isOverdue(item.task.dueDate) && !item.task.completed">
+                        📅 {{ formatDate(item.task.dueDate) }}
+                      </span>
+                    }
+
+                    <span class="task-priority-badge" [class]="item.task.priority">
+                      {{ item.task.priority === 'high' ? 'Alta' : item.task.priority === 'medium' ? 'Media' : 'Baja' }}
+                    </span>
+
+                    @if (item.task.assignee) {
+                      <span class="task-assignee-avatar" [style.background]="item.leaderColor || '#8b95a9'" [title]="'Asignado a: ' + item.task.assignee">
+                        {{ item.leaderAvatar || item.task.assignee.slice(0,2).toUpperCase() }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <um-empty-state
+                icon="⚡"
+                title="No se encontraron tareas"
+                subtitle="Prueba cambiando los filtros o crea nuevas tareas dentro de tus proyectos."
+              />
+            }
+          </div>
+        </div>
+      }
+
       <!-- Create Modal (simplified) -->
       @if (showCreateModal()) {
         <div class="modal-overlay" (click)="showCreateModal.set(false)">
@@ -164,7 +262,7 @@ import { Router } from '@angular/router';
 
       <!-- Delete Dialog -->
       <um-confirm-dialog
-        [open]="showDelete()"
+        [open]="openDeleteDialog()"
         title="Eliminar proyecto"
         message="Se eliminará el proyecto y todos sus datos."
         icon="🗑️"
@@ -184,7 +282,14 @@ export class ProjectBoardComponent {
   activeCount = computed(() => this.projects().filter(p => p.status === 'active').length);
 
   // View mode
-  boardView = signal<'list' | 'calendar'>('list');
+  boardView = signal<'list' | 'calendar' | 'tasks'>('list');
+
+  // Tasks view filter signals
+  taskSearchQuery = signal('');
+  taskSelectedProject = signal('');
+  taskSelectedPriority = signal('');
+  taskSelectedStatus = signal('all'); // all, active, completed
+  taskSortBy = signal('priority'); // priority, oldest, newest, project
 
   // Create modal
   showCreateModal = signal(false);
@@ -197,6 +302,9 @@ export class ProjectBoardComponent {
 
   // Calendar state
   calOffset = signal(0);
+
+  // Getter for the confirm dialog since open property name mismatch might exist
+  openDeleteDialog = computed(() => this.showDelete());
 
   generalCalMonthLabel = computed(() => {
     const now = new Date();
@@ -245,6 +353,84 @@ export class ProjectBoardComponent {
     return cells;
   });
 
+  // Consolidated all tasks
+  allTasks = computed(() => {
+    const allProjects = this.projects();
+    const list: { task: ProjectTask; projectId: string; projectName: string; projectStatus: string; projectColor: string; leaderAvatar?: string; leaderColor?: string }[] = [];
+    for (const p of allProjects) {
+      for (const t of p.tasks) {
+        const member = (p.members || []).find(m => m.name === t.assignee);
+        list.push({
+          task: t,
+          projectId: p.id,
+          projectName: p.name,
+          projectStatus: p.status,
+          projectColor: this.getStatusColor(p.status),
+          leaderAvatar: member?.avatar,
+          leaderColor: member?.color
+        });
+      }
+    }
+    return list;
+  });
+
+  // Filtered & sorted tasks
+  filteredTasks = computed(() => {
+    let list = this.allTasks();
+    const query = this.taskSearchQuery().toLowerCase().trim();
+    const projectId = this.taskSelectedProject();
+    const priority = this.taskSelectedPriority();
+    const status = this.taskSelectedStatus();
+    const sortBy = this.taskSortBy();
+
+    // Filter by search query
+    if (query) {
+      list = list.filter(t => 
+        t.task.title.toLowerCase().includes(query) || 
+        (t.task.description || '').toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by project
+    if (projectId) {
+      list = list.filter(t => t.projectId === projectId);
+    }
+
+    // Filter by priority
+    if (priority) {
+      list = list.filter(t => t.task.priority === priority);
+    }
+
+    // Filter by status
+    if (status === 'active') {
+      list = list.filter(t => !t.task.completed);
+    } else if (status === 'completed') {
+      list = list.filter(t => t.task.completed);
+    }
+
+    // Sort
+    if (sortBy === 'priority') {
+      list = [...list].sort((a, b) => this.getPriorityWeight(b.task.priority) - this.getPriorityWeight(a.task.priority));
+    } else if (sortBy === 'oldest') {
+      list = [...list].sort((a, b) => new Date(a.task.createdAt || 0).getTime() - new Date(b.task.createdAt || 0).getTime());
+    } else if (sortBy === 'newest') {
+      list = [...list].sort((a, b) => new Date(b.task.createdAt || 0).getTime() - new Date(a.task.createdAt || 0).getTime());
+    } else if (sortBy === 'project') {
+      list = [...list].sort((a, b) => a.projectName.localeCompare(b.projectName));
+    }
+
+    return list;
+  });
+
+  private getPriorityWeight(priority: string): number {
+    const weights: Record<string, number> = {
+      high: 3,
+      medium: 2,
+      low: 1
+    };
+    return weights[priority] || 0;
+  }
+
   navigateToProject(projectId: string): void {
     this.router.navigate(['/d/projects', projectId]);
   }
@@ -291,5 +477,23 @@ export class ProjectBoardComponent {
     const p = this.deletingProject();
     if (p) this.projectService.delete(p.id);
     this.showDelete.set(false);
+  }
+
+  toggleTask(projectId: string, taskId: string): void {
+    this.projectService.toggleTask(projectId, taskId);
+  }
+
+  isOverdue(dateStr: string): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dateStr);
+    return dueDate < today;
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+    return date.toLocaleDateString('es-ES', options);
   }
 }

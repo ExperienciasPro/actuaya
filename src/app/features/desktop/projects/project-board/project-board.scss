@@ -459,3 +459,268 @@ select.modal-input {
   justify-content: flex-end;
   padding-top: $spacing-sm;
 }
+
+// ─── Consolidated Tasks View ──────────────────
+.tasks-view-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.tasks-filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  .filter-group {
+    flex: 1 1 180px;
+    min-width: 140px;
+
+    &.search {
+      flex: 2 1 240px;
+    }
+  }
+
+  .filter-input, .filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: $color-bg-tertiary;
+    border: 1px solid $color-border-subtle;
+    border-radius: $radius-md;
+    font-size: 0.8125rem;
+    color: $color-text-primary;
+    font-family: inherit;
+    outline: none;
+    @include smooth;
+
+    &:focus {
+      border-color: $color-accent-primary;
+      background: $color-bg-secondary;
+      box-shadow: 0 0 0 3px $color-accent-primary-glow;
+    }
+  }
+
+  .filter-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%235a7a84' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+}
+
+.tasks-consolidated-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.task-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  @include smooth;
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+
+  &:hover {
+    border-color: $color-border-default;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  &.completed {
+    background: rgba($color-bg-primary, 0.4);
+    opacity: 0.75;
+
+    .task-item-title {
+      text-decoration: line-through;
+      color: $color-text-muted;
+    }
+    
+    .task-item-desc {
+      color: $color-text-muted;
+    }
+  }
+}
+
+// ─── Custom Checkbox ──────────────────────────
+.task-checkbox-container {
+  display: block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 2px;
+  flex-shrink: 0;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0; width: 0;
+
+    &:checked ~ .task-custom-checkbox {
+      background-color: $color-accent-secondary;
+      border-color: $color-accent-secondary;
+
+      &:after {
+        display: block;
+      }
+    }
+  }
+
+  .task-custom-checkbox {
+    position: absolute;
+    top: 0; left: 0;
+    height: 20px; width: 20px;
+    background-color: transparent;
+    border: 2px solid $color-text-muted;
+    border-radius: 50%;
+    @include smooth;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px; top: 3px;
+      width: 5px; height: 9px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  &:hover input ~ .task-custom-checkbox {
+    border-color: $color-accent-primary;
+  }
+}
+
+.task-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+
+  @media (min-width: $bp-tablet) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.task-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.task-item-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $color-text-primary;
+  word-wrap: break-word;
+}
+
+.task-item-desc {
+  font-size: 0.75rem;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.task-item-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.task-project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: $color-bg-tertiary;
+  border: 1px solid transparent;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text-secondary;
+  text-decoration: none;
+  @include smooth;
+
+  &:hover {
+    background: $color-bg-hover;
+    border-color: inherit !important;
+  }
+
+  .project-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+}
+
+.task-date-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $color-text-secondary;
+  background: $color-bg-tertiary;
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+
+  &.overdue {
+    background: rgba($color-accent-danger, 0.1);
+    color: $color-accent-danger;
+  }
+}
+
+.task-priority-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: $radius-sm;
+
+  &.high {
+    background: rgba($color-accent-danger, 0.1);
+    color: $color-accent-danger;
+  }
+  &.medium {
+    background: rgba($color-accent-warning, 0.1);
+    color: #d97706; // Darker orange for text readability
+  }
+  &.low {
+    background: rgba($color-accent-secondary, 0.1);
+    color: #059669; // Darker emerald for text readability
+  }
+}
+
+.task-assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  @include flex-center;
+  flex-shrink: 0;
+  box-shadow: $shadow-sm;
+}
+
