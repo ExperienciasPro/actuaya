@@ -57,7 +57,16 @@ export class UserService {
   allUsers = this._usersSignal.asReadonly();
 
   /** Whether the user has completed onboarding */
-  isOnboarded = computed(() => !!this.profile()?.name);
+  isOnboarded = computed(() => {
+    const p = this.profile();
+    if (!p) return false;
+    // Superadmin bypasses detail checks to avoid migration lockouts
+    if (p.role === 'superadmin') return true;
+    if (p.name === 'Usuario ActuaYa' || !p.email || !p.phone) {
+      return false;
+    }
+    return true;
+  });
 
   /** User's first name for greetings */
   firstName = computed(() => {
@@ -413,6 +422,12 @@ export class UserService {
         this._usersSignal.set([...users]);
         console.log('[UserService] Perfil del listado sanado con los datos del perfil activo:', current.name);
       }
+    } else {
+      // Si no están en la lista en absoluto (fueron borrados accidentalmente), los re-incorporamos
+      users.push({ ...current });
+      this.storage.set(this.USERS_KEY, users);
+      this._usersSignal.set([...users]);
+      console.log('[UserService] Perfil faltante re-incorporado al listado:', current.name);
     }
   }
 
