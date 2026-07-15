@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { DataSyncService } from './core/services/data-sync.service';
 import { StorageService } from './core/services/storage.service';
+import { UserService } from './core/services/user.service';
 
 @Component({
   selector: 'um-root',
@@ -19,11 +20,16 @@ import { StorageService } from './core/services/storage.service';
 export class AppComponent implements OnInit, OnDestroy {
   private dataSync = inject(DataSyncService);
   private storage = inject(StorageService);
+  private userService = inject(UserService);
   private swUpdate = inject(SwUpdate, { optional: true });
 
   ngOnInit() {
-    // Sincronizar datos del servidor al iniciar la app
-    this.dataSync.syncFromServer();
+    // Fix C3: Solo sincronizar si ya hay un usuario autenticado (sesión persistida).
+    // Si no hay usuario, la sincronización ocurrirá después del login en login.ts.
+    const activeUser = this.userService.profile();
+    if (activeUser?.id) {
+      this.dataSync.syncFromServer();
+    }
 
     // Auto-update PWA service worker
     if (this.swUpdate?.isEnabled) {
@@ -45,18 +51,17 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Asegurar guardado inmediato antes de refrescar o cerrar página
+    // Fix C7: Usar sendBeacon para guardado confiable al cerrar pestaña (Safari compatible)
     if (typeof window !== 'undefined') {
-      const flushSave = () => {
-        syncRef.saveToServer();
+      const beaconSave = () => {
+        syncRef.saveToServerBeacon();
       };
-      window.addEventListener('beforeunload', flushSave);
-      window.addEventListener('pagehide', flushSave);
+      window.addEventListener('beforeunload', beaconSave);
+      window.addEventListener('pagehide', beaconSave);
     }
   }
 
   ngOnDestroy() {
-    // Guardar antes de cerrar
     this.dataSync.saveToServer();
   }
 }

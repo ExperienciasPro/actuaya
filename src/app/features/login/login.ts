@@ -344,6 +344,8 @@ export class LoginComponent {
       const user = await this.userService.loginWithGoogle();
       if (user) {
         this.mockSubService.checkAndUpdateStatus();
+        // Fix C9: sincronizar datos del servidor después de Google login
+        await this.dataSync.syncFromServer();
         const updatedUser = this.userService.profile();
 
         if (updatedUser?.subscriptionStatus === 'expired' && updatedUser.role !== 'superadmin') {

@@ -85,6 +85,11 @@ export class UserService {
   });
 
   constructor() {
+    // Si hay un perfil activo en localStorage, restaurar el scope
+    const existingProfile = this.profile();
+    if (existingProfile?.id) {
+      this.storage.setActiveUser(existingProfile.id);
+    }
     this.ensureSuperAdmin();
     this.syncProfileToList();
   }
@@ -104,6 +109,8 @@ export class UserService {
     if (user) {
       user.lastLogin = new Date().toISOString();
       this.saveUserToList(user);
+      // Activar scope ANTES de setActiveProfile para que los datos se lean aislados
+      this.storage.setActiveUser(user.id);
       this.setActiveProfile(user);
     }
     return user || null;
@@ -124,6 +131,7 @@ export class UserService {
         if (user.isActive) {
           user.lastLogin = new Date().toISOString();
           this.saveUserToList(user);
+          this.storage.setActiveUser(user.id);
           this.setActiveProfile(user);
           return user;
         } else {
@@ -136,7 +144,11 @@ export class UserService {
           email: googleUser.email || '',
         };
         this.saveProfile(newUser);
-        return this.profile();
+        const created = this.profile();
+        if (created) {
+          this.storage.setActiveUser(created.id);
+        }
+        return created;
       }
     } catch (error: any) {
       console.error('Google Sign-In Error', error);
@@ -176,19 +188,17 @@ export class UserService {
     this.setActiveProfile(updated);
   }
 
-  /** Clear active profile (logout) and wipe user-specific local storage data */
+  /**
+   * Clear active profile (logout).
+   * NO destruye datos del usuario — solo desactiva la sesión activa.
+   * Los datos del usuario permanecen aislados bajo sus claves scoped en localStorage.
+   */
   clearProfile(): void {
-    this.storage.remove(this.PROFILE_KEY);
+    // Desactivar scope primero
+    this.storage.setActiveUser(null);
+    // Limpiar solo la sesión activa (clave sin scope)
+    this.storage.removeUnscoped(this.PROFILE_KEY);
     this.profile.set(null);
-
-    // Limpia todo el almacenamiento local del usuario para evitar fugas de datos al cerrar sesión
-    const keysToKeep = new Set(['um_users', 'um_subscribers', 'um_subscriptions', 'um_setup_intro_seen']);
-    const allKeys = this.storage.getAllKeys('um_');
-    for (const key of allKeys) {
-      if (!keysToKeep.has(key)) {
-        this.storage.remove(key);
-      }
-    }
   }
 
   // ─── Admin: User Management ────────────────────

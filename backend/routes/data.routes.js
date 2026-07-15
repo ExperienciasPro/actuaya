@@ -15,7 +15,8 @@ const DataStore = require('../models/data.model');
 
 // ─── Auth Middleware ──────────────────────────
 function authCheck(req, res, next) {
-  const token = req.headers['x-auth-token'] || '';
+  // Accept token from header OR query param (needed for navigator.sendBeacon)
+  const token = req.headers['x-auth-token'] || req.query.token || '';
   const expected = process.env.AUTH_TOKEN || 'um_api_2026';
   if (token !== expected) {
     return res.status(401).json({ error: 'No autorizado' });
