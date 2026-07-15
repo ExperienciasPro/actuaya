@@ -185,6 +185,7 @@ export class UserService {
       subscriptionActivatedByAdmin: current?.subscriptionActivatedByAdmin ?? data.subscriptionActivatedByAdmin ?? false,
     };
     this.saveUserToList(updated);
+    this.storage.setActiveUser(updated.id);
     this.setActiveProfile(updated);
   }
 

@@ -26,6 +26,7 @@ export class StorageService {
   private readonly SESSION_LOCAL_KEYS = new Set([
     'um_user_profile',
     'um_setup_intro_seen',
+    'um_onboarding_welcome_seen',
     'um_enabled_modules',
     'um_nav_order',
   ]);
@@ -142,6 +143,7 @@ export class StorageService {
     'um_enabled_modules',
     'um_user_profile',
     'um_setup_intro_seen',
+    'um_onboarding_welcome_seen',
   ]);
 
   /** Returns all um_ keys (resolved — includes userId suffix) from storage */
