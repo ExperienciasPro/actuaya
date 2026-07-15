@@ -83,59 +83,121 @@ export class DataSyncService {
 
       if (serverKeys.length === 0) {
         console.log('[DataSync] Servidor vacío, subiendo datos locales');
-        this.hasSynced = true; // Permite subir los datos iniciales sembrados
+        this.hasSynced = true;
         await this.saveToServer();
         return { success: true, msg: 'Servidor vacío -> subió local', goals: 0, tasks: 0, radar: 0 };
       }
 
       console.log('[DataSync] Datos del servidor:', serverKeys.length, 'claves');
 
-      // Obtener el ID del usuario actualmente logueado
       const userId = this.userService.profile()?.id;
 
-      // Extraer arreglos específicos del usuario (o genéricos si no está logueado aún)
-      const goalsKey = userId ? `um_goals_${userId}` : 'um_goals';
-      const tasksKey = userId ? `um_tasks_${userId}` : 'um_tasks';
-      const radarKey = userId ? `um_radar_${userId}` : 'um_radar';
+      // ── Claves globales (compartidas entre todos los usuarios) ──
+      const GLOBAL_KEYS = new Set(['um_users', 'um_subscribers', 'um_subscriptions']);
 
-      const goalsArr = (serverData[goalsKey] as any[]) || [];
-      let tasksArr = (serverData[tasksKey] as any[]) || [];
-      const radarArr = (serverData[radarKey] as any[]) || [];
+      // ── Helper: buscar primero la clave scoped, luego la legacy ──
+      const getArray = (baseKey: string): any[] => {
+        if (userId) {
+          const scopedKey = `${baseKey}_${userId}`;
+          if (serverData[scopedKey] && Array.isArray(serverData[scopedKey])) {
+            return serverData[scopedKey] as any[];
+          }
+        }
+        // Fallback: clave legacy sin sufijo (datos pre-migración)
+        if (serverData[baseKey] && Array.isArray(serverData[baseKey])) {
+          console.log(`[DataSync] Migración: usando clave legacy '${baseKey}' para el usuario ${userId}`);
+          return serverData[baseKey] as any[];
+        }
+        return [];
+      };
 
-      // Purge orphan tasks whose associated goalId no longer exists
-      if (serverData[goalsKey]) {
+      const getValue = (baseKey: string): unknown => {
+        if (userId) {
+          const scopedKey = `${baseKey}_${userId}`;
+          if (serverData[scopedKey] !== undefined) {
+            return serverData[scopedKey];
+          }
+        }
+        // Fallback: clave legacy
+        if (serverData[baseKey] !== undefined) {
+          return serverData[baseKey];
+        }
+        return undefined;
+      };
+
+      const goalsArr = getArray('um_goals');
+      let tasksArr = getArray('um_tasks');
+      const radarArr = getArray('um_radar');
+
+      // Purge orphan tasks
+      if (goalsArr.length > 0) {
         const validGoalIds = new Set(goalsArr.map(g => g.id));
         tasksArr = tasksArr.filter(t => !t.goalId || validGoalIds.has(t.goalId));
       }
 
-      // NUEVA ESTRATEGIA: Hidratación Directa en Memoria dentro del NgZone de Angular
+      // Hidratación directa en NgZone de Angular
       this.ngZone.run(() => {
         let restored = 0;
+
+        // 1. Restaurar claves globales
         for (const key of serverKeys) {
-          // Las claves globales se restauran tal cual
-          if (key === 'um_users' || key === 'um_subscribers' || key === 'um_subscriptions') {
+          if (GLOBAL_KEYS.has(key)) {
             this.storage.set(key, serverData[key]);
             restored++;
-          } else if (userId && key.endsWith(`_${userId}`)) {
-            // Claves específicas de este usuario logueado
-            const baseKey = key.substring(0, key.length - userId.length - 1); // Remover sufijo _userId
-            if (baseKey.startsWith(this.UM_PREFIX) && !this.SESSION_LOCAL_KEYS.has(baseKey)) {
-              const val = baseKey === 'um_tasks' ? tasksArr : serverData[key];
-              this.storage.set(baseKey, val);
-              restored++;
-            }
           }
         }
 
-        // Hidratar directamente los servicios reactivos para bypass de almacenamiento o Zone/Caches
+        // 2. Restaurar claves del usuario (scoped o legacy)
+        // Recopilar todas las baseKeys únicas presentes en el servidor
+        const processedBaseKeys = new Set<string>();
+        for (const key of serverKeys) {
+          if (GLOBAL_KEYS.has(key) || this.SESSION_LOCAL_KEYS.has(key)) continue;
+
+          let baseKey = key;
+          // Si es una clave scoped para este usuario, extraer la base
+          if (userId && key.endsWith(`_${userId}`)) {
+            baseKey = key.substring(0, key.length - userId.length - 1);
+          }
+          // Si es una clave scoped para OTRO usuario, ignorar
+          else if (key.match(/_[a-z]+-[a-z0-9]+$/i) && !key.startsWith('um_')) {
+            continue;
+          }
+
+          if (!baseKey.startsWith(this.UM_PREFIX)) continue;
+          if (this.SESSION_LOCAL_KEYS.has(baseKey)) continue;
+          if (processedBaseKeys.has(baseKey)) continue;
+          processedBaseKeys.add(baseKey);
+
+          const val = getValue(baseKey);
+          if (val !== undefined) {
+            this.storage.set(baseKey, val);
+            restored++;
+          }
+        }
+
+        // Hidratar servicios reactivos
         try { this.goalService.hydrateDirectly(goalsArr); } catch (err) { console.error('Error hidratando goals:', err); }
         try { this.taskService.hydrateDirectly(tasksArr); } catch (err) { console.error('Error hidratando tasks:', err); }
         try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
-        try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo desde lista sincronizada:', err); }
+        try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
 
-        console.log(`[DataSync] Hidratadas incondicionalmente ${restored} claves desde el servidor`);
-        this.hasSynced = true; // Sincronización exitosa
+        console.log(`[DataSync] Hidratadas ${restored} claves desde el servidor (con fallback legacy)`);
+        this.hasSynced = true;
       });
+
+      // 3. Auto-migración: si usamos claves legacy, re-guardar con el nuevo formato scoped
+      if (userId) {
+        const needsMigration = serverKeys.some(k =>
+          k.startsWith(this.UM_PREFIX) &&
+          !GLOBAL_KEYS.has(k) &&
+          !this.SESSION_LOCAL_KEYS.has(k) &&
+          !k.includes('_' + userId)
+        );
+        if (needsMigration) {
+          console.log('[DataSync] Detectada data legacy sin scope. Migrando al formato scoped...');
+          setTimeout(() => this.saveToServer(), 2000);
+        }
+      }
 
       return {
         success: true,
