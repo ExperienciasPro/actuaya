@@ -283,6 +283,10 @@ $max-width: 1200px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 520px) {
+    padding: 0 12px;
+  }
 }
 
 .nav-logo {
@@ -295,6 +299,10 @@ $max-width: 1200px;
     height: 38px;
     width: auto;
     object-fit: contain;
+
+    @media (max-width: 520px) {
+      height: 28px;
+    }
   }
 }
 
@@ -323,6 +331,10 @@ $max-width: 1200px;
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 520px) {
+    gap: 6px;
+  }
 }
 
 .btn-nav-login {
@@ -340,7 +352,8 @@ $max-width: 1200px;
   }
 
   @media (max-width: 520px) {
-    display: none;
+    font-size: 0.8rem;
+    padding: 6px 12px;
   }
 }
 
@@ -358,6 +371,11 @@ $max-width: 1200px;
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgba($c-purple, 0.3);
+  }
+
+  @media (max-width: 520px) {
+    font-size: 0.8rem;
+    padding: 6px 12px;
   }
 }
 
