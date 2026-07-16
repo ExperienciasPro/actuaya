@@ -158,14 +158,6 @@ interface CountryCode {
               <um-icon name="bolt" [size]="18"></um-icon>
             </button>
 
-            <div class="divider">
-              <span>O</span>
-            </div>
-
-            <button type="button" class="google-btn" (click)="loginWithGoogle()">
-              <img src="/assets/icons/google.svg" alt="Google" class="google-icon" />
-              Continuar con Google
-            </button>
           </form>
 
           <p class="card-footer">

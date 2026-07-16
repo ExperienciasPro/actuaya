@@ -77,29 +77,29 @@ jobs:
 
       - name: 📂 Sincronizar archivos backend
         run: |
-          sudo mkdir -p /var/www/actuaya-backend
+          sudo mkdir -p /var/www/api.actuaya.co
 
           # Copiar backend sin pisar .env ni node_modules
           rsync -av --delete \
             --exclude='node_modules' \
             --exclude='.env' \
-            backend/ /var/www/actuaya-backend/
+            backend/ /var/www/api.actuaya.co/
 
-          sudo chmod -R 755 /var/www/actuaya-backend
+          sudo chmod -R 755 /var/www/api.actuaya.co
           echo "✅ Archivos sincronizados"
 
       - name: 📦 Instalar dependencias
         run: |
-          cd /var/www/actuaya-backend
+          cd /var/www/api.actuaya.co
           npm install --production
 
       - name: 🔄 Reiniciar con PM2
         run: |
-          cd /var/www/actuaya-backend
+          cd /var/www/api.actuaya.co
 
           # Reiniciar si ya existe, sino iniciar
-          pm2 restart actuaya-backend 2>/dev/null || \
-          pm2 start ecosystem.config.js
+          pm2 restart api.actuaya.co 2>/dev/null || \
+          pm2 start ecosystem.config.js --name api.actuaya.co
 
           pm2 save
           echo "✅ Backend reiniciado"
@@ -123,9 +123,9 @@ jobs:
       - name: ✅ Health Check
         run: |
           sleep 3
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/status || echo "000")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3005/api/status || echo "000")
           if [ "$STATUS" = "200" ]; then
             echo "✅ Backend respondiendo correctamente"
           else
-            echo "⚠️ Backend respondió $STATUS — revisar: pm2 logs actuaya-backend"
+            echo "⚠️ Backend respondió $STATUS — revisar: pm2 logs api.actuaya.co"
           fi
