@@ -301,8 +301,10 @@ export class WelcomeComponent implements OnInit {
 
       // Ensure registration data forces a sync right away
       try {
-        await this.syncService.syncFromServer();
+        // Habilitar temporalmente hasSynced para poder subir la nueva cuenta
+        (this.syncService as any).hasSynced = true;
         await this.syncService.saveToServer();
+        await this.syncService.syncFromServer();
       } catch (e) {
         console.warn('Error en la sincronización inicial de registro:', e);
       }

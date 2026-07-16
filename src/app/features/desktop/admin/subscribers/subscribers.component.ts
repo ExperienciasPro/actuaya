@@ -446,7 +446,8 @@ export class SubscribersComponent {
 
   // ─── User Management ─────────────────────
 
-  refreshUsers(): void {
+  async refreshUsers(): Promise<void> {
+    await this.dataSyncService.syncFromServer();
     this.users.set(this.userService.getAllUsers());
   }
 
