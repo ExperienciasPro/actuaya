@@ -89,6 +89,28 @@ interface CountryCode {
               </div>
             </div>
 
+            <!-- Row 3c: Tipo de Empresa -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-businessType">Tipo de Empresa *</label>
+                <select id="reg-businessType" class="form-input"
+                  [(ngModel)]="businessType" name="businessType" required>
+                  <option value="">Seleccionar sector...</option>
+                  @for (bt of businessTypes; track bt) {
+                    <option [value]="bt">{{ bt }}</option>
+                  }
+                </select>
+              </div>
+              @if (businessType === 'Otro / No listado') {
+                <div class="form-group">
+                  <label for="reg-businessTypeOther">¿A qué se dedica tu negocio? *</label>
+                  <input id="reg-businessTypeOther" class="form-input" type="text"
+                    [(ngModel)]="businessTypeOther" name="businessTypeOther"
+                    placeholder="Describe brevemente tu sector" required />
+                </div>
+              }
+            </div>
+
             <!-- Row 3b: Department + City -->
             <div class="form-row">
               <div class="form-group">
@@ -154,7 +176,7 @@ interface CountryCode {
             </div>
 
             <button type="submit" class="register-btn"
-              [disabled]="isLoading || !name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !phoneNumber.trim() || !department || !city.trim() || password.length < 6 || password !== confirmPassword">
+              [disabled]="isLoading || !name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !businessType || (businessType === 'Otro / No listado' && !businessTypeOther.trim()) || !phoneNumber.trim() || !department || !city.trim() || password.length < 6 || password !== confirmPassword">
               @if (isLoading) {
                 <span>Creando tu cuenta... 🚀</span>
               } @else {
@@ -192,6 +214,8 @@ export class WelcomeComponent implements OnInit {
   companySize = '';
   department = '';
   city = '';
+  businessType = '';
+  businessTypeOther = '';
 
   // Phone
   selectedCountryCode = '+57';
@@ -236,6 +260,23 @@ export class WelcomeComponent implements OnInit {
     'La Guajira', 'Magdalena', 'Meta', 'Nariño', 'Norte de Santander',
     'Putumayo', 'Quindío', 'Risaralda', 'San Andrés y Providencia',
     'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada',
+  ];
+
+  /** Business type categories */
+  readonly businessTypes: string[] = [
+    'Comercio y Tiendas',
+    'Servicios Profesionales',
+    'Gastronomía y Alimentos',
+    'Salud, Belleza y Bienestar',
+    'Tecnología y Software',
+    'Educación y Capacitación',
+    'Construcción y Hogar',
+    'Moda, Textil y Diseño',
+    'Turismo y Entretenimiento',
+    'Transporte y Logística',
+    'Producción y Manufactura',
+    'Servicios para el Hogar',
+    'Otro / No listado',
   ];
 
   async ngOnInit(): Promise<void> {
@@ -302,6 +343,7 @@ export class WelcomeComponent implements OnInit {
           phone: this.fullPhone,
           occupation: this.occupation.trim(),
           companyName: this.companyName.trim(),
+          businessType: this.businessType === 'Otro / No listado' ? this.businessTypeOther.trim() : this.businessType,
           age: this.age,
           companySize: this.companySize,
           department: this.department,

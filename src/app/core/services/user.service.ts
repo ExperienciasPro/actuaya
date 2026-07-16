@@ -12,6 +12,7 @@ export interface UserProfile {
   phone?: string;            // Full phone with country code, e.g. '+573001234567'
   occupation?: string;
   companyName?: string;
+  businessType?: string;       // Tipo de empresa (sector)
   age?: number;
   companySize?: string;
   department?: string;

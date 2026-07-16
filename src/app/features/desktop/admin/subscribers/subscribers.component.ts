@@ -671,7 +671,7 @@ export class SubscribersComponent {
     const users = this.filteredUsers();
     const headers = [
       'Nombre', 'Apellidos', 'Correo', 'Teléfono',
-      'Ocupación', 'Empresa', 'Edad', 'Tamaño Empresa',
+      'Ocupación', 'Empresa', 'Tipo Empresa', 'Edad', 'Tamaño Empresa',
       'Departamento', 'Ciudad',
       'Rol', 'Suscripción', 'Estado', 'Creado', 'Último Acceso',
     ];
@@ -682,6 +682,7 @@ export class SubscribersComponent {
       u.phone || '',
       u.occupation || '',
       u.companyName || '',
+      u.businessType || '',
       u.age ? String(u.age) : '',
       u.companySize ? (this.companySizeLabels[u.companySize] || u.companySize) : '',
       u.department || '',

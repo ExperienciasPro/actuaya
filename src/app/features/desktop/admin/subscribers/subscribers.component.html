@@ -759,6 +759,7 @@
           <th>Nombre</th>
           <th>Apellidos</th>
           <th>Empresa</th>
+          <th>Tipo</th>
           <th>Correo</th>
           <th>Teléfono</th>
           <th>Suscripción</th>
@@ -794,6 +795,13 @@
             <td>
               @if (user.companyName) {
                 <span class="company-tag">{{ user.companyName }}</span>
+              } @else {
+                <span style="color: var(--text-muted); opacity: 0.5;">—</span>
+              }
+            </td>
+            <td>
+              @if (user.businessType) {
+                <span class="company-tag">{{ user.businessType }}</span>
               } @else {
                 <span style="color: var(--text-muted); opacity: 0.5;">—</span>
               }
