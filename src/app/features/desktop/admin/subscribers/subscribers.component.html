@@ -756,7 +756,8 @@
           <th style="width: 80px; text-align: center;">
             <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($any($event.target).checked)" />
           </th>
-          <th>Usuario</th>
+          <th>Nombre</th>
+          <th>Apellidos</th>
           <th>Empresa</th>
           <th>Correo</th>
           <th>Teléfono</th>
@@ -784,9 +785,12 @@
               <div class="user-cell">
                 <span class="user-avatar-sm">{{ getUserInitials(user.name) }}</span>
                 <div class="user-info">
-                  <span class="user-name">{{ user.name }}</span>
+                  <span class="user-name">{{ getFirstName(user.name) }}</span>
                 </div>
               </div>
+            </td>
+            <td>
+              <span class="user-name" style="font-weight: 500;">{{ getLastName(user.name) }}</span>
             </td>
             <td>
               @if (user.companyName) {
@@ -810,7 +814,7 @@
                 {{ getUserSubStatusLabel(user.subscriptionStatus) }}
               </span>
               @if (user.subscriptionActivatedByAdmin) {
-                <span class="admin-activated" title="Activado por admin">✅</span>
+                <span class="admin-activated-label" title="Activada manualmente por el administrador">Admin</span>
               }
             </td>
             <td>
@@ -843,7 +847,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="10">
+            <td colspan="11">
               <div class="empty-state">
                 <div class="empty-icon">👥</div>
                 <p>Sin usuarios registrados</p>

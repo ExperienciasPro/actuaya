@@ -698,6 +698,18 @@ export class SubscribersComponent {
     return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
   }
 
+  getFirstName(name: string): string {
+    if (!name) return '—';
+    return name.split(' ')[0];
+  }
+
+  getLastName(name: string): string {
+    if (!name) return '—';
+    const parts = name.split(' ');
+    if (parts.length <= 1) return '—';
+    return parts.slice(1).join(' ');
+  }
+
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
       superadmin: 'Super Admin',
