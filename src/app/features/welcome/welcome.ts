@@ -154,9 +154,13 @@ interface CountryCode {
             </div>
 
             <button type="submit" class="register-btn"
-              [disabled]="!name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !phoneNumber.trim() || !department || !city.trim() || password.length < 6 || password !== confirmPassword">
-              Comenzar mi camino
-              <um-icon name="bolt" [size]="18"></um-icon>
+              [disabled]="isLoading || !name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !phoneNumber.trim() || !department || !city.trim() || password.length < 6 || password !== confirmPassword">
+              @if (isLoading) {
+                <span>Creando tu cuenta... 🚀</span>
+              } @else {
+                Comenzar mi camino
+                <um-icon name="bolt" [size]="18"></um-icon>
+              }
             </button>
 
           </form>
@@ -176,6 +180,7 @@ export class WelcomeComponent implements OnInit {
   private userService = inject(UserService);
   private syncService = inject(DataSyncService);
 
+  isLoading = false;
   name = '';
   email = '';
   password = '';
@@ -272,44 +277,56 @@ export class WelcomeComponent implements OnInit {
         return;
       }
 
-      // Email uniqueness check via syncUserList() + local check
+      this.isLoading = true;
+
       try {
-        await this.syncService.syncUserList();
-      } catch (e) {
-        console.warn('Error sincronizando la lista de usuarios:', e);
-      }
-      const emailExists = this.userService.getAllUsers().some(
-        u => u.email?.toLowerCase() === this.email.trim().toLowerCase()
-      );
-      if (emailExists) {
-        alert('El correo electrónico ya está registrado.');
-        return;
-      }
+        // Email uniqueness check via syncUserList() + local check
+        try {
+          await this.syncService.syncUserList();
+        } catch (e) {
+          console.warn('Error sincronizando la lista de usuarios:', e);
+        }
+        const emailExists = this.userService.getAllUsers().some(
+          u => u.email?.toLowerCase() === this.email.trim().toLowerCase()
+        );
+        if (emailExists) {
+          alert('El correo electrónico ya está registrado.');
+          this.isLoading = false;
+          return;
+        }
 
-      await this.userService.saveProfile({
-        name: this.name.trim(),
-        email: this.email.trim(),
-        password: this.password,
-        phone: this.fullPhone,
-        occupation: this.occupation.trim(),
-        companyName: this.companyName.trim(),
-        age: this.age,
-        companySize: this.companySize,
-        department: this.department,
-        city: this.city.trim(),
-      });
+        await this.userService.saveProfile({
+          name: this.name.trim(),
+          email: this.email.trim(),
+          password: this.password,
+          phone: this.fullPhone,
+          occupation: this.occupation.trim(),
+          companyName: this.companyName.trim(),
+          age: this.age,
+          companySize: this.companySize,
+          department: this.department,
+          city: this.city.trim(),
+        });
 
-      // Ensure registration data forces a sync right away
-      try {
-        // Habilitar temporalmente hasSynced para poder subir la nueva cuenta
-        (this.syncService as any).hasSynced = true;
-        await this.syncService.saveToServer();
-        await this.syncService.syncFromServer();
-      } catch (e) {
-        console.warn('Error en la sincronización inicial de registro:', e);
+        // Ensure registration data forces a sync right away
+        try {
+          // Habilitar temporalmente hasSynced para poder subir la nueva cuenta
+          (this.syncService as any).hasSynced = true;
+          await this.syncService.saveToServer();
+          // Sincronizar en background para no demorar la navegación
+          this.syncService.syncFromServer().catch(err => {
+            console.warn('Error syncFromServer background:', err);
+          });
+        } catch (e) {
+          console.warn('Error en la sincronización inicial de registro:', e);
+        }
+
+        this.router.navigate(['/setup']);
+      } catch (err: any) {
+        console.error('Error during registration process:', err);
+        alert('Ocurrió un error al crear la cuenta. Inténtalo de nuevo.');
+        this.isLoading = false;
       }
-
-      this.router.navigate(['/setup']);
     }
   }
 }
