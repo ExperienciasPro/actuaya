@@ -100,12 +100,20 @@ export class UserService {
   authenticate(identifier: string, password: string): UserProfile | null {
     this.ensureSuperAdmin();
     const users = this.getAllUsers();
-    const user = users.find(
-      u => (u.email?.toLowerCase() === identifier.toLowerCase() ||
-            u.name.toLowerCase() === identifier.toLowerCase()) &&
-            u.password === password &&
-            u.isActive
+    // Priorizar match exacto por email sobre match por nombre
+    let user = users.find(
+      u => u.email?.toLowerCase() === identifier.toLowerCase() &&
+           u.password === password &&
+           u.isActive
     );
+    // Fallback: buscar por nombre (legacy)
+    if (!user) {
+      user = users.find(
+        u => u.name.toLowerCase() === identifier.toLowerCase() &&
+             u.password === password &&
+             u.isActive
+      );
+    }
     if (user) {
       user.lastLogin = new Date().toISOString();
       this.saveUserToList(user);

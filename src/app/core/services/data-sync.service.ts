@@ -40,7 +40,6 @@ export class DataSyncService {
    */
   private readonly SESSION_LOCAL_KEYS = new Set([
     'um_user_profile',
-    'um_setup_intro_seen',
     'um_enabled_modules',
     'um_nav_order',
   ]);
