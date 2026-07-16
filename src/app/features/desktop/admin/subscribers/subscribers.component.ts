@@ -142,7 +142,8 @@ export class SubscribersComponent {
       });
       this.selectedUserIds.set(new Set());
       this.refreshUsers();
-      this.dataSyncService.saveToServer();
+      // Save to server AFTER local state is updated so the server gets isDeleted flags
+      await this.dataSyncService.saveToServer();
       this.showToast(`🗑️ ${toDelete.length} usuarios eliminados`);
     }
   }
@@ -495,8 +496,9 @@ export class SubscribersComponent {
   // ─── User Management ─────────────────────
 
   async refreshUsers(): Promise<void> {
-    this.storageService.removeUnscoped('um_users');
-    await this.dataSyncService.syncUserList();
+    // Just reload from localStorage — do NOT nuke local data and re-sync from server.
+    // Deleting um_users and re-downloading from the server was causing deleted users
+    // to reappear because the server hadn't received the isDeleted flags yet.
     this.users.set(this.userService.getAllUsers());
   }
 
@@ -781,12 +783,13 @@ export class SubscribersComponent {
     this.showToast(user.isActive ? '🚫 Usuario desactivado' : '✅ Usuario activado');
   }
 
-  deleteUser(user: UserProfile): void {
+  async deleteUser(user: UserProfile): Promise<void> {
     if (confirm(`¿Eliminar al usuario "${user.name}" permanentemente?`)) {
       this.userService.deleteUser(user.id);
       this.refreshUsers();
       this.closeUserDetail();
-      this.dataSyncService.saveToServer();
+      // Save to server AFTER local state is updated so the server gets isDeleted flags
+      await this.dataSyncService.saveToServer();
       this.showToast('🗑️ Usuario eliminado');
     }
   }

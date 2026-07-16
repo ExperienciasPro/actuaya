@@ -284,11 +284,26 @@ export class DataSyncService {
       if (!response.ok) return;
       const serverUsers = await response.json();
       if (Array.isArray(serverUsers) && serverUsers.length > 0) {
-        // Merge con la lista local
+        // Merge con la lista local — LOCAL wins for isDeleted flags
         const localUsers = this.storage.getUnscoped<any[]>('um_users') || [];
+        const localMap = new Map<string, any>();
+        for (const u of localUsers) { if (u?.id) localMap.set(u.id, u); }
+
         const mergedMap = new Map<string, any>();
-        for (const u of serverUsers) { if (u?.id) mergedMap.set(u.id, u); }
-        for (const u of localUsers) { if (u?.id && !mergedMap.has(u.id)) mergedMap.set(u.id, u); }
+        for (const u of serverUsers) {
+          if (!u?.id) continue;
+          const local = localMap.get(u.id);
+          if (local?.isDeleted) {
+            // Preserve local deletion — do NOT resurrect from server
+            mergedMap.set(u.id, local);
+          } else {
+            mergedMap.set(u.id, u);
+          }
+        }
+        // Add any local-only users (not on server yet)
+        for (const u of localUsers) {
+          if (u?.id && !mergedMap.has(u.id)) mergedMap.set(u.id, u);
+        }
         this.storage.setUnscoped('um_users', Array.from(mergedMap.values()));
         console.log(`[DataSync] Lista de usuarios sincronizada: ${mergedMap.size} usuarios`);
       }
