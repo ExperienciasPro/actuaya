@@ -14,6 +14,9 @@
     <button class="btn-create btn-import" (click)="triggerImportFile()">
       📥 Importar
     </button>
+    <button class="btn-create btn-export-header" (click)="exportUsersCSV()">
+      📄 Exportar
+    </button>
     <input #fileInput type="file" accept=".csv,.xlsx,.xls" style="display:none"
            (change)="onImportFile($event)" />
   </div>
@@ -676,8 +679,6 @@
             (click)="showAdvancedFilters.set(!showAdvancedFilters())">
       ⚙️ Filtros Avanzados
     </button>
-
-    <button class="btn-export" (click)="exportUsersCSV()" title="Exportar a CSV">📄 Exportar</button>
   </div>
 
   <!-- Advanced Filters Panel -->

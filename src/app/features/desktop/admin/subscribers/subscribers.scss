@@ -101,6 +101,18 @@ $accent: $color-accent-primary;
         box-shadow: none;
       }
     }
+
+    &.btn-export-header {
+      background: rgba(#00b894, 0.1);
+      color: #00b894;
+      border: 1.5px solid rgba(#00b894, 0.2);
+
+      &:hover {
+        background: rgba(#00b894, 0.18);
+        border-color: #00b894;
+        box-shadow: none;
+      }
+    }
   }
 }
 
