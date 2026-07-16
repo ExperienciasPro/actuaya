@@ -5,7 +5,7 @@ import { UserService } from '../services/user.service';
 /**
  * Auth guard — intercepta el Magic Link (auth=id) y redirige a /welcome si el usuario no se ha registrado.
  */
-export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+export const authGuard: CanActivateFn = async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const userService = inject(UserService);
   const router = inject(Router);
 
@@ -15,21 +15,9 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
   const magicToken = urlTree.queryParams['auth'];
 
   if (magicToken) {
-    let user = userService.getUserById(magicToken);
-    if (!user) {
-      user = {
-        id: magicToken,
-        name: magicToken === 'sa-001' ? 'Gonzalo Jimenez Ramirez' : 'Usuario ActuaYa',
-        role: magicToken === 'sa-001' ? 'superadmin' : 'user',
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        subscriptionStatus: 'active',
-        trialEndsAt: '2099-12-31T23:59:59.000Z',
-        subscriptionActivatedByAdmin: false,
-      };
-    }
+    const user = userService.getUserById(magicToken);
     if (user) {
-      userService.saveProfile(user); // Auto-login
+      await userService.saveProfile(user); // Auto-login
     }
     
     // Si NO estamos en la pantalla de instalación, limpiamos la URL

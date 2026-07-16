@@ -190,8 +190,8 @@ export class SettingsComponent {
     return this.editName !== current.name || this.editEmail !== current.email;
   }
 
-  saveUserProfile(): void {
-    this.userService.saveProfile({ name: this.editName, email: this.editEmail });
+  async saveUserProfile(): Promise<void> {
+    await this.userService.saveProfile({ name: this.editName, email: this.editEmail });
     this.showToast('✅ Perfil actualizado correctamente');
   }
 

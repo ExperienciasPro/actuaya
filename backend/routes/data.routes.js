@@ -15,8 +15,29 @@ const DataStore = require('../models/data.model');
 
 // ─── Auth Middleware ──────────────────────────
 function authCheck(req, res, next) {
-  // Accept token from header OR query param (needed for navigator.sendBeacon)
-  const token = req.headers['x-auth-token'] || req.query.token || '';
+  // Accept token from header OR query param (needed for navigator.sendBeacon) OR request body
+  let token = req.headers['x-auth-token'] || req.query.token || '';
+
+  if (req.body) {
+    if (typeof req.body === 'string') {
+      try {
+        const parsed = JSON.parse(req.body);
+        req.body = parsed;
+      } catch (e) {
+        // Not valid JSON string
+      }
+    }
+
+    if (typeof req.body === 'object' && req.body !== null) {
+      if (!token) {
+        token = req.body.token || req.body.authToken || '';
+      }
+      // Remove token fields from req.body to avoid saving them as database keys
+      delete req.body.token;
+      delete req.body.authToken;
+    }
+  }
+
   const expected = process.env.AUTH_TOKEN || 'um_api_2026';
   if (token !== expected) {
     return res.status(401).json({ error: 'No autorizado' });
@@ -141,9 +162,29 @@ router.post('/', async (req, res) => {
     }
 
     // Single key upsert
+    let valueToSave = req.body;
+    if (key === 'um_users' && Array.isArray(req.body)) {
+      const existing = await DataStore.findOne({ key: 'um_users' });
+      const serverUsers = (existing && Array.isArray(existing.value)) ? existing.value : [];
+      const mergedMap = new Map();
+      for (const u of serverUsers) {
+        if (u && u.id) mergedMap.set(u.id, u);
+      }
+      for (const u of req.body) {
+        if (u && u.id) {
+          const serverVersion = mergedMap.get(u.id);
+          if (serverVersion && serverVersion.role === 'superadmin' && u.role !== 'superadmin') {
+            continue; // No degradar superadmin
+          }
+          mergedMap.set(u.id, u);
+        }
+      }
+      valueToSave = Array.from(mergedMap.values());
+    }
+
     await DataStore.findOneAndUpdate(
       { key },
-      { $set: { key, value: req.body, updatedAt: new Date() } },
+      { $set: { key, value: valueToSave, updatedAt: new Date() } },
       { upsert: true, new: true }
     );
 

@@ -481,18 +481,45 @@ export class SubscribersComponent {
     return [...users, ...subsAsUsers];
   });
 
+  // ─── Advanced Filters State ────────────────
+  showAdvancedFilters = signal(false);
+  filterDepartment = signal('');
+  filterCity = signal('');
+  filterRole = signal('');
+  filterActivity = signal('');
+  filterSortOrder = signal('newest');
+
+  readonly departmentsList = [
+    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá',
+    'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba',
+    'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira', 'Magdalena',
+    'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda',
+    'San Andrés y Providencia', 'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
+  ];
+
   filteredUsers = computed(() => {
     const all = this.allPeople();
     const query = this.userSearchQuery().toLowerCase().trim();
     const filter = this.userStatusFilter();
 
-    return all.filter(u => {
+    // Advanced filters
+    const dept = this.filterDepartment();
+    const city = this.filterCity().toLowerCase().trim();
+    const role = this.filterRole();
+    const activity = this.filterActivity();
+    const sortOrder = this.filterSortOrder();
+
+    let result = all.filter(u => {
+      // 1. Query general
       const matchQuery = !query ||
         u.name.toLowerCase().includes(query) ||
         (u.email || '').toLowerCase().includes(query) ||
         (u.phone || '').toLowerCase().includes(query) ||
         (u.companyName || '').toLowerCase().includes(query);
 
+      if (!matchQuery) return false;
+
+      // 2. Chip de Estado principal
       let matchStatus = filter === 'all';
       if (!matchStatus) {
         if (filter === 'active') matchStatus = u.isActive && u.subscriptionStatus === 'active';
@@ -507,8 +534,37 @@ export class SubscribersComponent {
           }
         }
       }
-      return matchQuery && matchStatus;
+      if (!matchStatus) return false;
+
+      // 3. Filtro de Departamento
+      if (dept && u.department !== dept) return false;
+
+      // 4. Filtro de Ciudad
+      if (city && !(u.city || '').toLowerCase().includes(city)) return false;
+
+      // 5. Filtro de Rol
+      if (role && u.role !== role) return false;
+
+      // 6. Filtro de Actividad Reciente
+      if (activity) {
+        if (!u.lastLogin) return false;
+        const daysSince = (Date.now() - new Date(u.lastLogin).getTime()) / (1000 * 60 * 60 * 24);
+        if (activity === 'today' && daysSince > 1) return false;
+        if (activity === 'week' && daysSince > 7) return false;
+        if (activity === 'inactive-14' && daysSince <= 14) return false;
+      }
+
+      return true;
     });
+
+    // 7. Ordenación
+    result.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return sortOrder === 'oldest' ? dateA - dateB : dateB - dateA;
+    });
+
+    return result;
   });
 
   // ─── Engagement & Churn Helpers ─────────────

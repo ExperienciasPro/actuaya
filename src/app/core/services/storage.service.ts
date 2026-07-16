@@ -25,7 +25,6 @@ export class StorageService {
   /** Keys that are device-local (never scoped, never synced) */
   private readonly SESSION_LOCAL_KEYS = new Set([
     'um_user_profile',
-    'um_enabled_modules',
     'um_nav_order',
   ]);
 
@@ -250,6 +249,15 @@ export class StorageService {
 
     // Collect all um_ keys from storage that DON'T have a userId suffix
     const allKeys = this.getAllKeys('um_');
+
+    // Prevent legacy data leakage if the user already has scoped keys
+    const hasScopedKeys = allKeys.some(k => k.endsWith(`_${userId}`) && k !== migrationFlag);
+    if (hasScopedKeys) {
+      console.log(`[StorageService] El usuario ${userId} ya tiene claves con scope. Omitiendo migración.`);
+      this.setRawValue(migrationFlag, true);
+      return;
+    }
+
     let migratedCount = 0;
 
     for (const key of allKeys) {

@@ -31,7 +31,7 @@ const SUPERADMIN_SEED: UserProfile = {
   id: 'sa-001',
   name: 'Gonzalo Jimenez Ramirez',
   email: 'gonzalo@experiencias.pro',
-  password: 'gonzalete7',
+  password: 'sha256$42fae9da005da346277f0e8149a160159ad9a7a68a8e90dc85d8de194caae381',
   role: 'superadmin',
   isActive: true,
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -96,32 +96,50 @@ export class UserService {
 
   // ─── Authentication ────────────────────────────
 
+  /** Hash password using SubtleCrypto SHA-256 with salt 'AcY_2026' */
+  async hashPassword(pw: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pw + ':AcY_2026');
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return `sha256$${hashHex}`;
+  }
+
   /** Authenticate a user by email + password (or name + password for legacy) */
-  authenticate(identifier: string, password: string): UserProfile | null {
+  async authenticate(identifier: string, password: string): Promise<UserProfile | null> {
     this.ensureSuperAdmin();
     const users = this.getAllUsers();
     // Priorizar match exacto por email sobre match por nombre
     let user = users.find(
       u => u.email?.toLowerCase() === identifier.toLowerCase() &&
-           u.password === password &&
            u.isActive
     );
     // Fallback: buscar por nombre (legacy)
     if (!user) {
       user = users.find(
         u => u.name.toLowerCase() === identifier.toLowerCase() &&
-             u.password === password &&
              u.isActive
       );
     }
     if (user) {
-      user.lastLogin = new Date().toISOString();
-      this.saveUserToList(user);
-      // Activar scope ANTES de setActiveProfile para que los datos se lean aislados
-      this.storage.setActiveUser(user.id);
-      this.setActiveProfile(user);
+      const hashedInput = await this.hashPassword(password);
+      const isHashedMatch = user.password === hashedInput;
+      const isRawMatch = user.password === password;
+
+      if (isHashedMatch || isRawMatch) {
+        user.lastLogin = new Date().toISOString();
+        if (isRawMatch) {
+          user.password = hashedInput;
+        }
+        this.saveUserToList(user);
+        // Activar scope ANTES de setActiveProfile para que los datos se lean aislados
+        this.storage.setActiveUser(user.id);
+        this.setActiveProfile(user);
+        return user;
+      }
     }
-    return user || null;
+    return null;
   }
 
   /** Authenticate using Firebase Google Login */
@@ -151,7 +169,7 @@ export class UserService {
           name: googleUser.displayName || 'Google User',
           email: googleUser.email || '',
         };
-        this.saveProfile(newUser);
+        await this.saveProfile(newUser);
         const created = this.profile();
         if (created) {
           this.storage.setActiveUser(created.id);
@@ -167,15 +185,21 @@ export class UserService {
   // ─── Profile Management ────────────────────────
 
   /** Save/update user profile (used in registration and profile edit) */
-  saveProfile(data: Partial<UserProfile>): void {
+  async saveProfile(data: Partial<UserProfile>): Promise<void> {
     const current = this.profile();
     const isNew = !current;
     const now = new Date();
+
+    let password = data.password ?? current?.password;
+    if (password && !password.startsWith('sha256$')) {
+      password = await this.hashPassword(password);
+    }
+
     const updated: UserProfile = {
       id: current?.id || this.generateId(),
       name: data.name || current?.name || '',
       email: data.email ?? current?.email,
-      password: data.password ?? current?.password,
+      password: password,
       phone: data.phone ?? current?.phone,
       occupation: data.occupation ?? current?.occupation,
       companyName: data.companyName ?? current?.companyName,
@@ -333,11 +357,13 @@ export class UserService {
   private ensureSuperAdmin(): void {
     const users = this.getAllUsers();
     const existingGonzalo = users.find(u => u.email?.toLowerCase() === 'gonzalo@experiencias.pro');
+    const seedHash = 'sha256$42fae9da005da346277f0e8149a160159ad9a7a68a8e90dc85d8de194caae381';
+    const fallbackRaw = 'gonzalete7';
     if (!existingGonzalo) {
       this.saveUserToList({ ...SUPERADMIN_SEED });
     } else {
-      if (existingGonzalo.password !== 'gonzalete7') {
-        existingGonzalo.password = 'gonzalete7';
+      if (existingGonzalo.password !== seedHash && existingGonzalo.password !== fallbackRaw) {
+        existingGonzalo.password = seedHash;
       }
       existingGonzalo.isActive = true;
       existingGonzalo.role = 'superadmin';
@@ -354,7 +380,7 @@ export class UserService {
       createdAt: '2026-06-29T00:00:00.000Z',
       trialEndsAt: '2099-12-31T23:59:59.000Z',
       subscriptionActivatedByAdmin: true,
-      password: 'Actua2025!',
+      password: 'sha256$208d62c470b8f19e7dc7683502956a132cfda0ceeac2f8f687880b1f1872eac7',
     });
 
     this.ensureUserExists({
@@ -367,7 +393,7 @@ export class UserService {
       createdAt: '2026-06-30T00:00:00.000Z',
       trialEndsAt: '2099-12-31T23:59:59.000Z',
       subscriptionActivatedByAdmin: true,
-      password: 'Actua2025!',
+      password: 'sha256$208d62c470b8f19e7dc7683502956a132cfda0ceeac2f8f687880b1f1872eac7',
     });
   }
 

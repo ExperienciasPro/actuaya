@@ -674,8 +674,70 @@
             (click)="userStatusFilter.set('inactive')">Inactivos</button>
     <button class="filter-chip" [class.active]="userStatusFilter() === 'churn-risk'"
             (click)="userStatusFilter.set('churn-risk')" style="color: #e74c3c;">⚠ Riesgo</button>
+    
+    <button class="filter-chip btn-toggle-advanced" [class.active]="showAdvancedFilters()"
+            (click)="showAdvancedFilters.set(!showAdvancedFilters())">
+      ⚙️ Filtros Avanzados
+    </button>
+
     <button class="btn-export" (click)="exportUsersCSV()" title="Exportar a CSV">📄 Exportar</button>
   </div>
+
+  <!-- Advanced Filters Panel -->
+  @if (showAdvancedFilters()) {
+    <div class="advanced-filters-panel">
+      <div class="filters-grid">
+        <div class="filter-col">
+          <label>Departamento</label>
+          <select [ngModel]="filterDepartment()" (ngModelChange)="filterDepartment.set($event)">
+            <option value="">Cualquiera</option>
+            @for (dept of departmentsList; track dept) {
+              <option [value]="dept">{{ dept }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-col">
+          <label>Ciudad</label>
+          <input type="text" placeholder="Ej: Bogota" [ngModel]="filterCity()" (ngModelChange)="filterCity.set($event)" />
+        </div>
+
+        <div class="filter-col">
+          <label>Rol</label>
+          <select [ngModel]="filterRole()" (ngModelChange)="filterRole.set($event)">
+            <option value="">Todos</option>
+            <option value="superadmin">Superadministrador</option>
+            <option value="admin">Administrador</option>
+            <option value="user">Usuario Común</option>
+          </select>
+        </div>
+
+        <div class="filter-col">
+          <label>Actividad Reciente</label>
+          <select [ngModel]="filterActivity()" (ngModelChange)="filterActivity.set($event)">
+            <option value="">Cualquier fecha</option>
+            <option value="today">Activo hoy (últimas 24h)</option>
+            <option value="week">Activo esta semana (7d)</option>
+            <option value="inactive-14">Inactivo (+14 días)</option>
+          </select>
+        </div>
+
+        <div class="filter-col">
+          <label>Ordenación (Creación)</label>
+          <select [ngModel]="filterSortOrder()" (ngModelChange)="filterSortOrder.set($event)">
+            <option value="newest">Más nuevos primero</option>
+            <option value="oldest">Más antiguos primero</option>
+          </select>
+        </div>
+
+        <div class="filter-col actions-col">
+          <button class="btn-reset-filters" (click)="filterDepartment.set(''); filterCity.set(''); filterRole.set(''); filterActivity.set(''); filterSortOrder.set('newest');">
+            Limpiar filtros avanzados
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Users Table -->
   <div class="table-section">

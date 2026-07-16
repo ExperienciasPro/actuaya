@@ -40,7 +40,6 @@ export class DataSyncService {
    */
   private readonly SESSION_LOCAL_KEYS = new Set([
     'um_user_profile',
-    'um_enabled_modules',
     'um_nav_order',
   ]);
 
@@ -103,169 +102,169 @@ export class DataSyncService {
     }
     this.isSyncing = true;
 
-    const userId = this.storage.getActiveUserId();
-    if (!userId) {
-      console.log('[DataSync] No hay usuario activo, saltando sincronización.');
-      this.isSyncing = false;
-      return { success: false, msg: 'No user', goals: 0, tasks: 0, radar: 0 };
-    }
+    try {
+      const userId = this.storage.getActiveUserId();
+      if (!userId) {
+        console.log('[DataSync] No hay usuario activo, saltando sincronización.');
+        return { success: false, msg: 'No user', goals: 0, tasks: 0, radar: 0 };
+      }
 
-    // Fix C6: retry con backoff exponencial (3 intentos)
-    let lastError = '';
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        console.log(`[DataSync] Sincronizando desde servidor (intento ${attempt}/3, user=${userId})...`);
-        const response = await fetch(`${this.API_URL}?key=_bulk&_t=${Date.now()}`, {
-          headers: { 'X-Auth-Token': this.AUTH_TOKEN },
-          cache: 'no-store',
-        });
+      // Fix C6: retry con backoff exponencial (3 intentos)
+      let lastError = '';
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`[DataSync] Sincronizando desde servidor (intento ${attempt}/3, user=${userId})...`);
+          const response = await fetch(`${this.API_URL}?key=_bulk&_t=${Date.now()}`, {
+            headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+            cache: 'no-store',
+          });
 
-        if (!response.ok) {
-          lastError = `HTTP ${response.status}`;
-          if (attempt < 3) {
-            await new Promise(r => setTimeout(r, 1000 * attempt));
-            continue;
-          }
-          break;
-        }
-
-        const serverData: Record<string, unknown> = await response.json();
-        const serverKeys = Object.keys(serverData);
-
-        if (serverKeys.length === 0) {
-          console.log('[DataSync] Servidor vacío, subiendo datos locales');
-          this.hasSynced = true;
-          this.isSyncing = false;
-          await this.saveToServer();
-          return { success: true, msg: 'Servidor vacío -> subió local', goals: 0, tasks: 0, radar: 0 };
-        }
-
-        console.log('[DataSync] Datos del servidor:', serverKeys.length, 'claves');
-
-        // ── Helper: buscar primero la clave scoped, luego la legacy ──
-        const getArray = (baseKey: string): any[] => {
-          const scopedKey = `${baseKey}_${userId}`;
-          if (serverData[scopedKey] && Array.isArray(serverData[scopedKey])) {
-            return serverData[scopedKey] as any[];
-          }
-          // Fallback: clave legacy sin sufijo (datos pre-migración)
-          if (serverData[baseKey] && Array.isArray(serverData[baseKey])) {
-            console.log(`[DataSync] Migración servidor: usando clave legacy '${baseKey}'`);
-            return serverData[baseKey] as any[];
-          }
-          return [];
-        };
-
-        const getValue = (baseKey: string): unknown => {
-          const scopedKey = `${baseKey}_${userId}`;
-          if (serverData[scopedKey] !== undefined) return serverData[scopedKey];
-          if (serverData[baseKey] !== undefined) return serverData[baseKey];
-          return undefined;
-        };
-
-        const goalsArr = getArray('um_goals');
-        let tasksArr = getArray('um_tasks');
-        const radarArr = getArray('um_radar');
-
-        // Purge orphan tasks
-        if (goalsArr.length > 0) {
-          const validGoalIds = new Set(goalsArr.map(g => g.id));
-          tasksArr = tasksArr.filter(t => !t.goalId || validGoalIds.has(t.goalId));
-        }
-
-        // Hidratación directa en NgZone de Angular
-        this.ngZone.run(() => {
-          let restored = 0;
-
-          // 1. Restaurar claves globales directamente (sin scoping)
-          for (const key of serverKeys) {
-            if (this.GLOBAL_KEYS.has(key)) {
-              this.storage.setUnscoped(key, serverData[key]);
-              restored++;
-            }
-          }
-
-          // 2. Restaurar claves del usuario
-          // Recopilar baseKeys únicas del servidor para este usuario
-          const processedBaseKeys = new Set<string>();
-          for (const key of serverKeys) {
-            if (this.GLOBAL_KEYS.has(key) || this.SESSION_LOCAL_KEYS.has(key)) continue;
-            if (key.includes('_migrated_v2_')) continue;
-
-            let baseKey: string | null = null;
-
-            // Clave scoped para ESTE usuario → extraer base
-            if (key.endsWith(`_${userId}`)) {
-              baseKey = key.substring(0, key.length - userId.length - 1);
-            }
-            // Clave legacy sin sufijo de usuario → candidata a migración
-            else if (!key.match(/_[a-z]+-[a-z0-9]{5,}$/i)) {
-              // No tiene formato de userId al final → es legacy
-              baseKey = key;
-            }
-            // Clave scoped para OTRO usuario → ignorar
-            else {
+          if (!response.ok) {
+            lastError = `HTTP ${response.status}`;
+            if (attempt < 3) {
+              await new Promise(r => setTimeout(r, 1000 * attempt));
               continue;
             }
-
-            if (!baseKey || !baseKey.startsWith(this.UM_PREFIX)) continue;
-            if (this.SESSION_LOCAL_KEYS.has(baseKey)) continue;
-            if (processedBaseKeys.has(baseKey)) continue;
-            processedBaseKeys.add(baseKey);
-
-            const val = getValue(baseKey);
-            if (val !== undefined) {
-              // storage.set('um_goals', data) → internamente escribe um_goals_sa-001
-              this.storage.set(baseKey, val);
-              restored++;
-            }
+            break;
           }
 
-          // Hidratar servicios reactivos
-          try { this.goalService.hydrateDirectly(goalsArr); } catch (err) { console.error('Error hidratando goals:', err); }
-          try { this.taskService.hydrateDirectly(tasksArr); } catch (err) { console.error('Error hidratando tasks:', err); }
-          try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
-          try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
+          const serverData: Record<string, unknown> = await response.json();
+          const serverKeys = Object.keys(serverData);
 
-          console.log(`[DataSync] Hidratadas ${restored} claves del servidor`);
-          this.hasSynced = true;
-        });
+          if (serverKeys.length === 0) {
+            console.log('[DataSync] Servidor vacío, subiendo datos locales');
+            this.hasSynced = true;
+            await this.saveToServer();
+            return { success: true, msg: 'Servidor vacío -> subió local', goals: 0, tasks: 0, radar: 0 };
+          }
 
-        // 3. Auto-migración servidor: re-guardar con claves scoped
-        const needsMigration = serverKeys.some(k =>
-          k.startsWith(this.UM_PREFIX) &&
-          !this.GLOBAL_KEYS.has(k) &&
-          !this.SESSION_LOCAL_KEYS.has(k) &&
-          !k.endsWith('_' + userId) &&
-          !k.match(/_[a-z]+-[a-z0-9]{5,}$/i)
-        );
-        if (needsMigration) {
-          console.log('[DataSync] Data legacy detectada en servidor. Re-guardando con scope...');
-          setTimeout(() => this.saveToServer(), 2000);
-        }
+          console.log('[DataSync] Datos del servidor:', serverKeys.length, 'claves');
 
-        this.isSyncing = false;
-        return {
-          success: true,
-          msg: `OK (${serverKeys.length} keys)`,
-          goals: goalsArr.length,
-          tasks: tasksArr.length,
-          radar: radarArr.length,
-        };
-      } catch (e: any) {
-        lastError = e.message || 'Error de red';
-        console.warn(`[DataSync] Intento ${attempt}/3 falló:`, lastError);
-        if (attempt < 3) {
-          await new Promise(r => setTimeout(r, 1000 * attempt));
+          // ── Helper: buscar primero la clave scoped, luego la legacy ──
+          const getArray = (baseKey: string): any[] => {
+            const scopedKey = `${baseKey}_${userId}`;
+            if (serverData[scopedKey] && Array.isArray(serverData[scopedKey])) {
+              return serverData[scopedKey] as any[];
+            }
+            // Fallback: clave legacy sin sufijo (datos pre-migración)
+            if (serverData[baseKey] && Array.isArray(serverData[baseKey])) {
+              console.log(`[DataSync] Migración servidor: usando clave legacy '${baseKey}'`);
+              return serverData[baseKey] as any[];
+            }
+            return [];
+          };
+
+          const getValue = (baseKey: string): unknown => {
+            const scopedKey = `${baseKey}_${userId}`;
+            if (serverData[scopedKey] !== undefined) return serverData[scopedKey];
+            if (serverData[baseKey] !== undefined) return serverData[baseKey];
+            return undefined;
+          };
+
+          const goalsArr = getArray('um_goals');
+          let tasksArr = getArray('um_tasks');
+          const radarArr = getArray('um_radar');
+
+          // Purge orphan tasks
+          if (goalsArr.length > 0) {
+            const validGoalIds = new Set(goalsArr.map(g => g.id));
+            tasksArr = tasksArr.filter(t => !t.goalId || validGoalIds.has(t.goalId));
+          }
+
+          // Hidratación directa en NgZone de Angular
+          this.ngZone.run(() => {
+            let restored = 0;
+
+            // 1. Restaurar claves globales directamente (sin scoping)
+            for (const key of serverKeys) {
+              if (this.GLOBAL_KEYS.has(key)) {
+                this.storage.setUnscoped(key, serverData[key]);
+                restored++;
+              }
+            }
+
+            // 2. Restaurar claves del usuario
+            // Recopilar baseKeys únicas del servidor para este usuario
+            const processedBaseKeys = new Set<string>();
+            for (const key of serverKeys) {
+              if (this.GLOBAL_KEYS.has(key) || this.SESSION_LOCAL_KEYS.has(key)) continue;
+              if (key.includes('_migrated_v2_')) continue;
+
+              let baseKey: string | null = null;
+
+              // Clave scoped para ESTE usuario → extraer base
+              if (key.endsWith(`_${userId}`)) {
+                baseKey = key.substring(0, key.length - userId.length - 1);
+              }
+              // Clave legacy sin sufijo de usuario → candidata a migración
+              else if (!key.match(/_[a-z]+-[a-z0-9]{5,}$/i)) {
+                // No tiene formato de userId al final → es legacy
+                baseKey = key;
+              }
+              // Clave scoped para OTRO usuario → ignorar
+              else {
+                continue;
+              }
+
+              if (!baseKey || !baseKey.startsWith(this.UM_PREFIX)) continue;
+              if (this.SESSION_LOCAL_KEYS.has(baseKey)) continue;
+              if (processedBaseKeys.has(baseKey)) continue;
+              processedBaseKeys.add(baseKey);
+
+              const val = getValue(baseKey);
+              if (val !== undefined) {
+                // storage.set('um_goals', data) → internamente escribe um_goals_sa-001
+                this.storage.set(baseKey, val);
+                restored++;
+              }
+            }
+
+            // Hidratar servicios reactivos
+            try { this.goalService.hydrateDirectly(goalsArr); } catch (err) { console.error('Error hidratando goals:', err); }
+            try { this.taskService.hydrateDirectly(tasksArr); } catch (err) { console.error('Error hidratando tasks:', err); }
+            try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
+            try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
+
+            console.log(`[DataSync] Hidratadas ${restored} claves del servidor`);
+            this.hasSynced = true;
+          });
+
+          // 3. Auto-migración servidor: re-guardar con claves scoped
+          const needsMigration = serverKeys.some(k =>
+            k.startsWith(this.UM_PREFIX) &&
+            !this.GLOBAL_KEYS.has(k) &&
+            !this.SESSION_LOCAL_KEYS.has(k) &&
+            !k.endsWith('_' + userId) &&
+            !k.match(/_[a-z]+-[a-z0-9]{5,}$/i)
+          );
+          if (needsMigration) {
+            console.log('[DataSync] Data legacy detectada en servidor. Re-guardando con scope...');
+            setTimeout(() => this.saveToServer(), 2000);
+          }
+
+          return {
+            success: true,
+            msg: `OK (${serverKeys.length} keys)`,
+            goals: goalsArr.length,
+            tasks: tasksArr.length,
+            radar: radarArr.length,
+          };
+        } catch (e: any) {
+          lastError = e.message || 'Error de red';
+          console.warn(`[DataSync] Intento ${attempt}/3 falló:`, lastError);
+          if (attempt < 3) {
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+          }
         }
       }
-    }
 
-    // Fix C6: si todos los intentos fallan, aún permite guardar localmente
-    console.warn('[DataSync] Todos los intentos de sync fallaron. Habilitando guardado local.');
-    this.hasSynced = true;
-    this.isSyncing = false;
-    return { success: false, msg: lastError, goals: 0, tasks: 0, radar: 0 };
+      // Fix C6: si todos los intentos fallan, aún permite guardar localmente
+      console.warn('[DataSync] Todos los intentos de sync fallaron. Habilitando guardado local.');
+      this.hasSynced = true;
+      return { success: false, msg: lastError, goals: 0, tasks: 0, radar: 0 };
+    } finally {
+      this.isSyncing = false;
+    }
   }
 
   /**
@@ -361,8 +360,13 @@ export class DataSyncService {
       const payload = this.collectLocalData();
       if (Object.keys(payload).length === 0) return;
 
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      const url = `${this.API_URL}?key=_bulk&token=${this.AUTH_TOKEN}`;
+      const payloadWithToken = {
+        ...payload,
+        token: this.AUTH_TOKEN
+      };
+
+      const blob = new Blob([JSON.stringify(payloadWithToken)], { type: 'application/json' });
+      const url = `${this.API_URL}?key=_bulk`;
       navigator.sendBeacon(url, blob);
       console.log('[DataSync] Beacon enviado al cerrar pestaña');
     } catch (e) {

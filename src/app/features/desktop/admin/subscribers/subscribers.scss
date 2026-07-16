@@ -321,6 +321,98 @@ $accent: $color-accent-primary;
     &:hover { border-color: $accent; color: $accent; }
     &.active { background: $accent; color: #fff; border-color: $accent; }
   }
+
+  .btn-toggle-advanced {
+    border-style: dashed;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    &.active {
+      background: rgba($accent, 0.1);
+      color: $accent;
+      border-color: $accent;
+      border-style: solid;
+    }
+  }
+}
+
+.advanced-filters-panel {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  animation: slideDown 200ms ease;
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .filter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.08));
+      border-radius: 10px;
+      background: var(--bg-hover, rgba(0, 0, 0, 0.02));
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: all 150ms ease;
+      font-family: inherit;
+
+      &:focus {
+        border-color: $accent;
+        background: var(--bg-card, #fff);
+      }
+    }
+  }
+
+  .actions-col {
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .btn-reset-filters {
+    padding: 8px 16px;
+    border: 1.5px solid rgba(#e84393, 0.2);
+    background: rgba(#e84393, 0.05);
+    color: #e84393;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 150ms ease;
+    height: 38px;
+    white-space: nowrap;
+
+    &:hover {
+      background: #e84393;
+      color: #fff;
+      border-color: #e84393;
+    }
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 // ─── Data Table ────────────────────────────

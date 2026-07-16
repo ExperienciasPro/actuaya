@@ -31,3 +31,18 @@ export const alreadyOnboardedGuard: CanActivateFn = () => {
   }
   return true;
 };
+
+/**
+ * Guard que requiere un perfil activo (profile) para acceder a setup, bienvenida y completar-perfil.
+ * Redirige a /welcome si es nulo.
+ */
+export const registrationGuard: CanActivateFn = () => {
+  const userService = inject(UserService);
+  const router = inject(Router);
+
+  if (!userService.profile()) {
+    router.navigate(['/welcome']);
+    return false;
+  }
+  return true;
+};

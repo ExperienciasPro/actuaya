@@ -291,14 +291,14 @@ export class SubscriptionRequiredComponent {
 
   userName = this.userService.firstName() || 'Usuario';
 
-  refreshStatus(): void {
+  async refreshStatus(): Promise<void> {
     // Re-read profile from storage (in case admin activated it)
     const userId = this.userService.profile()?.id;
     if (userId) {
       const fresh = this.userService.getUserById(userId);
       if (fresh && fresh.subscriptionStatus !== 'expired') {
         // Admin activated it! Refresh and redirect
-        this.userService.saveProfile(fresh);
+        await this.userService.saveProfile(fresh);
         this.router.navigate(['/d/dashboard']);
         return;
       }

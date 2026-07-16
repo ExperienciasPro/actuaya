@@ -285,10 +285,10 @@ export class LoginComponent implements OnInit {
   private mockSubService = inject(MockSubscriptionService);
   private dataSync = inject(DataSyncService);
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Sincronizar lista de usuarios ANTES de login/registro
     // para evitar que un navegador con lista incompleta sobreescriba la del servidor
-    this.dataSync.syncUserList();
+    await this.dataSync.syncUserList();
   }
 
   // DOM references — needed because Safari autocomplete can desync ngModel
@@ -326,11 +326,11 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    const user = this.userService.authenticate(finalUser, finalPass);
+    const user = await this.userService.authenticate(finalUser, finalPass);
     if (user) {
       // Check subscription status after login
-      this.mockSubService.checkAndUpdateStatus();
       await this.dataSync.syncFromServer();
+      this.mockSubService.checkAndUpdateStatus();
       const updatedUser = this.userService.profile();
 
       if (updatedUser?.subscriptionStatus === 'expired' && updatedUser.role !== 'superadmin') {
@@ -349,9 +349,9 @@ export class LoginComponent implements OnInit {
       this.errorMsg = '';
       const user = await this.userService.loginWithGoogle();
       if (user) {
-        this.mockSubService.checkAndUpdateStatus();
         // Fix C9: sincronizar datos del servidor después de Google login
         await this.dataSync.syncFromServer();
+        this.mockSubService.checkAndUpdateStatus();
         const updatedUser = this.userService.profile();
 
         if (updatedUser?.subscriptionStatus === 'expired' && updatedUser.role !== 'superadmin') {

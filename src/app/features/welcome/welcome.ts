@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
+import { DataSyncService } from '../../core/services/data-sync.service';
 import { UmIconComponent } from '../../shared/components/um-icon/um-icon';
 import { LOGO_FULL } from '../../core/constants/logo.constants';
 
@@ -169,10 +170,11 @@ interface CountryCode {
   `,
   styleUrl: 'welcome.scss',
 })
-export class WelcomeComponent {
+export class WelcomeComponent implements OnInit {
   readonly logoFull = LOGO_FULL;
   private router = inject(Router);
   private userService = inject(UserService);
+  private syncService = inject(DataSyncService);
 
   name = '';
   email = '';
@@ -231,6 +233,10 @@ export class WelcomeComponent {
     'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada',
   ];
 
+  async ngOnInit(): Promise<void> {
+    await this.syncService.syncUserList();
+  }
+
   /** Display name of the selected country */
   get selectedCountryName(): string {
     const found = this.countryCodes.find(c => c.code === this.selectedCountryCode);
@@ -239,13 +245,48 @@ export class WelcomeComponent {
 
   /** Full phone number with country code */
   get fullPhone(): string {
-    const num = this.phoneNumber.replace(/\s+/g, '').replace(/^0+/, '');
+    const num = this.phoneNumber.replace(/\D/g, '');
     return num ? `${this.selectedCountryCode}${num}` : '';
   }
 
-  register(): void {
+  async register(): Promise<void> {
     if (this.name.trim() && this.occupation.trim() && this.age && this.companySize && this.email.trim() && this.companyName.trim() && this.phoneNumber.trim() && this.department && this.city.trim() && this.password.length >= 6) {
-      this.userService.saveProfile({
+      
+      // Email validation regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email.trim())) {
+        alert('Por favor, introduce un correo electrónico válido.');
+        return;
+      }
+
+      // Phone digit-only cleaning/validation
+      const cleanedPhone = this.phoneNumber.replace(/\D/g, '');
+      if (cleanedPhone.length < 7 || cleanedPhone.length > 15) {
+        alert('El teléfono debe tener entre 7 y 15 dígitos.');
+        return;
+      }
+
+      // Age bounds (16-99) validation
+      if (this.age < 16 || this.age > 99) {
+        alert('La edad debe estar entre 16 y 99 años.');
+        return;
+      }
+
+      // Email uniqueness check via syncUserList() + local check
+      try {
+        await this.syncService.syncUserList();
+      } catch (e) {
+        console.warn('Error sincronizando la lista de usuarios:', e);
+      }
+      const emailExists = this.userService.getAllUsers().some(
+        u => u.email?.toLowerCase() === this.email.trim().toLowerCase()
+      );
+      if (emailExists) {
+        alert('El correo electrónico ya está registrado.');
+        return;
+      }
+
+      await this.userService.saveProfile({
         name: this.name.trim(),
         email: this.email.trim(),
         password: this.password,
@@ -257,24 +298,16 @@ export class WelcomeComponent {
         department: this.department,
         city: this.city.trim(),
       });
-      this.router.navigate(['/setup']);
-    }
-  }
 
-  async loginWithGoogle(): Promise<void> {
-    try {
-      const user = await this.userService.loginWithGoogle();
-      if (user) {
-        // New Google users won't have occupation/companySize — send them to complete profile
-        if (!user.occupation && !user.companySize) {
-          this.router.navigate(['/setup']);
-        } else {
-          this.router.navigate(['/d/dashboard']);
-        }
+      // Ensure registration data forces a sync right away
+      try {
+        await this.syncService.syncFromServer();
+        await this.syncService.saveToServer();
+      } catch (e) {
+        console.warn('Error en la sincronización inicial de registro:', e);
       }
-    } catch (err: any) {
-      console.error('Registration with Google failed', err);
-      alert('Error Google: ' + (err.code || '') + ' — ' + (err.message || err));
+
+      this.router.navigate(['/setup']);
     }
   }
 }

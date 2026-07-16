@@ -201,8 +201,8 @@ export class CompleteProfileComponent {
     return this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
   }
 
-  save(): void {
-    this.userService.saveProfile({
+  async save(): Promise<void> {
+    await this.userService.saveProfile({
       occupation: this.occupation.trim() || undefined,
       companyName: this.companyName.trim() || undefined,
       age: this.age || undefined,

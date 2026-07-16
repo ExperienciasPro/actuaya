@@ -3,6 +3,7 @@ import { desktopOnlyGuard, mobileOnlyGuard } from './core/guards/device.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { subscriptionGuard } from './core/guards/subscription.guard';
 import { superAdminGuard } from './core/guards/super-admin.guard';
+import { registrationGuard } from './core/guards/onboarding.guard';
 
 export const routes: Routes = [
   // ═══════════════════════════════════════════
@@ -38,6 +39,7 @@ export const routes: Routes = [
   // ═══════════════════════════════════════════
   {
     path: 'setup',
+    canActivate: [registrationGuard],
     loadComponent: () =>
       import('./features/module-picker/module-picker').then((m) => m.ModulePickerComponent),
   },
@@ -47,6 +49,7 @@ export const routes: Routes = [
   // ═══════════════════════════════════════════
   {
     path: 'completar-perfil',
+    canActivate: [registrationGuard],
     loadComponent: () =>
       import('./features/complete-profile/complete-profile').then((m) => m.CompleteProfileComponent),
   },
@@ -56,6 +59,7 @@ export const routes: Routes = [
   // ═══════════════════════════════════════════
   {
     path: 'bienvenida',
+    canActivate: [registrationGuard],
     loadComponent: () =>
       import('./features/onboarding-welcome/onboarding-welcome').then((m) => m.OnboardingWelcomeComponent),
   },
