@@ -14,9 +14,6 @@
     <button class="btn-create btn-import" (click)="triggerImportFile()">
       📥 Importar
     </button>
-    <button class="btn-create btn-refresh" (click)="refreshUsers()">
-      ↻ Refrescar
-    </button>
     <input #fileInput type="file" accept=".csv,.xlsx,.xls" style="display:none"
            (change)="onImportFile($event)" />
   </div>
