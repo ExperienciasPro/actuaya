@@ -134,9 +134,18 @@ interface CountryCode {
                     @for (ct of getCitiesForDepartment(); track ct) {
                       <option [value]="ct">{{ ct }}</option>
                     }
+                    <option value="Otra ciudad / No listada">Otra ciudad / No listada</option>
                   }
                 </select>
               </div>
+              @if (city === 'Otra ciudad / No listada') {
+                <div class="form-group">
+                  <label for="reg-cityOther">¿Cuál es tu ciudad? *</label>
+                  <input id="reg-cityOther" class="form-input" type="text"
+                    [(ngModel)]="cityOther" name="cityOther"
+                    placeholder="Escribe el nombre de tu ciudad" required />
+                </div>
+              }
             </div>
 
             <!-- Row 4: Phone with Country Code -->
@@ -184,7 +193,7 @@ interface CountryCode {
             </div>
 
             <button type="submit" class="register-btn"
-              [disabled]="isLoading || !name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !businessType || (businessType === 'Otro / No listado' && !businessTypeOther.trim()) || !phoneNumber.trim() || !department || !city.trim() || password.length < 6 || password !== confirmPassword">
+              [disabled]="isLoading || !name.trim() || !occupation.trim() || !age || !companySize || !email.trim() || !companyName.trim() || !businessType || (businessType === 'Otro / No listado' && !businessTypeOther.trim()) || !phoneNumber.trim() || !department || !city.trim() || (city === 'Otra ciudad / No listada' && !cityOther.trim()) || password.length < 6 || password !== confirmPassword">
               @if (isLoading) {
                 <span>Creando tu cuenta... 🚀</span>
               } @else {
@@ -222,6 +231,7 @@ export class WelcomeComponent implements OnInit {
   companySize = '';
   department = '';
   city = '';
+  cityOther = '';
   businessType = '';
   businessTypeOther = '';
 
@@ -322,6 +332,7 @@ export class WelcomeComponent implements OnInit {
   onDepartmentChange(newDept: string) {
     this.department = newDept;
     this.city = '';
+    this.cityOther = '';
   }
 
   getCitiesForDepartment(): string[] {
@@ -345,7 +356,8 @@ export class WelcomeComponent implements OnInit {
   }
 
   async register(): Promise<void> {
-    if (this.name.trim() && this.occupation.trim() && this.age && this.companySize && this.email.trim() && this.companyName.trim() && this.phoneNumber.trim() && this.department && this.city.trim() && this.password.length >= 6) {
+    const isCityValid = this.city.trim() && (this.city !== 'Otra ciudad / No listada' || this.cityOther.trim());
+    if (this.name.trim() && this.occupation.trim() && this.age && this.companySize && this.email.trim() && this.companyName.trim() && this.phoneNumber.trim() && this.department && isCityValid && this.password.length >= 6) {
       
       // Email validation regex
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -396,7 +408,7 @@ export class WelcomeComponent implements OnInit {
           age: this.age,
           companySize: this.companySize,
           department: this.department,
-          city: this.city.trim(),
+          city: this.city === 'Otra ciudad / No listada' ? this.cityOther.trim() : this.city.trim(),
         });
 
         // Ensure registration data forces a sync right away
