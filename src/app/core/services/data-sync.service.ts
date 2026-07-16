@@ -178,7 +178,12 @@ export class DataSyncService {
             // 1. Restaurar claves globales directamente (sin scoping)
             for (const key of serverKeys) {
               if (this.GLOBAL_KEYS.has(key)) {
-                this.storage.setUnscoped(key, serverData[key]);
+                if (key === 'um_users') {
+                  // SPECIAL HANDLING: merge server users with local, preserving isDeleted flags
+                  this.mergeUsersFromServer(serverData[key] as any[] || []);
+                } else {
+                  this.storage.setUnscoped(key, serverData[key]);
+                }
                 restored++;
               }
             }
@@ -268,6 +273,72 @@ export class DataSyncService {
     } finally {
       this.isSyncing = false;
     }
+  }
+
+  /**
+   * Merge users from server with local data, preserving local isDeleted flags
+   * and deduplicating by email. Used by syncFromServer() to prevent resurrecting deleted users.
+   */
+  private mergeUsersFromServer(serverUsers: any[]): void {
+    if (!Array.isArray(serverUsers)) {
+      this.storage.setUnscoped('um_users', serverUsers);
+      return;
+    }
+
+    const localUsers = this.storage.getUnscoped<any[]>('um_users') || [];
+
+    // Build map of local deleted user IDs and emails
+    const localDeletedIds = new Set<string>();
+    const localDeletedEmails = new Set<string>();
+    for (const u of localUsers) {
+      if (u?.isDeleted) {
+        localDeletedIds.add(u.id);
+        if (u.email) localDeletedEmails.add(u.email.toLowerCase().trim());
+      }
+    }
+
+    // Merge: start with server data, preserve local isDeleted
+    const mergedMap = new Map<string, any>();
+    for (const u of serverUsers) {
+      if (!u?.id) continue;
+      if (localDeletedIds.has(u.id) || (u.email && localDeletedEmails.has(u.email.toLowerCase().trim()))) {
+        // This user was deleted locally — keep it as deleted
+        mergedMap.set(u.id, { ...u, isDeleted: true });
+      } else {
+        mergedMap.set(u.id, u);
+      }
+    }
+    // Add local-only entries (not on server)
+    for (const u of localUsers) {
+      if (u?.id && !mergedMap.has(u.id)) mergedMap.set(u.id, u);
+    }
+
+    // Deduplicate by email
+    const byEmail = new Map<string, any>();
+    const noEmail: any[] = [];
+    const deleted: any[] = [];
+
+    for (const user of mergedMap.values()) {
+      if (user.isDeleted) { deleted.push(user); continue; }
+      const email = (user.email || '').toLowerCase().trim();
+      if (!email) { noEmail.push(user); continue; }
+      const existing = byEmail.get(email);
+      if (!existing) {
+        byEmail.set(email, user);
+      } else {
+        const existingTime = new Date(existing.lastLogin || existing.createdAt || 0).getTime();
+        const newTime = new Date(user.lastLogin || user.createdAt || 0).getTime();
+        const existingActive = existing.subscriptionStatus === 'active' || existing.subscriptionActivatedByAdmin;
+        const newActive = user.subscriptionStatus === 'active' || user.subscriptionActivatedByAdmin;
+        if ((newActive && !existingActive) || (newActive === existingActive && newTime > existingTime)) {
+          byEmail.set(email, user);
+        }
+      }
+    }
+
+    const finalList = [...deleted, ...noEmail, ...Array.from(byEmail.values())];
+    this.storage.setUnscoped('um_users', finalList);
+    console.log(`[DataSync] um_users merged from server: ${finalList.length} users (${deleted.length} deleted preserved)`);
   }
 
   /**
