@@ -739,11 +739,26 @@
     </div>
   }
 
+  <!-- Bulk Actions Bar -->
+  @if (selectedUserIds().size > 0) {
+    <div class="bulk-actions-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(232, 67, 147, 0.08); border: 1.5px dashed rgba(232, 67, 147, 0.3); border-radius: 12px; margin-bottom: 1.25rem;">
+      <span style="font-size: 0.85rem; font-weight: 600; color: #e84393;">
+        Selected: {{ selectedUserIds().size }} user(s)
+      </span>
+      <button class="btn-bulk-delete" (click)="deleteSelectedUsers()" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 10px; background: #e84393; color: #fff; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">
+        🗑️ Borrar Seleccionados
+      </button>
+    </div>
+  }
+
   <!-- Users Table -->
   <div class="table-section">
     <table class="data-table">
       <thead>
         <tr>
+          <th style="width: 80px; text-align: center;">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($any($event.target).checked)" />
+          </th>
           <th>Usuario</th>
           <th>Correo</th>
           <th>Teléfono</th>
@@ -760,6 +775,14 @@
         @for (user of filteredUsers(); track user.id) {
           <tr [class.inactive-row]="!user.isActive" [class.superadmin-row]="user.role === 'superadmin'"
               (click)="openUserDetail(user)" style="cursor: pointer;">
+            <td style="width: 80px; text-align: center;" (click)="$event.stopPropagation()">
+              <div class="actions-cell-left" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <input type="checkbox" [checked]="selectedUserIds().has(user.id)" (change)="toggleSelectUser(user.id, $event)" />
+                @if (user.role !== 'superadmin') {
+                  <button class="btn-delete-left" title="Eliminar usuario" (click)="$event.stopPropagation(); deleteUser(user)" style="border: none; background: transparent; cursor: pointer; color: #e84393; font-size: 0.95rem; padding: 2px;">🗑️</button>
+                }
+              </div>
+            </td>
             <td>
               <div class="user-cell">
                 <span class="user-avatar-sm">{{ getUserInitials(user.name) }}</span>
@@ -817,9 +840,6 @@
               <div class="action-btns">
                 <button class="btn-icon" title="Ver detalle" (click)="$event.stopPropagation(); openUserDetail(user)">👁️</button>
                 <button class="btn-icon" title="Cambiar clave" (click)="$event.stopPropagation(); openPasswordModal(user)">🔑</button>
-                @if (user.role !== 'superadmin') {
-                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteUser(user)">🗑️</button>
-                }
               </div>
             </td>
           </tr>

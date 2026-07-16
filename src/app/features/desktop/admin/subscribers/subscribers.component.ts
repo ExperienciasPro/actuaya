@@ -99,6 +99,53 @@ export class SubscribersComponent {
   activationUser = signal<UserProfile | null>(null);
   activationMonths = 1;
 
+  // ─── Selection and Multi-Delete State ─────
+  selectedUserIds = signal<Set<string>>(new Set());
+
+  isAllSelected = computed(() => {
+    const list = this.filteredUsers();
+    if (list.length === 0) return false;
+    const currentSelected = this.selectedUserIds();
+    return list.every(u => currentSelected.has(u.id));
+  });
+
+  toggleSelectAll(checked: boolean): void {
+    const nextSet = new Set(this.selectedUserIds());
+    const list = this.filteredUsers();
+    if (checked) {
+      list.forEach(u => nextSet.add(u.id));
+    } else {
+      list.forEach(u => nextSet.delete(u.id));
+    }
+    this.selectedUserIds.set(nextSet);
+  }
+
+  toggleSelectUser(userId: string, event: Event): void {
+    event.stopPropagation();
+    const nextSet = new Set(this.selectedUserIds());
+    if (nextSet.has(userId)) {
+      nextSet.delete(userId);
+    } else {
+      nextSet.add(userId);
+    }
+    this.selectedUserIds.set(nextSet);
+  }
+
+  async deleteSelectedUsers(): Promise<void> {
+    const toDelete = Array.from(this.selectedUserIds()).filter(id => id !== 'sa-001'); // No borrar superadmin
+    if (toDelete.length === 0) return;
+
+    if (confirm(`¿Eliminar permanentemente los ${toDelete.length} usuarios seleccionados?`)) {
+      toDelete.forEach(id => {
+        this.userService.deleteUser(id);
+      });
+      this.selectedUserIds.set(new Set());
+      this.refreshUsers();
+      this.dataSyncService.saveToServer();
+      this.showToast(`🗑️ ${toDelete.length} usuarios eliminados`);
+    }
+  }
+
   // ─── Import State ──────────────────────
   importResults = signal<{ created: number; skipped: number; errors: number } | null>(null);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
