@@ -747,7 +747,6 @@
           <th>Usuario</th>
           <th>Correo</th>
           <th>Teléfono</th>
-          <th>Rol</th>
           <th>Suscripción</th>
           <th>Estado</th>
           <th>Engagement</th>
@@ -781,9 +780,6 @@
               } @else {
                 —
               }
-            </td>
-            <td>
-              <span class="role-badge" [class]="user.role">{{ getRoleLabel(user.role) }}</span>
             </td>
             <td>
               <span class="sub-badge" [class]="user.subscriptionStatus || 'trial'">
