@@ -447,7 +447,8 @@ export class SubscribersComponent {
   // ─── User Management ─────────────────────
 
   async refreshUsers(): Promise<void> {
-    await this.dataSyncService.syncFromServer();
+    this.storageService.removeUnscoped('um_users');
+    await this.dataSyncService.syncUserList();
     this.users.set(this.userService.getAllUsers());
   }
 
