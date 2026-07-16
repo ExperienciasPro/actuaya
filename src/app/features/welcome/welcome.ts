@@ -116,7 +116,7 @@ interface CountryCode {
               <div class="form-group">
                 <label for="reg-department">Departamento *</label>
                 <select id="reg-department" class="form-input"
-                  [(ngModel)]="department" name="department" required>
+                  [ngModel]="department" (ngModelChange)="onDepartmentChange($event)" name="department" required>
                   <option value="">Seleccionar...</option>
                   @for (dept of departments; track dept) {
                     <option [value]="dept">{{ dept }}</option>
@@ -125,9 +125,17 @@ interface CountryCode {
               </div>
               <div class="form-group">
                 <label for="reg-city">Ciudad *</label>
-                <input id="reg-city" class="form-input" type="text"
-                  [(ngModel)]="city" name="city"
-                  placeholder="Ej: Bogotá" required />
+                <select id="reg-city" class="form-input"
+                  [(ngModel)]="city" name="city" [disabled]="!department" required>
+                  @if (!department) {
+                    <option value="">Selecciona un departamento...</option>
+                  } @else {
+                    <option value="">Seleccionar...</option>
+                    @for (ct of getCitiesForDepartment(); track ct) {
+                      <option [value]="ct">{{ ct }}</option>
+                    }
+                  }
+                </select>
               </div>
             </div>
 
@@ -252,15 +260,47 @@ export class WelcomeComponent implements OnInit {
     { flag: '🇵🇹', name: 'Portugal',            code: '+351' },
   ];
 
-  /** Colombian departments */
-  readonly departments: string[] = [
-    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar',
-    'Boyacá', 'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar',
-    'Chocó', 'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila',
-    'La Guajira', 'Magdalena', 'Meta', 'Nariño', 'Norte de Santander',
-    'Putumayo', 'Quindío', 'Risaralda', 'San Andrés y Providencia',
-    'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada',
-  ];
+  /** Colombian territories map */
+  readonly territoriesMap: Record<string, string[]> = {
+    'Amazonas': ['Leticia', 'Puerto Nariño'],
+    'Antioquia': ['Medellín', 'Bello', 'Itagüí', 'Envigado', 'Rionegro', 'Apartadó', 'Sabaneta', 'Caldas', 'Copacabana', 'La Estrella', 'Turbo', 'Caucasia', 'Chigorodó'],
+    'Arauca': ['Arauca', 'Tame', 'Saravena', 'Arauquita'],
+    'Atlántico': ['Barranquilla', 'Soledad', 'Malambo', 'Sabanalarga', 'Puerto Colombia', 'Galapa', 'Baranoa'],
+    'Bogotá D.C.': ['Bogotá D.C.'],
+    'Bolívar': ['Cartagena', 'Magangué', 'Turbaco', 'Arjona', 'El Carmen de Bolívar'],
+    'Boyacá': ['Tunja', 'Duitama', 'Sogamoso', 'Chiquinquirá', 'Puerto Boyacá', 'Villa de Leyva'],
+    'Caldas': ['Manizales', 'La Dorada', 'Chinchiná', 'Riosucio', 'Villamaría'],
+    'Caquetá': ['Florencia', 'San Vicente del Caguán', 'Puerto Rico'],
+    'Casanare': ['Yopal', 'Aguazul', 'Paz de Ariporo', 'Villanueva'],
+    'Cauca': ['Popayán', 'Santander de Quilichao', 'Puerto Tejada', 'Patía', 'El Tambo'],
+    'Cesar': ['Valledupar', 'Aguachica', 'Agustín Codazzi', 'Bosconia', 'El Copey'],
+    'Chocó': ['Quibdó', 'Istmina', 'Condoto', 'Bahía Solano'],
+    'Córdoba': ['Montería', 'Cereté', 'Sahagún', 'Lorica', 'Montelíbano', 'Planeta Rica', 'Tierralta'],
+    'Cundinamarca': ['Soacha', 'Chía', 'Zipaquirá', 'Facatativá', 'Fusagasugá', 'Mosquera', 'Madrid', 'Funza', 'Girardot', 'Cajicá', 'Ubaté'],
+    'Guainía': ['Inírida'],
+    'Guaviare': ['San José del Guaviare', 'Calamar', 'El Retorno'],
+    'Huila': ['Neiva', 'Pitalito', 'Garzón', 'La Plata', 'Campoalegre'],
+    'La Guajira': ['Riohacha', 'Maicao', 'Uribia', 'San Juan del Cesar', 'Fonseca'],
+    'Magdalena': ['Santa Marta', 'Ciénaga', 'Fundación', 'El Banco', 'Plato'],
+    'Meta': ['Villavicencio', 'Acacías', 'Granada', 'Puerto López', 'San Martín'],
+    'Nariño': ['Pasto', 'Tumaco', 'Ipiales', 'Túquerres', 'La Unión'],
+    'Norte de Santander': ['Cúcuta', 'Ocaña', 'Villa del Rosario', 'Los Patios', 'Pamplona', 'Tibú'],
+    'Putumayo': ['Mocoa', 'Orito', 'Puerto Asís', 'Sibundoy'],
+    'Quindío': ['Armenia', 'Calarcá', 'Tebaida', 'Montenegro', 'Quimbaya', 'Salento'],
+    'Risaralda': ['Pereira', 'Dosquebradas', 'Santa Rosa de Cabal', 'La Virginia'],
+    'San Andrés y Providencia': ['San Andrés', 'Providencia'],
+    'Santander': ['Bucaramanga', 'Floridablanca', 'Girón', 'Piedecuesta', 'Barrancabermeja', 'San Gil', 'Socorro', 'Barbosa'],
+    'Sucre': ['Sincelejo', 'Corozal', 'San Marcos', 'Tolú', 'Sampués'],
+    'Tolima': ['Ibagué', 'Espinal', 'Melgar', 'Mariquita', 'Honda', 'Líbano'],
+    'Valle del Cauca': ['Cali', 'Buenaventura', 'Palmira', 'Tuluá', 'Yumbo', 'Cartago', 'Buga', 'Jamundí', 'Buga', 'Florida'],
+    'Vaupés': ['Mitú'],
+    'Vichada': ['Puerto Carreño', 'Santa Rosalía', 'Cumaribo']
+  };
+
+  /** Colombian departments list derived from territories map */
+  get departments(): string[] {
+    return Object.keys(this.territoriesMap);
+  }
 
   /** Business type categories */
   readonly businessTypes: string[] = [
@@ -278,6 +318,15 @@ export class WelcomeComponent implements OnInit {
     'Servicios para el Hogar',
     'Otro / No listado',
   ];
+
+  onDepartmentChange(newDept: string) {
+    this.department = newDept;
+    this.city = '';
+  }
+
+  getCitiesForDepartment(): string[] {
+    return this.department ? this.territoriesMap[this.department] || [] : [];
+  }
 
   async ngOnInit(): Promise<void> {
     await this.syncService.syncUserList();
