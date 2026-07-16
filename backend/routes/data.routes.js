@@ -119,9 +119,13 @@ router.post('/', async (req, res) => {
           for (const u of serverUsers) {
             if (u && u.id) mergedMap.set(u.id, u);
           }
-          // Luego los del cliente (ganan si hay conflicto, excepto superadmin del servidor)
+          // Luego los del cliente
           for (const u of dataValue) {
             if (u && u.id) {
+              if (u.isDeleted) {
+                mergedMap.delete(u.id); // Remover si está marcado para eliminar
+                continue;
+              }
               const serverVersion = mergedMap.get(u.id);
               if (serverVersion && serverVersion.role === 'superadmin' && u.role !== 'superadmin') {
                 continue; // No degradar superadmin
@@ -129,7 +133,7 @@ router.post('/', async (req, res) => {
               mergedMap.set(u.id, u);
             }
           }
-          const mergedUsers = Array.from(mergedMap.values());
+          const mergedUsers = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
           operations.push({
             updateOne: {
               filter: { key: dataKey },
@@ -164,22 +168,26 @@ router.post('/', async (req, res) => {
     // Single key upsert
     let valueToSave = req.body;
     if (key === 'um_users' && Array.isArray(req.body)) {
-      const existing = await DataStore.findOne({ key: 'um_users' });
-      const serverUsers = (existing && Array.isArray(existing.value)) ? existing.value : [];
-      const mergedMap = new Map();
-      for (const u of serverUsers) {
-        if (u && u.id) mergedMap.set(u.id, u);
-      }
-      for (const u of req.body) {
-        if (u && u.id) {
-          const serverVersion = mergedMap.get(u.id);
-          if (serverVersion && serverVersion.role === 'superadmin' && u.role !== 'superadmin') {
-            continue; // No degradar superadmin
-          }
-          mergedMap.set(u.id, u);
-        }
-      }
-      valueToSave = Array.from(mergedMap.values());
+       const existing = await DataStore.findOne({ key: 'um_users' });
+       const serverUsers = (existing && Array.isArray(existing.value)) ? existing.value : [];
+       const mergedMap = new Map();
+       for (const u of serverUsers) {
+         if (u && u.id) mergedMap.set(u.id, u);
+       }
+       for (const u of req.body) {
+         if (u && u.id) {
+           if (u.isDeleted) {
+             mergedMap.delete(u.id);
+             continue;
+           }
+           const serverVersion = mergedMap.get(u.id);
+           if (serverVersion && serverVersion.role === 'superadmin' && u.role !== 'superadmin') {
+             continue; // No degradar superadmin
+           }
+           mergedMap.set(u.id, u);
+         }
+       }
+       valueToSave = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
     }
 
     await DataStore.findOneAndUpdate(

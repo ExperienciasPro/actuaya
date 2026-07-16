@@ -24,6 +24,7 @@ export interface UserProfile {
   subscriptionStatus: UserSubscriptionStatus;
   trialEndsAt: string;                   // ISO date string
   subscriptionActivatedByAdmin: boolean;
+  isDeleted?: boolean;
 }
 
 // Superadmin seed data
@@ -248,11 +249,12 @@ export class UserService {
 
   /** Update an existing user's data */
   updateUser(id: string, changes: Partial<UserProfile>): void {
-    const users = this.getAllUsers();
+    const users = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
     const idx = users.findIndex(u => u.id === id);
     if (idx >= 0) {
       users[idx] = { ...users[idx], ...changes };
       this.storage.set(this.USERS_KEY, users);
+      this._usersSignal.set(users.filter(u => !u.isDeleted));
       // If editing the active user, refresh profile
       if (this.profile()?.id === id) {
         this.setActiveProfile(users[idx]);
@@ -275,9 +277,13 @@ export class UserService {
 
   /** Delete a user (cannot delete superadmin) */
   deleteUser(id: string): void {
-    const users = this.getAllUsers().filter(u => u.id !== id || u.role === 'superadmin');
-    this.storage.set(this.USERS_KEY, users);
-    this._usersSignal.set([...users]);
+    const rawUsers = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
+    const idx = rawUsers.findIndex(u => u.id === id);
+    if (idx >= 0 && rawUsers[idx].role !== 'superadmin') {
+      rawUsers[idx].isDeleted = true;
+      this.storage.set(this.USERS_KEY, rawUsers);
+      this._usersSignal.set(rawUsers.filter(u => !u.isDeleted));
+    }
   }
 
   /** Admin: create a new user without affecting the active profile */
@@ -331,7 +337,7 @@ export class UserService {
   }
 
   private saveUserToList(user: UserProfile): void {
-    const users = this.getAllUsers();
+    const users = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
     const idx = users.findIndex(u => u.id === user.id);
     if (idx >= 0) {
       users[idx] = user;
@@ -339,11 +345,12 @@ export class UserService {
       users.push(user);
     }
     this.storage.set(this.USERS_KEY, users);
-    this._usersSignal.set([...users]);
+    this._usersSignal.set(users.filter(u => !u.isDeleted));
   }
 
   private loadAllUsers(): UserProfile[] {
-    return this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
+    const users = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
+    return users.filter(u => !u.isDeleted);
   }
 
   private loadActiveProfile(): UserProfile | null {
@@ -355,7 +362,7 @@ export class UserService {
   }
 
   private ensureSuperAdmin(): void {
-    const users = this.getAllUsers();
+    const users = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
     const existingGonzalo = users.find(u => u.email?.toLowerCase() === 'gonzalo@experiencias.pro');
     const seedHash = 'sha256$42fae9da005da346277f0e8149a160159ad9a7a68a8e90dc85d8de194caae381';
     const fallbackRaw = 'gonzalete7';
@@ -368,67 +375,6 @@ export class UserService {
       existingGonzalo.isActive = true;
       existingGonzalo.role = 'superadmin';
       this.saveUserToList(existingGonzalo);
-    }
-
-    // ── Restore missing registered users ──
-    this.ensureUserExists({
-      name: 'maira Dayana',
-      email: 'dayana.81m@gmail.com',
-      role: 'user',
-      isActive: true,
-      subscriptionStatus: 'active',
-      createdAt: '2026-06-29T00:00:00.000Z',
-      trialEndsAt: '2099-12-31T23:59:59.000Z',
-      subscriptionActivatedByAdmin: true,
-      password: 'sha256$208d62c470b8f19e7dc7683502956a132cfda0ceeac2f8f687880b1f1872eac7',
-    });
-
-    this.ensureUserExists({
-      name: 'anniella baena lorduv',
-      email: 'anniellabaena@gmail.com',
-      phone: '+573008112376',
-      role: 'user',
-      isActive: true,
-      subscriptionStatus: 'active',
-      createdAt: '2026-06-30T00:00:00.000Z',
-      trialEndsAt: '2099-12-31T23:59:59.000Z',
-      subscriptionActivatedByAdmin: true,
-      password: 'sha256$208d62c470b8f19e7dc7683502956a132cfda0ceeac2f8f687880b1f1872eac7',
-    });
-  }
-
-  /** Ensure a user exists by email; if not, create them */
-  private ensureUserExists(seed: Partial<UserProfile>): void {
-    const users = this.getAllUsers();
-    const existsIdx = users.findIndex(u => u.email?.toLowerCase() === (seed.email || '').toLowerCase());
-    if (existsIdx === -1) {
-      this.saveUserToList({
-        id: this.generateId(),
-        name: seed.name || '',
-        email: seed.email,
-        password: seed.password,
-        phone: seed.phone,
-        occupation: seed.occupation,
-        companyName: seed.companyName,
-        age: seed.age,
-        companySize: seed.companySize,
-        department: seed.department,
-        city: seed.city,
-        role: (seed.role as any) || 'user',
-        isActive: seed.isActive ?? true,
-        createdAt: seed.createdAt || new Date().toISOString(),
-        subscriptionStatus: seed.subscriptionStatus ?? 'trial',
-        trialEndsAt: seed.trialEndsAt ?? this.calculateTrialEnd(new Date()),
-        subscriptionActivatedByAdmin: seed.subscriptionActivatedByAdmin ?? false,
-      });
-    } else {
-      const existing = users[existsIdx];
-      if (seed.subscriptionStatus === 'active' && existing.subscriptionStatus !== 'active') {
-        existing.subscriptionStatus = 'active';
-        existing.subscriptionActivatedByAdmin = true;
-        existing.trialEndsAt = seed.trialEndsAt || '2099-12-31T23:59:59.000Z';
-        this.saveUserToList(existing);
-      }
     }
   }
 
