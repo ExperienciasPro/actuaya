@@ -328,12 +328,13 @@ export class LoginComponent implements OnInit {
 
     const user = await this.userService.authenticate(finalUser, finalPass);
     if (user) {
-      // Check subscription status after login
-      await this.dataSync.syncFromServer();
-      this.mockSubService.checkAndUpdateStatus();
-      const updatedUser = this.userService.profile();
+      // Sincronizar en segundo plano sin bloquear la redirección
+      this.dataSync.syncFromServer().then(() => {
+        this.mockSubService.checkAndUpdateStatus();
+      });
 
-      if (updatedUser?.subscriptionStatus === 'expired' && updatedUser.role !== 'superadmin') {
+      // Redirigir de inmediato al dashboard
+      if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
         this.router.navigate(['/subscription-required']);
       } else {
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/d/dashboard';
@@ -349,12 +350,12 @@ export class LoginComponent implements OnInit {
       this.errorMsg = '';
       const user = await this.userService.loginWithGoogle();
       if (user) {
-        // Fix C9: sincronizar datos del servidor después de Google login
-        await this.dataSync.syncFromServer();
-        this.mockSubService.checkAndUpdateStatus();
-        const updatedUser = this.userService.profile();
+        // Sincronizar en segundo plano
+        this.dataSync.syncFromServer().then(() => {
+          this.mockSubService.checkAndUpdateStatus();
+        });
 
-        if (updatedUser?.subscriptionStatus === 'expired' && updatedUser.role !== 'superadmin') {
+        if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
           this.router.navigate(['/subscription-required']);
         } else if (!this.userService.isProfileComplete()) {
           // Google users with incomplete profile → complete profile first
