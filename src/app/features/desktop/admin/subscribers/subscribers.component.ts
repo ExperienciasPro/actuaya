@@ -83,6 +83,7 @@ export class SubscribersComponent {
   users = signal<UserProfile[]>([]);
   userSearchQuery = signal('');
   userStatusFilter = signal<string>('all');
+
   passwordModal = signal(false);
   editingUser = signal<UserProfile | null>(null);
   newPassword = '';
