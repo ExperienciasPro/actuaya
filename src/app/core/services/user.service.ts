@@ -92,6 +92,7 @@ export class UserService {
       this.storage.setActiveUser(existingProfile.id);
     }
     this.ensureSuperAdmin();
+    this.deduplicateUsers();
     this.syncProfileToList();
   }
 
@@ -196,26 +197,37 @@ export class UserService {
       password = await this.hashPassword(password);
     }
 
+    // If creating a new profile, check if email already exists to avoid duplicates
+    let existingByEmail: UserProfile | undefined;
+    if (isNew && data.email) {
+      const allUsers = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
+      existingByEmail = allUsers.find(
+        u => (u.email || '').toLowerCase() === data.email!.toLowerCase() && !u.isDeleted
+      );
+    }
+
+    const baseUser = existingByEmail || current;
+
     const updated: UserProfile = {
-      id: current?.id || this.generateId(),
-      name: data.name || current?.name || '',
-      email: data.email ?? current?.email,
+      id: baseUser?.id || this.generateId(),
+      name: data.name || baseUser?.name || '',
+      email: data.email ?? baseUser?.email,
       password: password,
-      phone: data.phone ?? current?.phone,
-      occupation: data.occupation ?? current?.occupation,
-      companyName: data.companyName ?? current?.companyName,
-      age: data.age ?? current?.age,
-      companySize: data.companySize ?? current?.companySize,
-      department: data.department ?? current?.department,
-      city: data.city ?? current?.city,
-      role: current?.role || 'user',
-      isActive: current?.isActive ?? true,
-      createdAt: current?.createdAt || now.toISOString(),
-      lastLogin: current?.lastLogin,
+      phone: data.phone ?? baseUser?.phone,
+      occupation: data.occupation ?? baseUser?.occupation,
+      companyName: data.companyName ?? baseUser?.companyName,
+      age: data.age ?? baseUser?.age,
+      companySize: data.companySize ?? baseUser?.companySize,
+      department: data.department ?? baseUser?.department,
+      city: data.city ?? baseUser?.city,
+      role: baseUser?.role || 'user',
+      isActive: baseUser?.isActive ?? true,
+      createdAt: baseUser?.createdAt || now.toISOString(),
+      lastLogin: baseUser?.lastLogin,
       // Subscription: new users start with 30-day trial
-      subscriptionStatus: current?.subscriptionStatus ?? data.subscriptionStatus ?? 'trial',
-      trialEndsAt: current?.trialEndsAt ?? data.trialEndsAt ?? this.calculateTrialEnd(now),
-      subscriptionActivatedByAdmin: current?.subscriptionActivatedByAdmin ?? data.subscriptionActivatedByAdmin ?? false,
+      subscriptionStatus: baseUser?.subscriptionStatus ?? data.subscriptionStatus ?? 'trial',
+      trialEndsAt: baseUser?.trialEndsAt ?? data.trialEndsAt ?? this.calculateTrialEnd(now),
+      subscriptionActivatedByAdmin: baseUser?.subscriptionActivatedByAdmin ?? data.subscriptionActivatedByAdmin ?? false,
     };
     this.saveUserToList(updated);
     this.storage.setActiveUser(updated.id);
@@ -342,6 +354,19 @@ export class UserService {
     if (idx >= 0) {
       users[idx] = user;
     } else {
+      // Before adding a new user, check if another user with the same email exists
+      if (user.email) {
+        const emailDupeIdx = users.findIndex(
+          u => u.id !== user.id && (u.email || '').toLowerCase() === user.email!.toLowerCase() && !u.isDeleted
+        );
+        if (emailDupeIdx >= 0) {
+          // Merge: update the existing record instead of creating a duplicate
+          users[emailDupeIdx] = { ...users[emailDupeIdx], ...user, id: users[emailDupeIdx].id };
+          this.storage.set(this.USERS_KEY, users);
+          this._usersSignal.set(users.filter(u => !u.isDeleted));
+          return;
+        }
+      }
       users.push(user);
     }
     this.storage.set(this.USERS_KEY, users);
@@ -423,12 +448,94 @@ export class UserService {
         console.log('[UserService] Perfil del listado sanado con los datos del perfil activo:', current.name);
       }
     } else {
-      // Si no están en la lista en absoluto (fueron borrados accidentalmente), los re-incorporamos
+      // Before re-adding, check if a user with the same email already exists under a different ID
+      if (current.email) {
+        const emailMatch = users.findIndex(
+          u => (u.email || '').toLowerCase() === current.email!.toLowerCase()
+        );
+        if (emailMatch >= 0) {
+          // Update existing record instead of creating a duplicate
+          users[emailMatch] = { ...users[emailMatch], ...current, id: users[emailMatch].id };
+          this.storage.set(this.USERS_KEY, users);
+          this._usersSignal.set([...users]);
+          console.log('[UserService] Perfil sincronizado con registro existente por email:', current.email);
+          return;
+        }
+      }
       users.push({ ...current });
       this.storage.set(this.USERS_KEY, users);
       this._usersSignal.set([...users]);
       console.log('[UserService] Perfil faltante re-incorporado al listado:', current.name);
     }
+  }
+
+  /**
+   * Deduplicate users by email. Keeps the most recently active entry per email.
+   * This cleans up any existing duplicates in the stored data.
+   */
+  deduplicateUsers(): void {
+    const rawUsers = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
+    const emailMap = new Map<string, UserProfile>();
+    const deduped: UserProfile[] = [];
+    let removed = 0;
+
+    for (const user of rawUsers) {
+      // Keep deleted users as-is (don't deduplicate them away, they need to persist)
+      if (user.isDeleted) {
+        deduped.push(user);
+        continue;
+      }
+
+      const email = (user.email || '').toLowerCase().trim();
+
+      // Users without email can't be deduped by email, keep all
+      if (!email) {
+        deduped.push(user);
+        continue;
+      }
+
+      const existing = emailMap.get(email);
+      if (!existing) {
+        emailMap.set(email, user);
+      } else {
+        // Keep the one with the most recent activity or the one with richer data
+        const existingScore = this.getUserActivityScore(existing);
+        const newScore = this.getUserActivityScore(user);
+
+        if (newScore > existingScore) {
+          // Replace with the better record
+          emailMap.set(email, user);
+        }
+        removed++;
+      }
+    }
+
+    if (removed > 0) {
+      // Rebuild deduped list: non-email users + best per email
+      const finalList = deduped.concat(Array.from(emailMap.values()));
+      this.storage.set(this.USERS_KEY, finalList);
+      this._usersSignal.set(finalList.filter(u => !u.isDeleted));
+      console.log(`[UserService] Deduplicación: ${removed} registros duplicados eliminados`);
+    }
+  }
+
+  /** Score a user record for deduplication — higher score = more valuable record to keep */
+  private getUserActivityScore(user: UserProfile): number {
+    let score = 0;
+    // Prefer superadmin
+    if (user.role === 'superadmin') score += 1000;
+    // Prefer active subscriptions
+    if (user.subscriptionStatus === 'active') score += 100;
+    if (user.subscriptionActivatedByAdmin) score += 50;
+    // Prefer more recently active
+    if (user.lastLogin) score += 20 + (new Date(user.lastLogin).getTime() / 1e12);
+    // Prefer richer profiles
+    if (user.phone) score += 5;
+    if (user.occupation) score += 3;
+    if (user.companyName) score += 3;
+    // Prefer older accounts (established)
+    if (user.createdAt) score += new Date(user.createdAt).getTime() / 1e13;
+    return score;
   }
 
   private generateId(): string {

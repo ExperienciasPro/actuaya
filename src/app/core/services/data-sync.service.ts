@@ -304,8 +304,35 @@ export class DataSyncService {
         for (const u of localUsers) {
           if (u?.id && !mergedMap.has(u.id)) mergedMap.set(u.id, u);
         }
-        this.storage.setUnscoped('um_users', Array.from(mergedMap.values()));
-        console.log(`[DataSync] Lista de usuarios sincronizada: ${mergedMap.size} usuarios`);
+
+        // Deduplicate by email — keep the best record per email
+        const byEmail = new Map<string, any>();
+        const noEmail: any[] = [];
+        const deleted: any[] = [];
+
+        for (const user of mergedMap.values()) {
+          if (user.isDeleted) { deleted.push(user); continue; }
+          const email = (user.email || '').toLowerCase().trim();
+          if (!email) { noEmail.push(user); continue; }
+          const existing = byEmail.get(email);
+          if (!existing) {
+            byEmail.set(email, user);
+          } else {
+            // Keep the one with latest activity
+            const existingTime = new Date(existing.lastLogin || existing.createdAt || 0).getTime();
+            const newTime = new Date(user.lastLogin || user.createdAt || 0).getTime();
+            // Prefer active subscriptions, then most recent activity
+            const existingActive = existing.subscriptionStatus === 'active' || existing.subscriptionActivatedByAdmin;
+            const newActive = user.subscriptionStatus === 'active' || user.subscriptionActivatedByAdmin;
+            if ((newActive && !existingActive) || (newActive === existingActive && newTime > existingTime)) {
+              byEmail.set(email, user);
+            }
+          }
+        }
+
+        const finalList = [...deleted, ...noEmail, ...Array.from(byEmail.values())];
+        this.storage.setUnscoped('um_users', finalList);
+        console.log(`[DataSync] Lista de usuarios sincronizada: ${finalList.length} usuarios (de ${mergedMap.size} pre-dedup)`);
       }
     } catch (e) {
       console.warn('[DataSync] Error sincronizando lista de usuarios:', e);
