@@ -669,18 +669,28 @@ export class SubscribersComponent {
 
   exportUsersCSV(): void {
     const users = this.filteredUsers();
-    const headers = ['Nombre', 'Correo', 'Teléfono', 'Rol', 'Suscripción', 'Estado', 'Creado', 'Último Acceso', 'Empresa', 'Días Trial'];
+    const headers = [
+      'Nombre', 'Apellidos', 'Correo', 'Teléfono',
+      'Ocupación', 'Empresa', 'Edad', 'Tamaño Empresa',
+      'Departamento', 'Ciudad',
+      'Rol', 'Suscripción', 'Estado', 'Creado', 'Último Acceso',
+    ];
     const rows = users.map(u => [
-      u.name,
+      this.getFirstName(u.name),
+      this.getLastName(u.name),
       u.email || '',
       u.phone || '',
+      u.occupation || '',
+      u.companyName || '',
+      u.age ? String(u.age) : '',
+      u.companySize ? (this.companySizeLabels[u.companySize] || u.companySize) : '',
+      u.department || '',
+      u.city || '',
       this.getRoleLabel(u.role),
       u.subscriptionStatus || 'trial',
       u.isActive ? 'Activo' : 'Inactivo',
       u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-CO') : '',
       u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('es-CO') : 'Nunca',
-      u.companyName || '',
-      String(this.getTrialDaysLeft(u)),
     ]);
 
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
