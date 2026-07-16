@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewInit, OnInit } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
@@ -277,13 +277,19 @@ import { LOGO_FULL } from '../../core/constants/logo.constants';
   `,
   styleUrl: 'login.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   readonly logoFull = LOGO_FULL;
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private userService = inject(UserService);
   private mockSubService = inject(MockSubscriptionService);
   private dataSync = inject(DataSyncService);
+
+  ngOnInit(): void {
+    // Sincronizar lista de usuarios ANTES de login/registro
+    // para evitar que un navegador con lista incompleta sobreescriba la del servidor
+    this.dataSync.syncUserList();
+  }
 
   // DOM references — needed because Safari autocomplete can desync ngModel
   @ViewChild('usernameInput') usernameInputRef!: ElementRef<HTMLInputElement>;

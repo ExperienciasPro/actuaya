@@ -81,17 +81,52 @@ router.post('/', async (req, res) => {
       }
 
       const savedKeys = [];
-      const operations = Object.entries(allData).map(([dataKey, dataValue]) => {
-        if (!/^[a-zA-Z0-9_-]+$/.test(dataKey)) return null;
+      const operations = [];
+
+      for (const [dataKey, dataValue] of Object.entries(allData)) {
+        if (!/^[a-zA-Z0-9_-]+$/.test(dataKey)) continue;
         savedKeys.push(dataKey);
-        return {
+
+        // ── MERGE para listas de usuarios (um_users) ──
+        // En vez de sobreescribir, fusionar por ID para evitar pérdida
+        // cuando múltiples navegadores sincronizan al mismo tiempo.
+        if (dataKey === 'um_users' && Array.isArray(dataValue)) {
+          const existing = await DataStore.findOne({ key: 'um_users' });
+          const serverUsers = (existing && Array.isArray(existing.value)) ? existing.value : [];
+          const mergedMap = new Map();
+          // Primero los del servidor (base)
+          for (const u of serverUsers) {
+            if (u && u.id) mergedMap.set(u.id, u);
+          }
+          // Luego los del cliente (ganan si hay conflicto, excepto superadmin del servidor)
+          for (const u of dataValue) {
+            if (u && u.id) {
+              const serverVersion = mergedMap.get(u.id);
+              if (serverVersion && serverVersion.role === 'superadmin' && u.role !== 'superadmin') {
+                continue; // No degradar superadmin
+              }
+              mergedMap.set(u.id, u);
+            }
+          }
+          const mergedUsers = Array.from(mergedMap.values());
+          operations.push({
+            updateOne: {
+              filter: { key: dataKey },
+              update: { $set: { key: dataKey, value: mergedUsers, updatedAt: new Date() } },
+              upsert: true,
+            },
+          });
+          continue;
+        }
+
+        operations.push({
           updateOne: {
             filter: { key: dataKey },
             update: { $set: { key: dataKey, value: dataValue, updatedAt: new Date() } },
             upsert: true,
           },
-        };
-      }).filter(Boolean);
+        });
+      }
 
       if (operations.length > 0) {
         await DataStore.bulkWrite(operations);

@@ -269,6 +269,33 @@ export class DataSyncService {
   }
 
   /**
+   * Sync ligero: descarga SOLO la lista de usuarios del servidor.
+   * NO requiere sesión activa — se usa ANTES del login/registro para
+   * asegurar que la lista local de um_users esté al día.
+   */
+  async syncUserList(): Promise<void> {
+    try {
+      const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
+        headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+        cache: 'no-store',
+      });
+      if (!response.ok) return;
+      const serverUsers = await response.json();
+      if (Array.isArray(serverUsers) && serverUsers.length > 0) {
+        // Merge con la lista local
+        const localUsers = this.storage.getUnscoped<any[]>('um_users') || [];
+        const mergedMap = new Map<string, any>();
+        for (const u of serverUsers) { if (u?.id) mergedMap.set(u.id, u); }
+        for (const u of localUsers) { if (u?.id && !mergedMap.has(u.id)) mergedMap.set(u.id, u); }
+        this.storage.setUnscoped('um_users', Array.from(mergedMap.values()));
+        console.log(`[DataSync] Lista de usuarios sincronizada: ${mergedMap.size} usuarios`);
+      }
+    } catch (e) {
+      console.warn('[DataSync] Error sincronizando lista de usuarios:', e);
+    }
+  }
+
+  /**
    * Guarda TODOS los datos de localStorage al servidor.
    * Usa debounce para no hacer demasiadas peticiones.
    */
