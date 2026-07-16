@@ -198,7 +198,10 @@ export class DataSyncService {
               }
               // Clave legacy sin sufijo de usuario → candidata a migración
               else if (!key.match(/_[a-z]+-[a-z0-9]{5,}$/i)) {
-                // No tiene formato de userId al final → es legacy
+                // No migrar claves de estado de UI para evitar saltarse onboarding/intro en usuarios nuevos
+                if (key === 'um_onboarding_welcome_seen' || key === 'um_setup_intro_seen') {
+                  continue;
+                }
                 baseKey = key;
               }
               // Clave scoped para OTRO usuario → ignorar
