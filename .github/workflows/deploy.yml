@@ -106,11 +106,18 @@ jobs:
 
       - name: ⚡ Configurar Nginx
         run: |
-          sudo cp nginx/backend.conf /etc/nginx/sites-available/api.actuaya.co
-
-          if [ ! -L /etc/nginx/sites-enabled/api.actuaya.co ]; then
-            sudo ln -s /etc/nginx/sites-available/api.actuaya.co /etc/nginx/sites-enabled/
+          # Solo copiar si el archivo de config no existe aún
+          # Si Certbot ya configuró SSL, no sobreescribir para no romper la config
+          if [ ! -f /etc/nginx/sites-available/api.actuaya.co ]; then
+            sudo cp nginx/backend.conf /etc/nginx/sites-available/api.actuaya.co
+          else
+            # Actualizar solo el proxy_pass al puerto correcto
+            sudo sed -i 's|proxy_pass http://127.0.0.1:[0-9]*;|proxy_pass http://127.0.0.1:3005;|g' /etc/nginx/sites-available/api.actuaya.co
           fi
+
+          # Asegurar que sites-enabled apunta al archivo correcto (forzar symlink)
+          sudo rm -f /etc/nginx/sites-enabled/api.actuaya.co
+          sudo ln -s /etc/nginx/sites-available/api.actuaya.co /etc/nginx/sites-enabled/api.actuaya.co
 
           if sudo nginx -t 2>&1; then
             sudo systemctl reload nginx
