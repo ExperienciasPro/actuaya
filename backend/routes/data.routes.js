@@ -133,7 +133,35 @@ router.post('/', async (req, res) => {
               mergedMap.set(u.id, u);
             }
           }
-          const mergedUsers = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
+          // Deduplicate by email — keep best record per email
+          let mergedUsers = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
+          const byEmail = new Map();
+          const noEmail = [];
+          for (const u of mergedUsers) {
+            const email = (u.email || '').toLowerCase().trim();
+            if (!email) { noEmail.push(u); continue; }
+            const prev = byEmail.get(email);
+            if (!prev) {
+              byEmail.set(email, u);
+            } else {
+              // Score: prefer superadmin > active sub > lastLogin > more fields
+              const scoreUser = (x) => {
+                let s = 0;
+                if (x.role === 'superadmin') s += 1000;
+                if (x.subscriptionStatus === 'active') s += 100;
+                if (x.subscriptionActivatedByAdmin) s += 50;
+                if (x.lastLogin) s += 20;
+                if (x.phone) s += 5;
+                if (x.occupation) s += 3;
+                if (x.companyName) s += 3;
+                return s;
+              };
+              if (scoreUser(u) > scoreUser(prev)) {
+                byEmail.set(email, u);
+              }
+            }
+          }
+          mergedUsers = [...noEmail, ...Array.from(byEmail.values())];
           operations.push({
             updateOne: {
               filter: { key: dataKey },
@@ -187,7 +215,34 @@ router.post('/', async (req, res) => {
            mergedMap.set(u.id, u);
          }
        }
-       valueToSave = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
+       // Deduplicate by email — keep best record per email
+       let mergedUsers = Array.from(mergedMap.values()).filter(u => !u.isDeleted);
+       const byEmail = new Map();
+       const noEmail = [];
+       for (const u of mergedUsers) {
+         const email = (u.email || '').toLowerCase().trim();
+         if (!email) { noEmail.push(u); continue; }
+         const prev = byEmail.get(email);
+         if (!prev) {
+           byEmail.set(email, u);
+         } else {
+           const scoreUser = (x) => {
+             let s = 0;
+             if (x.role === 'superadmin') s += 1000;
+             if (x.subscriptionStatus === 'active') s += 100;
+             if (x.subscriptionActivatedByAdmin) s += 50;
+             if (x.lastLogin) s += 20;
+             if (x.phone) s += 5;
+             if (x.occupation) s += 3;
+             if (x.companyName) s += 3;
+             return s;
+           };
+           if (scoreUser(u) > scoreUser(prev)) {
+             byEmail.set(email, u);
+           }
+         }
+       }
+       valueToSave = [...noEmail, ...Array.from(byEmail.values())];
     }
 
     await DataStore.findOneAndUpdate(

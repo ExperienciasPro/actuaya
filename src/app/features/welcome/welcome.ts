@@ -312,7 +312,16 @@ export class WelcomeComponent implements OnInit {
         try {
           // Habilitar temporalmente hasSynced para poder subir la nueva cuenta
           (this.syncService as any).hasSynced = true;
+
+          // CRITICAL: First, merge the server's user list with our local list
+          // so we don't overwrite other users when we save.
+          // syncUserList merges by ID and deduplicates by email, so the new user
+          // will be added to the full server list.
+          await this.syncService.syncUserList();
+
+          // Now save to server — um_users will contain the full merged list + our new user
           await this.syncService.saveToServer();
+
           // Sincronizar en background para no demorar la navegación
           this.syncService.syncFromServer().catch(err => {
             console.warn('Error syncFromServer background:', err);
