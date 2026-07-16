@@ -757,12 +757,12 @@
             <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($any($event.target).checked)" />
           </th>
           <th>Usuario</th>
+          <th>Empresa</th>
           <th>Correo</th>
           <th>Teléfono</th>
           <th>Suscripción</th>
           <th>Estado</th>
           <th>Engagement</th>
-          <th>Trial</th>
           <th>Almacenamiento</th>
           <th>Creado</th>
           <th>Acciones</th>
@@ -785,11 +785,15 @@
                 <span class="user-avatar-sm">{{ getUserInitials(user.name) }}</span>
                 <div class="user-info">
                   <span class="user-name">{{ user.name }}</span>
-                  @if (user.companyName) {
-                    <span class="company-tag">{{ user.companyName }}</span>
-                  }
                 </div>
               </div>
+            </td>
+            <td>
+              @if (user.companyName) {
+                <span class="company-tag">{{ user.companyName }}</span>
+              } @else {
+                <span style="color: var(--text-muted); opacity: 0.5;">—</span>
+              }
             </td>
             <td class="mono">{{ user.email || '—' }}</td>
             <td class="mono">
@@ -819,9 +823,6 @@
               </span>
             </td>
             <td>
-              <span class="trial-badge">{{ getTrialLabel(user) }}</span>
-            </td>
-            <td>
               <div class="storage-cell">
                 <div class="storage-bar">
                   <div class="storage-fill"
@@ -842,7 +843,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="11">
+            <td colspan="10">
               <div class="empty-state">
                 <div class="empty-icon">👥</div>
                 <p>Sin usuarios registrados</p>

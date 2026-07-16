@@ -561,9 +561,18 @@ $accent: $color-accent-primary;
   }
 }
 
-.admin-activated {
+.admin-activated-label {
+  display: block;
+  margin-top: 4px;
   font-size: 0.65rem;
-  margin-left: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c5ce7;
+  background: rgba(108, 92, 231, 0.08);
+  padding: 1px 6px;
+  border-radius: 6px;
+  width: fit-content;
 }
 
 .status-dot {
