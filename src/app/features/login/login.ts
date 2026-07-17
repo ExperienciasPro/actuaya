@@ -330,7 +330,19 @@ export class LoginComponent implements OnInit {
       // Force reload from localStorage before authenticating
       this.userService.reloadUsersFromStorage();
 
-      const user = await this.userService.authenticate(finalUser, finalPass);
+      let user = await this.userService.authenticate(finalUser, finalPass);
+      
+      // If auth failed, maybe localStorage is empty/stale — sync from server and retry
+      if (!user) {
+        try {
+          await this.dataSync.syncUserList();
+          this.userService.reloadUsersFromStorage();
+          user = await this.userService.authenticate(finalUser, finalPass);
+        } catch (syncErr) {
+          console.warn('[Login] Error syncing users for retry:', syncErr);
+        }
+      }
+
       if (user) {
         // Sincronizar en segundo plano sin bloquear la redirección
         this.dataSync.syncFromServer().then(() => {
