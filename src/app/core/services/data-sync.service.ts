@@ -382,6 +382,7 @@ export class DataSyncService {
 
     const finalList = [...deleted, ...noEmail, ...Array.from(byEmail.values())];
     this.storage.setUnscoped('um_users', finalList);
+    this.userService.reloadUsersFromStorage();
     console.log(`[DataSync] um_users merged from server: ${finalList.length} users (${deleted.length} deleted preserved)`);
   }
 
@@ -447,6 +448,7 @@ export class DataSyncService {
 
         const finalList = [...deleted, ...noEmail, ...Array.from(byEmail.values())];
         this.storage.setUnscoped('um_users', finalList);
+        this.userService.reloadUsersFromStorage();
         console.log(`[DataSync] Lista de usuarios sincronizada: ${finalList.length} usuarios (de ${mergedMap.size} pre-dedup)`);
       }
     } catch (e) {
