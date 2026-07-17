@@ -326,34 +326,43 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    // DEBUG: Log authentication attempt details
-    const allUsers = this.userService.getAllUsers();
-    console.log(`[LOGIN DEBUG] Total users in signal: ${allUsers.length}`);
-    const matchByEmail = allUsers.find(u => u.email?.toLowerCase() === finalUser.toLowerCase());
-    if (matchByEmail) {
-      console.log(`[LOGIN DEBUG] Found user by email: ${matchByEmail.name}, isActive: ${matchByEmail.isActive}, passwordType: ${matchByEmail.password?.startsWith('sha256$') ? 'hashed' : 'raw'}, passwordLength: ${matchByEmail.password?.length}`);
-    } else {
-      console.log(`[LOGIN DEBUG] User NOT found by email: ${finalUser}`);
-      console.log(`[LOGIN DEBUG] Available emails:`, allUsers.map(u => u.email).join(', '));
-    }
-
-    const user = await this.userService.authenticate(finalUser, finalPass);
-    if (user) {
-      // Sincronizar en segundo plano sin bloquear la redirección
-      this.dataSync.syncFromServer().then(() => {
-        this.mockSubService.checkAndUpdateStatus();
-      });
-
-      // Redirigir de inmediato al dashboard
-      if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
-        this.router.navigate(['/subscription-required']);
+    try {
+      // Force reload from localStorage before authenticating
+      this.userService.reloadUsersFromStorage();
+      
+      const allUsers = this.userService.getAllUsers();
+      const matchByEmail = allUsers.find(u => u.email?.toLowerCase() === finalUser.toLowerCase());
+      
+      // TEMP DEBUG: show diagnostic info on screen
+      let debugInfo = `[DEBUG] ${allUsers.length} usuarios cargados. `;
+      if (matchByEmail) {
+        debugInfo += `Usuario encontrado: ${matchByEmail.name}, activo: ${matchByEmail.isActive}, `;
+        debugInfo += `clave tipo: ${matchByEmail.password?.startsWith('sha256$') ? 'hash' : 'texto'}, `;
+        debugInfo += `clave guardada: ${matchByEmail.password?.substring(0, 6)}..., `;
+        debugInfo += `clave ingresada: ${finalPass.substring(0, 4)}...`;
       } else {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/d/dashboard';
-        this.router.navigateByUrl(returnUrl);
+        debugInfo += `NO se encontró email: ${finalUser}`;
       }
-    } else {
-      console.log(`[LOGIN DEBUG] Authentication FAILED for: ${finalUser}`);
-      this.errorMsg = 'Correo o contraseña incorrectos';
+
+      const user = await this.userService.authenticate(finalUser, finalPass);
+      if (user) {
+        // Sincronizar en segundo plano sin bloquear la redirección
+        this.dataSync.syncFromServer().then(() => {
+          this.mockSubService.checkAndUpdateStatus();
+        });
+
+        // Redirigir de inmediato al dashboard
+        if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
+          this.router.navigate(['/subscription-required']);
+        } else {
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/d/dashboard';
+          this.router.navigateByUrl(returnUrl);
+        }
+      } else {
+        this.errorMsg = debugInfo;
+      }
+    } catch (err: any) {
+      this.errorMsg = `[ERROR] ${err.message || err}`;
     }
   }
 
