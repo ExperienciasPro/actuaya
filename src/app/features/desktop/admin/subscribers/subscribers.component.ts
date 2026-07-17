@@ -318,8 +318,16 @@ export class SubscribersComponent {
   constructor() {
     if (!this.userService.isSuperAdmin()) {
       this.router.navigate(['/d/dashboard']);
+      return;
     }
     this.refreshUsers();
+    
+    // Sync users from server to ensure list is fresh
+    this.dataSyncService.syncFromServer().then(() => {
+      this.refreshUsers();
+    }).catch(err => {
+      console.warn('Error syncing users from server:', err);
+    });
   }
 
   // ─── Detail Panel Actions ─────────────────

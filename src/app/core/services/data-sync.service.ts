@@ -287,22 +287,37 @@ export class DataSyncService {
 
     const localUsers = this.storage.getUnscoped<any[]>('um_users') || [];
 
-    // Build map of local deleted user IDs and emails
+    // Build map of local deleted user IDs and emails with their full objects
     const localDeletedIds = new Set<string>();
-    const localDeletedEmails = new Set<string>();
+    const localDeletedMap = new Map<string, any>(); // email -> user object
     for (const u of localUsers) {
       if (u?.isDeleted) {
         localDeletedIds.add(u.id);
-        if (u.email) localDeletedEmails.add(u.email.toLowerCase().trim());
+        if (u.email) {
+          localDeletedMap.set(u.email.toLowerCase().trim(), u);
+        }
       }
     }
 
-    // Merge: start with server data, preserve local isDeleted
+    // Merge: start with server data, preserve local isDeleted only if it's newer/same age
     const mergedMap = new Map<string, any>();
     for (const u of serverUsers) {
       if (!u?.id) continue;
-      if (localDeletedIds.has(u.id) || (u.email && localDeletedEmails.has(u.email.toLowerCase().trim()))) {
-        // This user was deleted locally — keep it as deleted
+      
+      const emailKey = u.email ? u.email.toLowerCase().trim() : '';
+      const localDel = emailKey ? localDeletedMap.get(emailKey) : null;
+      
+      let wasDeletedLocally = localDeletedIds.has(u.id);
+      if (!wasDeletedLocally && localDel) {
+        // Only treat as deleted if the local deleted record is newer or equal in creation date
+        const localDelTime = new Date(localDel.createdAt || 0).getTime();
+        const serverTime = new Date(u.createdAt || 0).getTime();
+        if (localDelTime >= serverTime) {
+          wasDeletedLocally = true;
+        }
+      }
+
+      if (wasDeletedLocally) {
         mergedMap.set(u.id, { ...u, isDeleted: true });
       } else {
         mergedMap.set(u.id, u);
