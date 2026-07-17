@@ -326,6 +326,17 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // DEBUG: Log authentication attempt details
+    const allUsers = this.userService.getAllUsers();
+    console.log(`[LOGIN DEBUG] Total users in signal: ${allUsers.length}`);
+    const matchByEmail = allUsers.find(u => u.email?.toLowerCase() === finalUser.toLowerCase());
+    if (matchByEmail) {
+      console.log(`[LOGIN DEBUG] Found user by email: ${matchByEmail.name}, isActive: ${matchByEmail.isActive}, passwordType: ${matchByEmail.password?.startsWith('sha256$') ? 'hashed' : 'raw'}, passwordLength: ${matchByEmail.password?.length}`);
+    } else {
+      console.log(`[LOGIN DEBUG] User NOT found by email: ${finalUser}`);
+      console.log(`[LOGIN DEBUG] Available emails:`, allUsers.map(u => u.email).join(', '));
+    }
+
     const user = await this.userService.authenticate(finalUser, finalPass);
     if (user) {
       // Sincronizar en segundo plano sin bloquear la redirección
@@ -341,6 +352,7 @@ export class LoginComponent implements OnInit {
         this.router.navigateByUrl(returnUrl);
       }
     } else {
+      console.log(`[LOGIN DEBUG] Authentication FAILED for: ${finalUser}`);
       this.errorMsg = 'Correo o contraseña incorrectos';
     }
   }
