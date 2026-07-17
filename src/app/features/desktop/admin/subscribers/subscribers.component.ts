@@ -324,6 +324,7 @@ export class SubscribersComponent {
     
     // Sync users from server to ensure list is fresh
     this.dataSyncService.syncFromServer().then(() => {
+      this.userService.reloadUsersFromStorage();
       this.refreshUsers();
     }).catch(err => {
       console.warn('Error syncing users from server:', err);

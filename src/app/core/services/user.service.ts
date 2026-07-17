@@ -255,6 +255,11 @@ export class UserService {
     return this._usersSignal();
   }
 
+  /** Force-reload the users signal from localStorage (call after external sync writes) */
+  reloadUsersFromStorage(): void {
+    this._usersSignal.set(this.loadAllUsers());
+  }
+
   /** Get a user by ID */
   getUserById(id: string): UserProfile | undefined {
     return this.getAllUsers().find(u => u.id === id);
