@@ -329,20 +329,6 @@ export class LoginComponent implements OnInit {
     try {
       // Force reload from localStorage before authenticating
       this.userService.reloadUsersFromStorage();
-      
-      const allUsers = this.userService.getAllUsers();
-      const matchByEmail = allUsers.find(u => u.email?.toLowerCase() === finalUser.toLowerCase());
-      
-      // TEMP DEBUG: show diagnostic info on screen
-      let debugInfo = `[DEBUG] ${allUsers.length} usuarios cargados. `;
-      if (matchByEmail) {
-        debugInfo += `Usuario encontrado: ${matchByEmail.name}, activo: ${matchByEmail.isActive}, `;
-        debugInfo += `clave tipo: ${matchByEmail.password?.startsWith('sha256$') ? 'hash' : 'texto'}, `;
-        debugInfo += `clave guardada: ${matchByEmail.password?.substring(0, 6)}..., `;
-        debugInfo += `clave ingresada: ${finalPass.substring(0, 4)}...`;
-      } else {
-        debugInfo += `NO se encontró email: ${finalUser}`;
-      }
 
       const user = await this.userService.authenticate(finalUser, finalPass);
       if (user) {
@@ -359,10 +345,10 @@ export class LoginComponent implements OnInit {
           this.router.navigateByUrl(returnUrl);
         }
       } else {
-        this.errorMsg = debugInfo;
+        this.errorMsg = 'Correo o contraseña incorrectos';
       }
     } catch (err: any) {
-      this.errorMsg = `[ERROR] ${err.message || err}`;
+      this.errorMsg = 'Error al iniciar sesión. Intenta de nuevo.';
     }
   }
 
@@ -403,6 +389,8 @@ export class LoginComponent implements OnInit {
 
   verifyEmail(): void {
     this.errorMsg = '';
+    // Force reload from localStorage to get latest user list
+    this.userService.reloadUsersFromStorage();
     const users = this.userService.getAllUsers();
     const found = users.find(
       u => u.email?.toLowerCase() === this.recoverEmail.trim().toLowerCase()
@@ -433,7 +421,7 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  resetPassword(): void {
+  async resetPassword(): Promise<void> {
     this.errorMsg = '';
     this.successMsg = '';
 
@@ -446,7 +434,17 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    this.userService.updateUserPassword(this.foundUserId, this.newPassword);
+    // Hash the password before saving for consistency
+    const hashedPassword = await this.userService.hashPassword(this.newPassword);
+    this.userService.updateUserPassword(this.foundUserId, hashedPassword);
+    
+    // CRITICAL: Save to server to persist the password change
+    try {
+      await this.dataSync.saveUsersToServer();
+    } catch (err) {
+      console.warn('[Login] Error saving password change to server:', err);
+    }
+    
     this.successMsg = '✅ Contraseña actualizada correctamente';
 
     // Auto-redirect to login after 2s

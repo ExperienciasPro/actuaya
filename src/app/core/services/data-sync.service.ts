@@ -457,6 +457,30 @@ export class DataSyncService {
   }
 
   /**
+   * Guarda SOLO la lista de usuarios al servidor.
+   * NO requiere sesión activa ni hasSynced — se usa para recovery de contraseña.
+   */
+  async saveUsersToServer(): Promise<void> {
+    try {
+      const users = this.storage.getUnscoped<any[]>('um_users');
+      if (!users || users.length === 0) return;
+
+      const response = await fetch(`${this.API_URL}?key=_bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': this.AUTH_TOKEN,
+        },
+        body: JSON.stringify({ um_users: users }),
+      });
+      const result = await response.json();
+      console.log('[DataSync] Usuarios guardados al servidor:', result);
+    } catch (e) {
+      console.warn('[DataSync] Error guardando usuarios al servidor:', e);
+    }
+  }
+
+  /**
    * Guarda TODOS los datos de localStorage al servidor.
    * Usa debounce para no hacer demasiadas peticiones.
    */
