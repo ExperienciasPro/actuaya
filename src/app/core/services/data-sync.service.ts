@@ -299,8 +299,11 @@ export class DataSyncService {
       }
     }
 
-    // Merge: start with server data, preserve local isDeleted only if it's newer/same age
+    // Merge: start with server data, but prefer LOCAL version when it's more recent
     const mergedMap = new Map<string, any>();
+    const localMap = new Map<string, any>();
+    for (const u of localUsers) { if (u?.id) localMap.set(u.id, u); }
+
     for (const u of serverUsers) {
       if (!u?.id) continue;
       
@@ -320,7 +323,33 @@ export class DataSyncService {
       if (wasDeletedLocally) {
         mergedMap.set(u.id, { ...u, isDeleted: true });
       } else {
-        mergedMap.set(u.id, u);
+        // Check if local version is more recent (admin changes like subscription)
+        const localUser = localMap.get(u.id);
+        if (localUser && !localUser.isDeleted) {
+          // Prefer local if it has admin-activated subscription that server doesn't
+          const localHasAdminSub = localUser.subscriptionActivatedByAdmin || localUser.subscriptionStatus === 'active';
+          const serverHasAdminSub = u.subscriptionActivatedByAdmin || u.subscriptionStatus === 'active';
+          if (localHasAdminSub && !serverHasAdminSub) {
+            // Local has admin subscription changes not yet on server — keep local
+            mergedMap.set(u.id, localUser);
+          } else {
+            // Merge: use server as base, overlay local subscription fields if they're set
+            const merged = { ...u };
+            // Preserve local subscription fields if they differ (admin-made changes)
+            if (localUser.subscriptionStatus && localUser.subscriptionStatus !== u.subscriptionStatus) {
+              merged.subscriptionStatus = localUser.subscriptionStatus;
+              merged.subscriptionActivatedByAdmin = localUser.subscriptionActivatedByAdmin ?? merged.subscriptionActivatedByAdmin;
+              merged.trialEndsAt = localUser.trialEndsAt ?? merged.trialEndsAt;
+            }
+            // Preserve local isActive flag
+            if (localUser.isActive !== undefined && localUser.isActive !== u.isActive) {
+              merged.isActive = localUser.isActive;
+            }
+            mergedMap.set(u.id, merged);
+          }
+        } else {
+          mergedMap.set(u.id, u);
+        }
       }
     }
     // Add local-only entries (not on server)

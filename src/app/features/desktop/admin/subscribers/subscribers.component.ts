@@ -761,7 +761,7 @@ export class SubscribersComponent {
     this.activationUser.set(null);
   }
 
-  confirmActivation(indefinite: boolean = false): void {
+  async confirmActivation(indefinite: boolean = false): Promise<void> {
     const user = this.activationUser();
     if (!user) return;
 
@@ -775,19 +775,25 @@ export class SubscribersComponent {
       this.selectedUser.set(updatedUser);
     }
 
-    // CRITICAL: Save to server IMMEDIATELY to prevent data loss on page reload
-    this.dataSyncService.saveToServer();
-
     this.closeActivationModal();
     const durationLabel = months ? `por ${months} mes(es)` : 'indefinidamente';
     this.showToast(`💎 Suscripción activada ${durationLabel} para ${user.name}`);
+
+    // CRITICAL: Save to server IMMEDIATELY and WAIT for completion
+    try {
+      await this.dataSyncService.saveToServer();
+      console.log('[Subscribers] Suscripción guardada exitosamente en servidor');
+    } catch (err) {
+      console.error('[Subscribers] Error guardando suscripción en servidor:', err);
+      this.showToast('⚠️ Cambio guardado localmente. Sincronizando con servidor...');
+    }
   }
 
   activateUserSubscription(user: UserProfile): void {
     this.openActivationModal(user);
   }
 
-  deactivateUserSubscription(user: UserProfile): void {
+  async deactivateUserSubscription(user: UserProfile): Promise<void> {
     if (confirm(`¿Desactivar la suscripción de "${user.name}"? Pasará a estado "Expirada".`)) {
       this.mockSubService.deactivateSubscription(user.id);
       this.refreshUsers();
@@ -800,10 +806,15 @@ export class SubscribersComponent {
         this.closeUserDetail();
       }
 
-      // CRITICAL: Save to server IMMEDIATELY
-      this.dataSyncService.saveToServer();
-
       this.showToast('⏸️ Suscripción desactivada para ' + user.name);
+
+      // CRITICAL: Save to server IMMEDIATELY and WAIT for completion
+      try {
+        await this.dataSyncService.saveToServer();
+        console.log('[Subscribers] Desactivación guardada exitosamente en servidor');
+      } catch (err) {
+        console.error('[Subscribers] Error guardando desactivación en servidor:', err);
+      }
     }
   }
 
