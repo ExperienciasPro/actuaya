@@ -112,8 +112,9 @@ export class UserService {
   /** Authenticate a user by email + password (or name + password for legacy) */
   async authenticate(identifier: string, password: string): Promise<UserProfile | null> {
     this.ensureSuperAdmin();
-    const users = this.getAllUsers();
-    // Priorizar match exacto por email sobre match por nombre
+    
+    // Try signal first, then force-reload from localStorage as fallback
+    let users = this.getAllUsers();
     let user = users.find(
       u => u.email?.toLowerCase() === identifier.toLowerCase() &&
            u.isActive
@@ -125,6 +126,23 @@ export class UserService {
              u.isActive
       );
     }
+    
+    // DEFENSIVE: If user not found in signal, reload from localStorage and retry
+    if (!user) {
+      this.reloadUsersFromStorage();
+      users = this.getAllUsers();
+      user = users.find(
+        u => u.email?.toLowerCase() === identifier.toLowerCase() &&
+             u.isActive
+      );
+      if (!user) {
+        user = users.find(
+          u => u.name.toLowerCase() === identifier.toLowerCase() &&
+               u.isActive
+        );
+      }
+    }
+    
     if (user) {
       const hashedInput = await this.hashPassword(password);
       const isHashedMatch = user.password === hashedInput;
