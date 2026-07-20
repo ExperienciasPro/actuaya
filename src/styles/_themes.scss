@@ -20,6 +20,14 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
   }
+
+  // Inputs, select and textarea placeholder override for legibility
+  input, select, textarea {
+    &::placeholder {
+      color: #48626c !important;
+      opacity: 0.85 !important;
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
