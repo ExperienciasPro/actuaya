@@ -50,6 +50,6 @@
 .action-btn {
   @include flex-center; width: 26px; height: 26px; border-radius: $radius-sm; font-size: 0.75rem; @include smooth;
   &.win { color: $color-accent-secondary; &:hover { background: rgba($color-accent-secondary, 0.12); } }
-  &.lose { color: $color-accent-danger; &:hover { background: rgba($color-accent-danger, 0.12); } }
+  &.lose { color: $color-text-secondary; &:hover { background: rgba($color-text-secondary, 0.12); } }
   &.danger { color: $color-text-muted; &:hover { background: rgba($color-accent-danger, 0.12); color: $color-accent-danger; } }
 }
