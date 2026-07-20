@@ -55,21 +55,8 @@ export class ProductDataService {
     if (saved) {
       this._products.set(saved);
     } else {
-      // Semilla inicial si está vacío
-      const initial: ProductService[] = [
-        {
-          id: 'prod-default-1',
-          name: 'Producto General',
-          category: 'otro',
-          currency: 'COP',
-          color: '#3b82f6',
-          icon: '📦',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-        }
-      ];
-      this._products.set(initial);
-      this.storage.set(this.STORAGE_KEY, initial);
+      this._products.set([]);
+      this.storage.set(this.STORAGE_KEY, []);
     }
   }
 

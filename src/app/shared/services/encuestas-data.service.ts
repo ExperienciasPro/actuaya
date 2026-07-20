@@ -19,13 +19,10 @@ export class EncuestasDataService {
 
         return this.http.get('/api/encuestas/raw', { params }).pipe(
             catchError(err => {
-                console.error('Error fetching raw encuestas data. Using mock data fallback.', err);
+                console.error('Error fetching raw encuestas data.', err);
                 return of({
                     status: 'ok',
-                    data: [
-                        { id: 'e_mock1', nombre: 'Clima Laboral 2026', descripcion: 'Mock Fallback', estado: 'Publicado', creado_por: 'Admin_Juan', fechaAlta: new Date().toISOString() },
-                        { id: 'e_mock2', nombre: 'Mock Encuesta Bienestar', descripcion: 'Borrador Fallback', estado: 'Borrador', creado_por: 'Gestor Testea RH', fechaAlta: new Date().toISOString() }
-                    ]
+                    data: []
                 });
             })
         );

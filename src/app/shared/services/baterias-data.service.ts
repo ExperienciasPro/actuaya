@@ -19,13 +19,10 @@ export class BateriasDataService {
 
         return this.http.get('/api/baterias/raw', { params }).pipe(
             catchError(err => {
-                console.error('Error fetching raw baterias data. Using mock data fallback.', err);
+                console.error('Error fetching raw baterias data.', err);
                 return of({
                     status: 'ok',
-                    data: [
-                        { id: 'b_mock1', nombre: 'Batería Mock 1', descripcion: 'Mock Fallback', activo: true, creado_por: 'Admin_Juan', fechaAlta: new Date().toISOString() },
-                        { id: 'b_mock2', nombre: 'Batería Mock 2', descripcion: 'Mock Fallback', activo: false, creado_por: 'Gestor Testea RH', fechaAlta: new Date().toISOString() }
-                    ]
+                    data: []
                 });
             })
         );

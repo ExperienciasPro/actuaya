@@ -105,83 +105,15 @@ export class AsignacionesService {
     const storedTechs = this.storage.get<Technician[]>(this.STORAGE_TECH_KEY);
     const storedAss = this.storage.get<Assignment[]>(this.STORAGE_ASS_KEY);
     
-    if (storedTechs && storedTechs.length > 0) {
-      this._technicians.set(storedTechs);
-    } else {
-      this._technicians.set(this.getMockTechnicians());
-      this.persistTechnicians();
-    }
-
-    if (storedAss && storedAss.length > 0) {
-      this._assignments.set(storedAss);
-    } else {
-      this._assignments.set(this.getMockAssignments());
-      this.persistAssignments();
-    }
+    this._technicians.set(storedTechs && storedTechs.length > 0 ? storedTechs : []);
+    this._assignments.set(storedAss && storedAss.length > 0 ? storedAss : []);
   }
 
   private getMockTechnicians(): Technician[] {
-    return [
-      {
-        id: 't-001',
-        firstName: 'Mario',
-        lastName: 'Ramírez',
-        email: 'mario.ramirez@actuaya.com',
-        phone: '+52 555 123 4567',
-        specialty: 'Electricidad e Instalaciones',
-        active: true,
-        notes: 'Especialista nivel senior.',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 't-002',
-        firstName: 'Sara',
-        lastName: 'Gómez',
-        email: 'sara.gomez@actuaya.com',
-        phone: '+52 555 987 6543',
-        specialty: 'Plomería y Aguas',
-        active: true,
-        notes: 'Herramienta propia.',
-        createdAt: new Date().toISOString()
-      }
-    ];
+    return [];
   }
 
   private getMockAssignments(): Assignment[] {
-    const today = new Date().toISOString().split('T')[0];
-    return [
-      {
-        id: 'a-001',
-        technicianId: 't-001',
-        technicianName: 'Mario Ramírez',
-        date: today,
-        startTime: '09:00',
-        endTime: '11:00',
-        type: 'preventivo',
-        status: 'confirmada',
-        priority: 'media',
-        address: 'Av. Reforma #405, CDMX',
-        title: 'Mantenimiento Preventivo Tablero Principal',
-        description: 'Revisión y ajuste de interruptores principales.',
-        clientName: 'Corporativo Viamonte',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'a-002',
-        technicianId: 't-002',
-        technicianName: 'Sara Gómez',
-        date: today,
-        startTime: '13:00',
-        endTime: '15:00',
-        type: 'emergencia',
-        status: 'retrasada',
-        priority: 'urgente',
-        address: 'Plaza Galerías Sur, Local 42',
-        title: 'Fuga de agua en matriz comercial',
-        description: 'Acudir de emergencia para sellar rotura de matriz.',
-        clientName: 'Grupo Retail SAB',
-        createdAt: new Date().toISOString()
-      }
-    ];
+    return [];
   }
 }

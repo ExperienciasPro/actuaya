@@ -114,17 +114,7 @@ export class FinanceService {
   }
 
   private loadHistorical(): HistoricalYear[] {
-    const saved = this.storage.get<HistoricalYear[]>(this.HISTORICAL_KEY);
-    if (saved && saved.length > 0) return saved;
-
-    // Seed con datos reales de Gonzalo
-    const seed: HistoricalYear[] = [
-      { year: 2023, grossIncome: 411494922, grossExpenses: 0 },
-      { year: 2024, grossIncome: 165500000, grossExpenses: 0 },
-      { year: 2025, grossIncome: 183224886, grossExpenses: 0 },
-    ];
-    this.storage.set(this.HISTORICAL_KEY, seed);
-    return seed;
+    return this.storage.get<HistoricalYear[]>(this.HISTORICAL_KEY) || [];
   }
 
   // — Computed —
