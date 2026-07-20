@@ -320,13 +320,18 @@ export class FinanceAnalyticsComponent {
 
   // ─── Chart Data ───
   investmentsChartData = computed<ChartData<'doughnut'>>(() => {
-    const map = this.financeService.investmentsByType();
+    const map = new Map<string, number>();
+    for (const inv of this.financeService.investments()) {
+      const value = inv.currency === 'USD' ? inv.currentValue * this.financeService.dollarRate() : inv.currentValue;
+      const key = inv.type === 'custom' ? inv.name : inv.type;
+      map.set(key, (map.get(key) || 0) + value);
+    }
+
     const typeLabels: Record<string, string> = {
       'stocks': 'Renta Variable',
       'fixed_income': 'Renta Fija',
       'real_estate': 'Finca Raíz',
-      'other': 'Otros',
-      'custom': 'Personalizada'
+      'other': 'Otros'
     };
     return {
       labels: Array.from(map.keys()).map(k => typeLabels[k] || k),
