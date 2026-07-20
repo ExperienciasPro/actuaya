@@ -51,7 +51,7 @@ export const EDUCATION_PROGRAM_TYPES: { value: EducationProgramType; label: stri
 
 export const EDUCATION_EXPENSE_CATEGORIES = [
   'Materiales / Papelería',
-  'Honorarios Docentes',
+  'Pago Docente',
   'Alquiler de Espacio',
   'Publicidad / Marketing',
   'Refrigerios',
