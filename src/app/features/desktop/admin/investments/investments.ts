@@ -124,7 +124,13 @@ import {
               @for (inv of finance.investments(); track inv.id) {
                 @if (editingId === inv.id) {
                   <tr class="editing-row">
-                    <td><span class="type-tag" [class]="inv.type === 'custom' ? 'other' : inv.type">{{ inv.name }}</span></td>
+                    <td>
+                      @if (inv.type === 'custom') {
+                        <input type="text" [(ngModel)]="editName" name="editName" class="inline-input" placeholder="Nombre..." />
+                      } @else {
+                        <span class="type-tag" [class]="inv.type">{{ inv.name }}</span>
+                      }
+                    </td>
                     <td><input type="text" [(ngModel)]="editDescription" name="editDesc" class="inline-input desc-input" /></td>
                     <td class="right"><input umCurrencyInput [(ngModel)]="editAmount" name="editAmt" class="inline-input" /></td>
                     <td class="right"><input umCurrencyInput [(ngModel)]="editCurrentValue" name="editVal" class="inline-input" /></td>
@@ -270,19 +276,23 @@ export class AdminInvestmentsComponent implements OnInit {
   editAmount: number | null = null;
   editCurrentValue: number | null = null;
   editDescription = '';
+  editName = '';
 
   startEdit(inv: InvestmentRecord): void {
     this.editingId = inv.id;
     this.editAmount = inv.amount;
     this.editCurrentValue = inv.currentValue;
     this.editDescription = inv.description || '';
+    this.editName = inv.name || '';
   }
 
   saveEdit(id: string): void {
+    const inv = this.finance.investments().find(i => i.id === id);
     this.finance.updateInvestment(id, {
       amount: this.editAmount || 0,
       currentValue: this.editCurrentValue || 0,
       description: this.editDescription.trim(),
+      ...(inv?.type === 'custom' ? { name: this.editName.trim() || 'Personalizada' } : {})
     });
     this.cancelEdit();
   }
@@ -292,5 +302,6 @@ export class AdminInvestmentsComponent implements OnInit {
     this.editAmount = null;
     this.editCurrentValue = null;
     this.editDescription = '';
+    this.editName = '';
   }
 }
