@@ -50,7 +50,11 @@ import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from 
           </div>
           <div class="form-field flex-2">
             <label>Descripción</label>
-            <input type="text" [(ngModel)]="newDesc" name="desc" placeholder="Breve descripción..." />
+            <input type="text" [(ngModel)]="newDesc" name="desc" placeholder="Breve descripción (opcional)" />
+          </div>
+          <div class="form-field">
+            <label>Sitio Web</label>
+            <input type="url" [(ngModel)]="newWebsite" name="website" placeholder="https://..." />
           </div>
           <button type="submit" class="btn-add" [disabled]="!canSubmit">+ Crear</button>
         </form>
@@ -114,6 +118,7 @@ export class EducationDashboardComponent {
   newType: EducationProgramType | '' = '';
   newName = '';
   newDesc = '';
+  newWebsite = '';
 
   groupedPrograms = computed(() => {
     const programs = [...this.educationService.programs()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -145,11 +150,13 @@ export class EducationDashboardComponent {
       name: this.newName.trim(),
       type: this.newType as EducationProgramType,
       status: 'active',
-      description: this.newDesc.trim()
+      description: this.newDesc.trim(),
+      website: this.newWebsite.trim() || undefined,
     });
-    this.newName = '';
     this.newType = '';
+    this.newName = '';
     this.newDesc = '';
+    this.newWebsite = '';
   }
 
   getTypeLabel(type: string): string {

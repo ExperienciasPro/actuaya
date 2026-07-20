@@ -21,7 +21,13 @@ import { CurrencyInputDirective } from '../../../../shared/directives/currency-i
                 {{ program()?.status === 'active' ? 'Activo' : 'Finalizado' }}
               </span>
             </div>
-            <p class="subtitle">{{ program()?.description || 'Sin descripción' }}</p>
+            <p class="subtitle">
+              {{ program()?.description || 'Sin descripción' }}
+              @if (program()?.website) {
+                <span class="dot-separator">•</span>
+                <a [href]="program()?.website" target="_blank" rel="noopener noreferrer" class="website-link">Ver sitio web ↗</a>
+              }
+            </p>
             
             <div class="header-actions">
               <button class="btn-toggle-status" (click)="toggleStatus()" [class.is-completed]="program()?.status === 'completed'">

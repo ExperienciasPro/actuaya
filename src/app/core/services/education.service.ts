@@ -14,6 +14,7 @@ export interface EducationalProgram {
   status: 'active' | 'completed';
   createdAt: string;
   description?: string;
+  website?: string;
 }
 
 export interface ProgramIncome {
