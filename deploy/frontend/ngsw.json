@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1784562338690,
+  "timestamp": 1784563432395,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -12,7 +12,6 @@
       },
       "urls": [
         "/chunk-2FWLH3R7.js",
-        "/chunk-2GJ5N6G5.js",
         "/chunk-2PQJSC73.js",
         "/chunk-35LDKMOC.js",
         "/chunk-35YHVGTG.js",
@@ -30,6 +29,7 @@
         "/chunk-5JUKV6JL.js",
         "/chunk-5MUMKXS7.js",
         "/chunk-5OWHSKGE.js",
+        "/chunk-5V7D5WDL.js",
         "/chunk-6HZVTNAZ.js",
         "/chunk-6R6CYUCQ.js",
         "/chunk-6V72B3O3.js",
@@ -130,7 +130,7 @@
         "/chunk-ZZGOF3IX.js",
         "/favicon.ico",
         "/index.html",
-        "/main-OAERO3GN.js",
+        "/main-XGFE2FP3.js",
         "/manifest.webmanifest",
         "/styles-5K55I6C2.css"
       ],
@@ -210,7 +210,6 @@
     "/assets/images/pain_points_illustration.png": "8490f11258eda0e6b20b2a0810e4c3de0543befb",
     "/assets/images/pain_points_illustration.webp": "a60619cbf56f00e6735bea48fdd9a73d74bb965c",
     "/chunk-2FWLH3R7.js": "0bc65715625db3cdb6b5afb1f5164c6f6f75e5a3",
-    "/chunk-2GJ5N6G5.js": "ca4271e12162373c5e97a5532f1ba525fa474e30",
     "/chunk-2PQJSC73.js": "5860a38b3432bc774940799b60aa7840952a712b",
     "/chunk-35LDKMOC.js": "ba125940cc08cf1f3487cac0c6883e6549f79488",
     "/chunk-35YHVGTG.js": "ef0a0861ac8c273dfe7e0cd29a537e3c1fb8562b",
@@ -228,6 +227,7 @@
     "/chunk-5JUKV6JL.js": "12b3a1cc5640768ed6e9384ce88a11fd40aeb22c",
     "/chunk-5MUMKXS7.js": "74d96d5d9a2ca306e5b4e2c4eb4a35f0ef3df500",
     "/chunk-5OWHSKGE.js": "2e811817942abaad588c78bad7f2dfc1b61711c9",
+    "/chunk-5V7D5WDL.js": "3f7e10074ee1625c65a82cf4d3b6c0a8f86094bf",
     "/chunk-6HZVTNAZ.js": "66c73357788f1edf9b12f6efe0f49f625e792638",
     "/chunk-6R6CYUCQ.js": "5763899b4f061a9c484e18989ed0b35c2f188647",
     "/chunk-6V72B3O3.js": "65e691d8de7efaed2ade84188a116b4d8f5c895e",
@@ -327,8 +327,8 @@
     "/chunk-ZIGG4K6G.js": "7654fafde52f03d55aa179849e907f6a51f16ab1",
     "/chunk-ZZGOF3IX.js": "63cf4f1e502d3fc5cb0fd49af36f226388a610c1",
     "/favicon.ico": "360bb235f844313646e0439cbd668d92bde385b7",
-    "/index.html": "c37eec04f8f35dabd7c462a3d1a50f84e471bb1c",
-    "/main-OAERO3GN.js": "2d2862bed642b336905daa35da30e3106552c52b",
+    "/index.html": "8105de19cf42a95eab434a828e24d0e2de5d13ef",
+    "/main-XGFE2FP3.js": "801cc3c5a2d0c217609fe9cf06d86093ac221603",
     "/manifest.webmanifest": "b1ff5a764f2715dc808cf59dc111a34d1c3ce367",
     "/styles-5K55I6C2.css": "901720b54d9423ce85a3ab8337bc3577feb34ecb"
   },

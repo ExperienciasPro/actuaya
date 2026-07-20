@@ -26,7 +26,7 @@
 
 .header-subtitle {
   font-size: 0.875rem;
-  color: $color-text-secondary;
+  color: #3b525a; // Darker version of $color-text-secondary for better contrast
 }
 
 .header-actions {
@@ -69,28 +69,28 @@
   font-size: 0.8125rem;
   border-radius: $radius-full;
   background: transparent;
-  color: $color-text-muted;
-  border: 1px solid $color-border-subtle;
+  color: $color-text-secondary; // More readable than $color-text-muted
+  border: 1px solid $color-border-strong; // Slightly stronger border for definition
 
   &:hover {
     color: $color-text-primary;
-    border-color: $color-border-default;
+    border-color: $color-text-primary;
     background: $color-bg-hover;
   }
 
   &.active {
-    background: rgba($color-accent-primary, 0.15);
-    color: $color-accent-primary-light;
-    border-color: rgba($color-accent-primary, 0.3);
+    background: rgba($color-accent-primary, 0.12);
+    color: $color-accent-primary; // Higher contrast than primary-light
+    border-color: rgba($color-accent-primary, 0.35);
   }
 
   &.mode.active {
-    background: rgba($color-accent-secondary, 0.12);
-    color: $color-accent-secondary-light;
-    border-color: rgba($color-accent-secondary, 0.25);
+    background: rgba($color-accent-secondary, 0.1);
+    color: darken($color-accent-secondary, 15%); // Darker green for readability on light bg
+    border-color: rgba($color-accent-secondary, 0.3);
 
     .chip-inline-progress {
-      background: rgba($color-accent-secondary-light, 0.2);
+      background: rgba($color-accent-secondary, 0.2);
     }
   }
 }
