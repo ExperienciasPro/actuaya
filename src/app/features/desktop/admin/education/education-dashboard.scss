@@ -1,249 +1,115 @@
-.admin-page {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+@use '../../../../../styles/variables' as *;
+@use '../../../../../styles/mixins' as *;
 
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 32px;
+.admin-page { max-width: 100%; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; padding-right: 4px; padding-bottom: 24px; }
+
+.page-header {
+  @include flex-between; margin-bottom: $spacing-xl; flex-wrap: wrap; gap: $spacing-md;
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
+  .subtitle { font-size: 0.9rem; color: $color-text-muted; margin: 0; }
+}
+
+.header-totals { display: flex; gap: $spacing-md; flex-wrap: wrap; }
+.total-badge {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 20px; border-radius: $radius-lg;
+  
+  .total-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; opacity: 0.8; margin-bottom: 4px; }
+  .total-value { font-size: 1.5rem; font-weight: 800; }
+  
+  &.green { background: rgba(#00cec9, 0.1); color: #00b894; }
+  &.red { background: rgba(#e84393, 0.1); color: #e84393; }
+  &.positive { background: rgba(#00cec9, 0.1); color: #00b894; }
+  &.negative { background: rgba(#e84393, 0.1); color: #e84393; }
+}
+
+.form-card {
+  @include card($spacing-lg); margin-bottom: $spacing-lg;
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: $spacing-md; color: $color-text-primary; }
+}
+
+.inline-form {
+  display: flex; flex-wrap: wrap;
+  gap: $spacing-md; align-items: end;
+}
+
+.form-field {
+  display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 140px; min-width: 120px;
+  
+  &.flex-2 { flex: 2 1 250px; min-width: 200px; }
+
+  label { font-size: 0.75rem; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: 0.04em; }
+  input, select {
+    padding: 10px 14px; border: 1px solid $color-border-default;
+    border-radius: $radius-md; background: $color-bg-primary;
+    font-size: 0.9rem; font-family: inherit; color: $color-text-primary;
+    outline: none; @include smooth;
+    &:focus { border-color: $color-accent-primary; box-shadow: 0 0 0 3px $color-accent-primary-glow; }
+    &::placeholder { color: $color-text-muted; }
+  }
+  select { appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+}
+
+.btn-add {
+  @include button-base; padding: 10px 20px; background: $color-accent-primary;
+  color: #fff; font-weight: 600; border-radius: $radius-md; font-size: 0.85rem;
+  height: 42px; white-space: nowrap;
+  &:hover { background: $color-accent-primary-light; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.program-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: $spacing-lg;
+}
+
+.program-card {
+  display: block; text-decoration: none; @include card($spacing-md);
+  border: 1px solid transparent; border-radius: $radius-lg;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  color: inherit;
+  
+  &:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-color: $color-accent-primary; }
+
+  .prog-header {
+    @include flex-between; margin-bottom: $spacing-md;
+    .prog-type {
+      display: inline-block; padding: 2px 8px; border-radius: $radius-sm; font-size: 0.7rem; font-weight: 600;
+      &.tag-course { background: rgba(#00cec9, 0.1); color: #00b894; }
+      &.tag-workshop { background: rgba(#fdcb6e, 0.1); color: #d39e00; }
+      &.tag-diploma { background: rgba(#e84393, 0.1); color: #e84393; }
+      &.tag-other { background: rgba(#6c5ce7, 0.1); color: #6c5ce7; }
+    }
+    .prog-status {
+      display: inline-block; padding: 2px 8px; border-radius: $radius-sm; font-size: 0.7rem; font-weight: 600;
+      background: rgba(#00b894, 0.1); color: #00b894;
+      &.completed { background: rgba(#636e72, 0.1); color: #636e72; }
+    }
+  }
+
+  .prog-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: $color-text-primary; }
+  .prog-desc { font-size: 0.9rem; color: $color-text-secondary; margin-bottom: $spacing-lg; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .prog-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: $spacing-md;
+    background: $color-bg-tertiary; padding: $spacing-md; border-radius: $radius-md;
     
-    h1 {
-      font-size: 28px;
-      margin: 0 0 8px;
-      color: var(--text-primary);
-    }
-    
-    .subtitle {
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    
-    .header-totals {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      
-      .total-badge {
-        background: var(--surface-card);
-        border: 1px solid var(--border-color);
-        padding: 16px 24px;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        box-shadow: var(--shadow-sm);
-        
-        &.green { border-bottom: 3px solid var(--success-color); }
-        &.red { border-bottom: 3px solid var(--danger-color); }
-        &.positive { border-bottom: 3px solid var(--success-color); }
-        &.negative { border-bottom: 3px solid var(--danger-color); }
-
-        .total-label {
-          font-size: 13px;
-          color: var(--text-secondary);
-          margin-bottom: 4px;
-        }
-        
-        .total-value {
-          font-size: 24px;
-          font-weight: 700;
-          color: var(--text-primary);
-        }
+    .stat-col {
+      display: flex; flex-direction: column;
+      .stat-lbl { font-size: 0.75rem; color: $color-text-muted; margin-bottom: 2px; }
+      .stat-val {
+        font-size: 1rem; font-weight: 700; color: $color-text-primary;
+        &.profit { color: #00b894; }
+        &.loss { color: #e84393; }
       }
     }
   }
+}
 
-  .form-card {
-    background: var(--surface-card);
-    border: 1px solid var(--border-color);
-    padding: 24px;
-    border-radius: 12px;
-    margin-bottom: 32px;
-    box-shadow: var(--shadow-sm);
-
-    h3 {
-      margin: 0 0 16px;
-      font-size: 16px;
-      color: var(--text-primary);
-    }
-
-    .inline-form {
-      display: flex;
-      gap: 16px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      
-      .form-field {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-width: 150px;
-
-        &.flex-2 {
-          flex: 2;
-          min-width: 250px;
-        }
-
-        label {
-          font-size: 13px;
-          color: var(--text-secondary);
-          margin-bottom: 8px;
-        }
-
-        input, select {
-          padding: 10px 12px;
-          border: 1px solid var(--border-color);
-          border-radius: 8px;
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          outline: none;
-          
-          &:focus {
-            border-color: var(--brand-primary);
-          }
-        }
-      }
-      
-      .btn-add {
-        background: var(--brand-primary);
-        color: white;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: opacity 0.2s;
-        height: 42px;
-        
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        
-        &:hover:not(:disabled) {
-          opacity: 0.9;
-        }
-      }
-    }
-  }
-
-  .program-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-
-    .program-card {
-      display: block;
-      background: var(--surface-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.2s ease;
-      cursor: pointer;
-
-      &:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--brand-primary);
-      }
-
-      .prog-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 16px;
-
-        .prog-type {
-          font-size: 12px;
-          font-weight: 600;
-          padding: 4px 10px;
-          border-radius: 20px;
-          background: rgba(108, 92, 231, 0.1);
-          color: #6c5ce7;
-
-          &.tag-course { background: rgba(0, 206, 201, 0.1); color: #00cec9; }
-          &.tag-workshop { background: rgba(253, 203, 110, 0.1); color: #fdcb6e; }
-          &.tag-diploma { background: rgba(232, 67, 147, 0.1); color: #e84393; }
-        }
-
-        .prog-status {
-          font-size: 12px;
-          font-weight: 600;
-          padding: 4px 10px;
-          border-radius: 20px;
-          background: rgba(0, 184, 148, 0.1);
-          color: #00b894;
-
-          &.completed {
-            background: rgba(99, 110, 114, 0.1);
-            color: #636e72;
-          }
-        }
-      }
-
-      .prog-name {
-        margin: 0 0 8px;
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text-primary);
-      }
-
-      .prog-desc {
-        margin: 0 0 20px;
-        font-size: 14px;
-        color: var(--text-secondary);
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .prog-stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        background: var(--bg-primary);
-        padding: 16px;
-        border-radius: 12px;
-
-        .stat-col {
-          display: flex;
-          flex-direction: column;
-
-          .stat-lbl {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-          }
-
-          .stat-val {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-
-            &.profit {
-              color: var(--success-color);
-            }
-            &.loss {
-              color: var(--danger-color);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .empty-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 20px;
-    background: var(--surface-card);
-    border: 1px dashed var(--border-color);
-    border-radius: 12px;
-    color: var(--text-secondary);
-    font-size: 15px;
-  }
+.empty-state {
+  grid-column: 1 / -1; padding: 48px 24px; text-align: center; color: $color-text-muted; font-size: 0.95rem;
+  background: $color-bg-primary; border: 1px dashed $color-border-subtle; border-radius: $radius-lg;
 }
