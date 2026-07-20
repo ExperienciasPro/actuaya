@@ -27,6 +27,13 @@ export class BudgetService {
     this.storage.set(this.STORAGE_KEY, this.budgetsSignal());
   }
 
+  /** Called by DataSyncService to set server data directly into the signal */
+  hydrateDirectly(data: any): void {
+    if (Array.isArray(data)) {
+      this.budgetsSignal.set(data as AnnualBudget[]);
+    }
+  }
+
   getByYear(year: number): AnnualBudget | undefined {
     return this.budgetsSignal().find(b => b.year === year);
   }

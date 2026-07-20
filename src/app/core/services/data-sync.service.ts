@@ -3,6 +3,7 @@ import { StorageService } from './storage.service';
 import { GoalService } from './goal.service';
 import { TaskService } from './task.service';
 import { RadarService } from './radar.service';
+import { BudgetService } from './budget.service';
 import { environment } from '../../../environments/environment';
 
 import { UserService } from './user.service';
@@ -24,6 +25,7 @@ export class DataSyncService {
   private goalService = inject(GoalService);
   private taskService = inject(TaskService);
   private radarService = inject(RadarService);
+  private budgetService = inject(BudgetService);
   private userService = inject(UserService);
   private ngZone = inject(NgZone);
   private appRef = inject(ApplicationRef);
@@ -164,6 +166,7 @@ export class DataSyncService {
           const goalsArr = getArray('um_goals');
           let tasksArr = getArray('um_tasks');
           const radarArr = getArray('um_radar');
+          const budgetVal = getValue('um_annual_budget');
 
           // Purge orphan tasks
           if (goalsArr.length > 0) {
@@ -231,6 +234,7 @@ export class DataSyncService {
             try { this.goalService.hydrateDirectly(goalsArr); } catch (err) { console.error('Error hidratando goals:', err); }
             try { this.taskService.hydrateDirectly(tasksArr); } catch (err) { console.error('Error hidratando tasks:', err); }
             try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
+            try { if (budgetVal !== undefined) this.budgetService.hydrateDirectly(budgetVal); } catch (err) { console.error('Error hidratando budget:', err); }
             try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
 
             console.log(`[DataSync] Hidratadas ${restored} claves del servidor`);

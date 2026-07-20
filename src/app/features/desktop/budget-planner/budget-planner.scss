@@ -214,14 +214,33 @@
 }
 
 .add-trigger {
-  display: block;
-  width: 100%;
-  padding: $spacing-sm $spacing-lg;
-  font-size: 0.8125rem;
-  color: $color-text-muted;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  width: calc(100% - 48px);
+  margin: $spacing-sm 24px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text-secondary;
+  background: $color-bg-tertiary;
+  border: 1px dashed $color-border-strong;
+  border-radius: $radius-md;
+  cursor: pointer;
   @include smooth;
-  &:hover { color: $color-accent-primary-light; background: $color-bg-hover; }
+
+  &:hover {
+    color: $color-accent-primary;
+    background: $color-bg-hover;
+    border-color: $color-accent-primary;
+    box-shadow: $shadow-sm;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 // ─── Breakdown Section ───────────────
