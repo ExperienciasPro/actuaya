@@ -6,11 +6,12 @@ import { Project, TeamMember, ProjectTask } from '../../../../core/models/projec
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { Router } from '@angular/router';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-project-board',
   standalone: true,
-  imports: [RouterLink, FormsModule, EmptyStateComponent, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, EmptyStateComponent, ConfirmDialogComponent, UmIconComponent],
   template: `
     <div class="projects-page">
       <div class="page-header animate-fadeInUp">
@@ -64,7 +65,9 @@ import { Router } from '@angular/router';
                  </div>
                </div>
                <div class="row-actions">
-                 <button class="delete-btn" (click)="confirmDelete($event, project)" title="Eliminar">×</button>
+                 <button class="delete-btn" (click)="confirmDelete($event, project)" title="Eliminar">
+                   <um-icon name="trash" [size]="16"></um-icon>
+                 </button>
                </div>
             </a>
           }
