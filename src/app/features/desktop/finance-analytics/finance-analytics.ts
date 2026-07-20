@@ -116,6 +116,9 @@ interface ChartCard {
                   @case ('income-monthly') {
                     <canvas baseChart [data]="incomeByMonthChartData()" [options]="lineOptions" type="line"></canvas>
                   }
+                  @case ('investments') {
+                    <canvas baseChart [data]="investmentsChartData()" [options]="doughnutOptions" type="doughnut"></canvas>
+                  }
                   @case ('income-company') {
                     <canvas baseChart [data]="incomeByCompanyChartData()" [options]="doughnutOptions" type="doughnut"></canvas>
                   }
@@ -210,7 +213,7 @@ export class FinanceAnalyticsComponent {
   });
 
   isActive(moduleId: string): boolean {
-    if (moduleId === 'income' || moduleId === 'investments') {
+    if (moduleId === 'investments') {
       if (!this.userService.isSuperAdmin()) return false;
     }
     const enabled = this.enabledModules();
@@ -221,13 +224,15 @@ export class FinanceAnalyticsComponent {
     this.isActive('income') || this.isActive('cashflow') || this.isActive('profitability')
   );
 
-  private readonly ALL_CHARTS: ChartCard[] = [
-    { id: 'income-monthly', title: 'Ingresos Mensuales', desc: 'Evolución de tus ingresos registrados mes a mes', module: 'income' },
+  allCharts = computed<ChartCard[]>(() => [
+    this.userService.isSuperAdmin()
+      ? { id: 'investments', title: 'Inversiones por Tipo', desc: 'Distribución de tu portafolio de inversiones', module: 'investments' }
+      : { id: 'income-monthly', title: 'Ingresos Mensuales', desc: 'Evolución de tus ingresos registrados mes a mes', module: 'income' },
     { id: 'income-company', title: 'Ingresos por Empresa', desc: 'Distribución de ingresos entre tus unidades de negocio', module: 'income' },
     { id: 'cashflow', title: 'Flujo de Caja: Ingresos vs Gastos', desc: 'Comparación mensual entre entradas y salidas', module: 'cashflow' },
     { id: 'profitability', title: 'Rentabilidad', desc: 'Proporción entre utilidad neta y gastos operativos', module: 'profitability' },
     { id: 'historical', title: 'Histórico Anual', desc: 'Evolución de ingresos brutos por año fiscal', module: 'profitability' },
-  ];
+  ]);
 
   hiddenCards = signal<Set<string>>(new Set());
   cardOrder = signal<string[]>([]);
@@ -245,7 +250,7 @@ export class FinanceAnalyticsComponent {
   }
 
   visibleCards = computed(() => {
-    const active = this.ALL_CHARTS.filter(c => this.isActive(c.module) && !this.hiddenCards().has(c.id));
+    const active = this.allCharts().filter(c => this.isActive(c.module) && !this.hiddenCards().has(c.id));
     const order = this.cardOrder();
     if (order.length) {
       active.sort((a, b) => {
@@ -258,7 +263,7 @@ export class FinanceAnalyticsComponent {
   });
 
   hiddenCardsList = computed(() =>
-    this.ALL_CHARTS.filter(c => this.isActive(c.module) && this.hiddenCards().has(c.id))
+    this.allCharts().filter(c => this.isActive(c.module) && this.hiddenCards().has(c.id))
   );
 
   toggleCard(id: string): void {
@@ -314,6 +319,26 @@ export class FinanceAnalyticsComponent {
   private readonly COLORS = ['#6c5ce7','#00cec9','#e17055','#0984e3','#fdcb6e','#e84393','#00b894','#d63031','#a29bfe','#55efc4'];
 
   // ─── Chart Data ───
+  investmentsChartData = computed<ChartData<'doughnut'>>(() => {
+    const map = this.financeService.investmentsByType();
+    const typeLabels: Record<string, string> = {
+      'stocks': 'Renta Variable',
+      'fixed_income': 'Renta Fija',
+      'real_estate': 'Finca Raíz',
+      'other': 'Otros',
+      'custom': 'Personalizada'
+    };
+    return {
+      labels: Array.from(map.keys()).map(k => typeLabels[k] || k),
+      datasets: [{
+        data: Array.from(map.values()),
+        backgroundColor: this.COLORS.slice(0, map.size),
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    };
+  });
+
   incomeByMonthChartData = computed<ChartData<'line'>>(() => {
     const monthMap = this.financeService.incomeByMonth();
     const sortedKeys = Array.from(monthMap.keys()).sort();
