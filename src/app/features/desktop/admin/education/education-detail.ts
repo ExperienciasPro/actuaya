@@ -13,7 +13,7 @@ import { CurrencyInputDirective } from '../../../../shared/directives/currency-i
     @if (program()) {
       <div class="admin-page">
         <div class="page-header animate-fadeInUp">
-          <div>
+          <div class="header-left">
             <a routerLink="/d/admin/education" class="back-link">← Volver a Proyectos Educativos</a>
             <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 8px;">
               <h1 style="margin:0;">{{ program()?.name }}</h1>
