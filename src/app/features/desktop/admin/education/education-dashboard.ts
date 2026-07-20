@@ -57,40 +57,47 @@ import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from 
       </div>
 
       <!-- Program Grid -->
-      <div class="program-grid animate-fadeInUp stagger-2">
-        @if (educationService.programs().length) {
-          @for (prog of educationService.programs(); track prog.id) {
-            <a class="program-card" [routerLink]="['/d/admin/education', prog.id]">
-              <div class="prog-header">
-                <span class="prog-type tag-{{ prog.type }}">{{ getTypeLabel(prog.type) }}</span>
-                <span class="prog-status" [class.completed]="prog.status === 'completed'">
-                  {{ prog.status === 'active' ? 'Activo' : 'Finalizado' }}
-                </span>
-              </div>
-              <h3 class="prog-name">{{ prog.name }}</h3>
-              <p class="prog-desc">{{ prog.description || 'Sin descripción' }}</p>
+      <div class="program-groups animate-fadeInUp stagger-2">
+        @if (groupedPrograms().length) {
+          @for (group of groupedPrograms(); track group.month) {
+            <div class="month-group">
+              <h2 class="month-header">{{ group.month }}</h2>
+              <div class="program-grid">
+                @for (prog of group.progs; track prog.id) {
+                  <a class="program-card" [routerLink]="['/d/admin/education', prog.id]">
+                    <div class="prog-header">
+                      <span class="prog-type tag-{{ prog.type }}">{{ getTypeLabel(prog.type) }}</span>
+                      <span class="prog-status" [class.completed]="prog.status === 'completed'">
+                        {{ prog.status === 'active' ? 'Activo' : 'Finalizado' }}
+                      </span>
+                    </div>
+                    <h3 class="prog-name">{{ prog.name }}</h3>
+                    <p class="prog-desc">{{ prog.description || 'Sin descripción' }}</p>
 
-              <div class="prog-stats">
-                <div class="stat-col">
-                  <span class="stat-lbl">Ingresos</span>
-                  <span class="stat-val">\${{ getStats(prog.id)?.income | number:'1.0-0' }}</span>
-                </div>
-                <div class="stat-col">
-                  <span class="stat-lbl">Gastos</span>
-                  <span class="stat-val">\${{ getStats(prog.id)?.expense | number:'1.0-0' }}</span>
-                </div>
-                <div class="stat-col">
-                  <span class="stat-lbl">Ganancia</span>
-                  <span class="stat-val profit" [class.loss]="(getStats(prog.id)?.income || 0) < (getStats(prog.id)?.expense || 0)">
-                    \${{ ((getStats(prog.id)?.income || 0) - (getStats(prog.id)?.expense || 0)) | number:'1.0-0' }}
-                  </span>
-                </div>
-                <div class="stat-col">
-                  <span class="stat-lbl">Inscritos</span>
-                  <span class="stat-val">{{ getStats(prog.id)?.attendees || 0 }}</span>
-                </div>
+                    <div class="prog-stats">
+                      <div class="stat-col">
+                        <span class="stat-lbl">Ingresos</span>
+                        <span class="stat-val">\${{ getStats(prog.id)?.income | number:'1.0-0' }}</span>
+                      </div>
+                      <div class="stat-col">
+                        <span class="stat-lbl">Gastos</span>
+                        <span class="stat-val">\${{ getStats(prog.id)?.expense | number:'1.0-0' }}</span>
+                      </div>
+                      <div class="stat-col">
+                        <span class="stat-lbl">Ganancia</span>
+                        <span class="stat-val profit" [class.loss]="(getStats(prog.id)?.income || 0) < (getStats(prog.id)?.expense || 0)">
+                          \${{ ((getStats(prog.id)?.income || 0) - (getStats(prog.id)?.expense || 0)) | number:'1.0-0' }}
+                        </span>
+                      </div>
+                      <div class="stat-col">
+                        <span class="stat-lbl">Inscritos</span>
+                        <span class="stat-val">{{ getStats(prog.id)?.attendees || 0 }}</span>
+                      </div>
+                    </div>
+                  </a>
+                }
               </div>
-            </a>
+            </div>
           }
         } @else {
           <div class="empty-state">No hay proyectos educativos registrados. Crea el primero arriba.</div>
@@ -107,6 +114,26 @@ export class EducationDashboardComponent {
   newType: EducationProgramType | '' = '';
   newName = '';
   newDesc = '';
+
+  groupedPrograms = computed(() => {
+    const programs = [...this.educationService.programs()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    const groups: { month: string; progs: any[] }[] = [];
+    
+    for (const p of programs) {
+      const d = new Date(p.createdAt);
+      const month = d.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      const key = month.charAt(0).toUpperCase() + month.slice(1);
+      
+      let group = groups.find(g => g.month === key);
+      if (!group) {
+        group = { month: key, progs: [] };
+        groups.push(group);
+      }
+      group.progs.push(p);
+    }
+    return groups;
+  });
 
   get canSubmit(): boolean {
     return !!this.newType && this.newName.trim().length > 0;

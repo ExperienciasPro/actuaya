@@ -1,7 +1,7 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EducationService, EDUCATION_EXPENSE_CATEGORIES } from '../../../../core/services/education.service';
 import { CurrencyInputDirective } from '../../../../shared/directives/currency-input.directive';
 
@@ -15,8 +15,20 @@ import { CurrencyInputDirective } from '../../../../shared/directives/currency-i
         <div class="page-header animate-fadeInUp">
           <div>
             <a routerLink="/d/admin/education" class="back-link">← Volver a Proyectos Educativos</a>
-            <h1>{{ program()?.name }}</h1>
+            <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 8px;">
+              <h1 style="margin:0;">{{ program()?.name }}</h1>
+              <span class="status-badge" [class.completed]="program()?.status === 'completed'">
+                {{ program()?.status === 'active' ? 'Activo' : 'Finalizado' }}
+              </span>
+            </div>
             <p class="subtitle">{{ program()?.description || 'Sin descripción' }}</p>
+            
+            <div class="header-actions">
+              <button class="btn-toggle-status" (click)="toggleStatus()" [class.is-completed]="program()?.status === 'completed'">
+                {{ program()?.status === 'active' ? '✓ Marcar como Finalizado' : '↻ Reactivar Proyecto' }}
+              </button>
+              <button class="btn-delete-prog" (click)="deleteProgram()">🗑 Eliminar</button>
+            </div>
           </div>
           <div class="header-totals">
             <div class="total-badge green">
@@ -197,6 +209,7 @@ import { CurrencyInputDirective } from '../../../../shared/directives/currency-i
 export class EducationDetailComponent implements OnInit {
   educationService = inject(EducationService);
   route = inject(ActivatedRoute);
+  router = inject(Router);
 
   programId = '';
   activeTab: 'income' | 'expenses' = 'income';
@@ -224,6 +237,22 @@ export class EducationDetailComponent implements OnInit {
 
   ngOnInit() {
     this.programId = this.route.snapshot.paramMap.get('id') || '';
+  }
+
+  toggleStatus() {
+    if (!this.programId) return;
+    const current = this.program()?.status;
+    this.educationService.updateProgram(this.programId, { 
+      status: current === 'active' ? 'completed' : 'active' 
+    });
+  }
+
+  deleteProgram() {
+    if (!this.programId) return;
+    if (confirm('¿Estás seguro de que deseas eliminar este proyecto? Todos los ingresos y gastos asociados se perderán para siempre.')) {
+      this.educationService.deleteProgram(this.programId);
+      this.router.navigate(['/d/admin/education']);
+    }
   }
 
   get canSubmitIncome() {

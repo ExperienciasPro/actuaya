@@ -12,6 +12,32 @@
   }
   h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; color: $color-text-primary; }
   .subtitle { font-size: 0.95rem; color: $color-text-muted; margin-bottom: $spacing-md; }
+
+  .status-badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    background: rgba(#00b894, 0.1); color: #00b894;
+    &.completed { background: rgba(#636e72, 0.1); color: #636e72; }
+  }
+
+  .header-actions {
+    display: flex; gap: $spacing-md; margin-top: $spacing-md;
+    button {
+      @include button-base; padding: 6px 14px; border-radius: $radius-md; font-size: 0.8rem; font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-toggle-status {
+      background: rgba(#00b894, 0.1); color: #00b894;
+      &:hover { background: rgba(#00b894, 0.2); }
+      &.is-completed {
+        background: rgba(#3498db, 0.1); color: #3498db;
+        &:hover { background: rgba(#3498db, 0.2); }
+      }
+    }
+    .btn-delete-prog {
+      background: rgba(#e84393, 0.1); color: #e84393;
+      &:hover { background: rgba(#e84393, 0.2); }
+    }
+  }
 }
 
 .header-totals {
