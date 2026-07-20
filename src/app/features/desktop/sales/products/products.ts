@@ -6,11 +6,12 @@ import { ProductService, ProductCategory } from '../../../../core/models/product
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { RouterLink } from '@angular/router';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-products',
   standalone: true,
-  imports: [CommonModule, FormsModule, EmptyStateComponent, ConfirmDialogComponent, RouterLink],
+  imports: [CommonModule, FormsModule, EmptyStateComponent, ConfirmDialogComponent, RouterLink, UmIconComponent],
   template: `
     <div class="products-page">
       <div class="page-header animate-fadeInUp">
@@ -52,7 +53,7 @@ import { RouterLink } from '@angular/router';
                 <button class="btn-icon" [title]="product.isActive ? 'Desactivar' : 'Activar'" (click)="toggleActive(product)">
                   {{ product.isActive ? '⏸️' : '▶️' }}
                 </button>
-                <button class="btn-icon danger" title="Eliminar" (click)="confirmDelete(product)">🗑️</button>
+                <button class="btn-icon danger" title="Eliminar" (click)="confirmDelete(product)"><um-icon name="trash" [size]="16"></um-icon></button>
               </div>
             </div>
           }

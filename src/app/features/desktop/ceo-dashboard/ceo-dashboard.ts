@@ -18,6 +18,7 @@ import {
   OT_PRIORITY_COLORS,
   OtPriority,
 } from '../../../core/models/work-order.model';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 
 // Leaflet types — loaded dynamically
 declare const L: any;
@@ -25,7 +26,7 @@ declare const L: any;
 @Component({
   selector: 'um-ceo-dashboard',
   standalone: true,
-  imports: [UpperCasePipe],
+  imports: [UpperCasePipe, UmIconComponent],
   templateUrl: './ceo-dashboard.html',
   styleUrl: './ceo-dashboard.scss',
 })

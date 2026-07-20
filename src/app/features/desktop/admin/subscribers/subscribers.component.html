@@ -176,7 +176,7 @@
               <div class="action-btns">
                 @if (sub.sub) {
                   <button class="btn-icon" title="Editar" (click)="$event.stopPropagation(); openEdit(sub.sub)">✏️</button>
-                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteSub(sub.sub)">🗑️</button>
+                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteSub(sub.sub)"><um-icon name="trash" [size]="16"></um-icon></button>
                 }
               </div>
             </td>
@@ -371,7 +371,7 @@
       </div>
 
       <div class="detail-footer">
-        <button class="btn-danger-outline" (click)="deleteSubFromDetail()">🗑️ Eliminar</button>
+        <button class="btn-danger-outline" (click)="deleteSubFromDetail()"><um-icon name="trash" [size]="16"></um-icon> Eliminar</button>
         <button class="btn-primary" (click)="editFromDetail()">✏️ Editar Suscriptor</button>
       </div>
     </div>
@@ -744,7 +744,7 @@
         Selected: {{ selectedUserIds().size }} user(s)
       </span>
       <button class="btn-bulk-delete" (click)="deleteSelectedUsers()" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 10px; background: #e84393; color: #fff; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-        🗑️ Borrar Seleccionados
+        <um-icon name="trash" [size]="16"></um-icon> Borrar Seleccionados
       </button>
     </div>
   }
@@ -778,7 +778,7 @@
               <div class="actions-cell-left" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <input type="checkbox" [checked]="selectedUserIds().has(user.id)" (change)="toggleSelectUser(user.id, $event)" />
                 @if (user.role !== 'superadmin') {
-                  <button class="btn-delete-left" title="Eliminar usuario" (click)="$event.stopPropagation(); deleteUser(user)" style="border: none; background: transparent; cursor: pointer; color: #e84393; font-size: 0.95rem; padding: 2px;">🗑️</button>
+                  <button class="btn-delete-left" title="Eliminar usuario" (click)="$event.stopPropagation(); deleteUser(user)" style="border: none; background: transparent; cursor: pointer; color: #e84393; font-size: 0.95rem; padding: 2px;"><um-icon name="trash" [size]="16"></um-icon></button>
                 }
               </div>
             </td>
@@ -998,7 +998,7 @@
                 <span class="action-text">{{ user.isActive ? 'Desactivar Cuenta' : 'Activar Cuenta' }}</span>
               </button>
               <button class="action-card danger" (click)="deleteUser(user)">
-                <span class="action-icon">🗑️</span>
+                <span class="action-icon"><um-icon name="trash" [size]="16"></um-icon></span>
                 <span class="action-text">Eliminar Usuario</span>
               </button>
             }

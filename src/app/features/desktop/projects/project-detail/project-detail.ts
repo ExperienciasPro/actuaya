@@ -1,6 +1,8 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
+
 import { ProjectService } from '../../../../core/services/project.service';
 import { ProjectTask, ProjectSection, TeamMember } from '../../../../core/models/project.model';
 import { ProgressRingComponent } from '../../../../shared/components/progress-ring/progress-ring';
@@ -9,7 +11,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 @Component({
   selector: 'um-project-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, ProgressRingComponent, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, ProgressRingComponent, ConfirmDialogComponent, UmIconComponent],
   template: `
     <div class="asana-workspace">
       @if (project(); as p) {
@@ -52,7 +54,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
               👥 Equipo del proyecto ({{ (p.members || []).length }})
             </button>
             <button class="toolbar-btn" (click)="showAddSection.set(true)">+ Sección</button>
-            <button class="toolbar-btn danger" (click)="showDeleteProject.set(true)">🗑️</button>
+            <button class="toolbar-btn danger" (click)="showDeleteProject.set(true)"><um-icon name="trash" [size]="16"></um-icon></button>
           </div>
         </div>
 
@@ -254,7 +256,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 </div>
               </div>
               <div class="panel-footer">
-                <button class="btn-danger-sm" (click)="deleteFromPanel(task.id)">🗑️ Eliminar tarea</button>
+                <button class="btn-danger-sm" (click)="deleteFromPanel(task.id)"><um-icon name="trash" [size]="16"></um-icon> Eliminar tarea</button>
                 <button class="btn-primary" (click)="closeTaskPanel()">Guardar</button>
               </div>
             </div>

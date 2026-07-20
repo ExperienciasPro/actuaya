@@ -7,11 +7,12 @@ import { GoalService } from '../../../../core/services/goal.service';
 import { ProductDataService } from '../../../../core/services/product.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-sales-pipeline',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, FormsModule, EmptyStateComponent, ConfirmDialogComponent],
+  imports: [RouterLink, DecimalPipe, FormsModule, EmptyStateComponent, ConfirmDialogComponent, UmIconComponent],
   template: `
     <div class="sales-page">
       <!-- Header -->
@@ -78,7 +79,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                       <h3 class="funnel-name">{{ funnel.name }}</h3>
                       <div class="funnel-actions">
                         <a class="action-link" [routerLink]="['/d/sales/funnel', funnel.id]">Ver →</a>
-                        <button class="action-btn danger" (click)="confirmDeleteFunnel(funnel.id, funnel.name)">🗑️</button>
+                        <button class="action-btn danger" (click)="confirmDeleteFunnel(funnel.id, funnel.name)"><um-icon name="trash" [size]="16"></um-icon></button>
                       </div>
                     </div>
 

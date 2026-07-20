@@ -6,11 +6,12 @@ import { SalesService } from '../../../../core/services/sales.service';
 import { Deal, DealStatus } from '../../../../core/models/sales-funnel.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-deal-tracker',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, FormsModule, EmptyStateComponent, ConfirmDialogComponent],
+  imports: [RouterLink, DecimalPipe, FormsModule, EmptyStateComponent, ConfirmDialogComponent, UmIconComponent],
   template: `
     <div class="deals-page">
       <div class="page-header animate-fadeInUp">
@@ -69,7 +70,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   <button class="action-btn win" (click)="closeDeal(deal.id, 'won')" title="Ganado">✓</button>
                   <button class="action-btn lose" (click)="closeDeal(deal.id, 'lost')" title="Perdido">✗</button>
                 }
-                <button class="action-btn danger" (click)="confirmDelete(deal.id)">🗑️</button>
+                <button class="action-btn danger" (click)="confirmDelete(deal.id)"><um-icon name="trash" [size]="16"></um-icon></button>
               </div>
             </div>
           }

@@ -1,6 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MenuService } from '../../../core/services/menu.service';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
+
 import {
   MenuItem, MenuCategory,
   FONT_FAMILIES, THEME_OPTIONS, LAYOUT_OPTIONS, RADIUS_OPTIONS, HEADER_STYLES, FONT_SIZE_OPTIONS,
@@ -11,7 +13,7 @@ type AdminView = 'items' | 'categories' | 'config';
 @Component({
   selector: 'um-menu-admin',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, UmIconComponent],
   template: `
     <div class="menu-admin-page">
       <div class="page-header animate-fadeInUp">
@@ -119,7 +121,7 @@ type AdminView = 'items' | 'categories' | 'config';
                       {{ item.available ? '✅' : '❌' }}
                     </button>
                     <button class="btn-edit-item" (click)="startEdit(item)">✏️</button>
-                    <button class="btn-delete-item" (click)="menu.deleteItem(item.id)">🗑️</button>
+                    <button class="btn-delete-item" (click)="menu.deleteItem(item.id)"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 </div>
               }
@@ -164,7 +166,7 @@ type AdminView = 'items' | 'categories' | 'config';
             <div class="cat-row">
               <span class="cat-badge">{{ cat.emoji }} {{ cat.name }}</span>
               <span class="cat-count">{{ countInCat(cat.id) }} platillos</span>
-              <button class="btn-delete-item" (click)="deleteCategory(cat.id)">🗑️</button>
+              <button class="btn-delete-item" (click)="deleteCategory(cat.id)"><um-icon name="trash" [size]="16"></um-icon></button>
             </div>
           }
         </div>
@@ -207,7 +209,7 @@ type AdminView = 'items' | 'categories' | 'config';
                     <img class="cover-preview-img" [src]="cfg.coverImageDataUrl" alt="Portada del menú" />
                     <div class="cover-preview-overlay">
                       <label class="btn-cover-change" for="cover-input">📷 Cambiar portada</label>
-                      <button type="button" class="btn-cover-remove" (click)="cfg.coverImageDataUrl = ''; saveConfig()">🗑️ Quitar</button>
+                      <button type="button" class="btn-cover-remove" (click)="cfg.coverImageDataUrl = ''; saveConfig()"><um-icon name="trash" [size]="16"></um-icon> Quitar</button>
                     </div>
                   </div>
                   <input id="cover-input" type="file" accept="image/*" class="hidden-file" (change)="onCover($event)" />

@@ -88,7 +88,7 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
                   <div class="card-top-right" style="display: flex; gap: 8px; align-items: center;">
                     <um-status-badge [variant]="goal.status" />
                     <button class="action-btn danger" (click)="$event.stopPropagation(); confirmDelete(goal)" title="Eliminar" style="width: 28px; height: 28px; font-size: 0.8rem; border: none; background: transparent; cursor: pointer;">
-                      🗑️
+                      <um-icon name="trash" [size]="16"></um-icon>
                     </button>
                   </div>
                 </div>

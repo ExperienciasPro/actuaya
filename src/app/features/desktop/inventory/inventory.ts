@@ -1,6 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
+
 import { InventoryService } from '../../../core/services/inventory.service';
 import { ProductCatalogService } from '../../../core/services/product-catalog.service';
 import { BusinessAutomationService } from '../../../core/services/business-automation.service';
@@ -9,7 +11,7 @@ import { InventoryProduct, INVENTORY_UNITS, ENTRY_REASONS, EXIT_REASONS, Movemen
 @Component({
   selector: 'um-inventory',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, DatePipe, DecimalPipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe, DecimalPipe, UmIconComponent],
   template: `
     <div class="inv-page">
 
@@ -214,7 +216,7 @@ import { InventoryProduct, INVENTORY_UNITS, ENTRY_REASONS, EXIT_REASONS, Movemen
               <button class="btn-action entrada" title="Comprar / Reabastecer" (click)="openMovement(p, 'entrada')">📥</button>
               <button class="btn-action salida" title="Vender" (click)="openMovement(p, 'salida')">📤</button>
               <button class="btn-action" title="Editar" (click)="editProduct(p)">✏️</button>
-              <button class="btn-action danger" title="Eliminar" (click)="inv.removeProduct(p.id)">🗑️</button>
+              <button class="btn-action danger" title="Eliminar" (click)="inv.removeProduct(p.id)"><um-icon name="trash" [size]="16"></um-icon></button>
             </div>
           </div>
         }

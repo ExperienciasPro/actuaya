@@ -3,11 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { BudgetService } from '../../../core/services/budget.service';
 import { FinanceService } from '../../../core/services/finance.service';
 import { CurrencyInputDirective } from '../../../shared/directives/currency-input.directive';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
+
 
 @Component({
   selector: 'um-budget-planner',
   standalone: true,
-  imports: [FormsModule, CurrencyInputDirective],
+  imports: [FormsModule, CurrencyInputDirective, UmIconComponent],
   template: `
     <div class="budget-page">
 
@@ -104,7 +106,7 @@ import { CurrencyInputDirective } from '../../../shared/directives/currency-inpu
                   <span class="row-amount" (dblclick)="startEdit(entry)">\${{ formatMoney(entry.amount) }}</span>
                   <div class="row-actions">
                     <button type="button" class="action-btn edit" (click)="startEdit(entry)" title="Editar">✏️</button>
-                    <button type="button" class="action-btn del" (click)="deleteEntry(entry.id)" title="Eliminar">🗑️</button>
+                    <button type="button" class="action-btn del" (click)="deleteEntry(entry.id)" title="Eliminar"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 }
               </div>
@@ -158,7 +160,7 @@ import { CurrencyInputDirective } from '../../../shared/directives/currency-inpu
                   <span class="row-amount" (dblclick)="startEdit(entry)">\${{ formatMoney(entry.amount) }}</span>
                   <div class="row-actions">
                     <button type="button" class="action-btn edit" (click)="startEdit(entry)" title="Editar">✏️</button>
-                    <button type="button" class="action-btn del" (click)="deleteEntry(entry.id)" title="Eliminar">🗑️</button>
+                    <button type="button" class="action-btn del" (click)="deleteEntry(entry.id)" title="Eliminar"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 }
               </div>

@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StorytellingService } from '../../../core/services/storytelling.service';
 import { Storyboard, DataSource, DataVisual, ChartType } from '../../../core/models/storytelling.model';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-storytelling',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, UmIconComponent],
   template: `
     <div class="storytelling-container">
       <!-- Sidebar de Proyectos -->
@@ -64,7 +65,7 @@ import { Storyboard, DataSource, DataVisual, ChartType } from '../../../core/mod
                   <h4>{{ v.title }}</h4>
                   <div class="visual-opts">
                     <button (click)="editVisual(v)">⚙️</button>
-                    <button (click)="removeVisual(v.id)">🗑️</button>
+                    <button (click)="removeVisual(v.id)"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 </div>
                 <div class="visual-content">
@@ -121,7 +122,7 @@ import { Storyboard, DataSource, DataVisual, ChartType } from '../../../core/mod
                     <strong>{{ src.name }}</strong>
                     <span>{{ src.data.length }} filas · {{ src.columns.join(', ') }}</span>
                   </div>
-                  <button class="btn-del-src" (click)="svc.deleteDataSource(src.id)">🗑️</button>
+                  <button class="btn-del-src" (click)="svc.deleteDataSource(src.id)"><um-icon name="trash" [size]="16"></um-icon></button>
                 </div>
               }
             </div>

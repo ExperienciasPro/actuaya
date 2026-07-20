@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { WorkOrderService } from '../../../core/services/work-order.service';
 import { InventoryService } from '../../../core/services/inventory.service';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import {
   WorkOrder,
   OtStatus,
@@ -29,7 +30,7 @@ import {
 @Component({
   selector: 'um-field-ot-detail',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, UmIconComponent],
   templateUrl: './field-ot-detail.html',
   styleUrl: './field-ot-detail.scss',
 })

@@ -216,7 +216,7 @@
                 <td>
                   <div class="action-btns" (click)="$event.stopPropagation()">
                     <button class="btn-icon" title="Editar" (click)="openEdit(sub)">✏️</button>
-                    <button class="btn-icon danger" title="Eliminar" (click)="confirmDelete(sub.id)">🗑️</button>
+                    <button class="btn-icon danger" title="Eliminar" (click)="confirmDelete(sub.id)"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 </td>
               </tr>
@@ -566,7 +566,7 @@
   @if (confirmDeleteId()) {
     <div class="modal-backdrop" (click)="cancelDelete()">
       <div class="modal-card" (click)="$event.stopPropagation()">
-        <h3>🗑️ Confirmar Eliminación</h3>
+        <h3><um-icon name="trash" [size]="16"></um-icon> Confirmar Eliminación</h3>
         <p class="modal-subtitle">¿Estás seguro de que deseas eliminar esta suscripción? Esta acción no se puede deshacer.</p>
         <div class="modal-actions">
           <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>

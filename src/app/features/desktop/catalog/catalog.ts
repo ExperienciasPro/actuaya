@@ -1,6 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
+
 import { CatalogItem, QuoteLineItem, QuoteTemplate, DEFAULT_QUOTE_TEMPLATE, QUOTE_COLOR_PRESETS, QUOTE_FONT_OPTIONS, UNIT_OPTIONS } from '../../../core/models/catalog.model';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { ProductCatalogService } from '../../../core/services/product-catalog.service';
@@ -11,7 +13,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
 @Component({
   selector: 'um-catalog',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, DatePipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe, UmIconComponent],
   template: `
     <div class="catalog-page">
 
@@ -159,7 +161,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
               <div class="product-actions">
                 <button class="btn-icon" title="Agregar a cotización" (click)="addToQuote(item)">📝</button>
                 <button class="btn-icon" title="Editar" (click)="editItem(item)">✏️</button>
-                <button class="btn-icon danger" title="Eliminar" (click)="cat.removeItem(item.id)">🗑️</button>
+                <button class="btn-icon danger" title="Eliminar" (click)="cat.removeItem(item.id)"><um-icon name="trash" [size]="16"></um-icon></button>
               </div>
             </div>
           }
@@ -378,7 +380,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                 <button class="btn-icon" title="Reimprimir" (click)="reprintQuote(q)">🖨️</button>
                 <button class="btn-icon" title="Reenviar por WhatsApp" (click)="resendWhatsApp(q)">📱</button>
                 <button class="btn-icon" title="Reenviar por Email" (click)="resendEmail(q)">✉️</button>
-                <button class="btn-icon danger" title="Eliminar" (click)="cat.removeQuote(q.id)">🗑️</button>
+                <button class="btn-icon danger" title="Eliminar" (click)="cat.removeQuote(q.id)"><um-icon name="trash" [size]="16"></um-icon></button>
               </div>
             </div>
           }
@@ -444,7 +446,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                   <input type="file" accept="image/*" (change)="onLogoUpload($event)" class="hidden-file" />
                 </label>
                 @if (tpl.logoDataUrl) {
-                  <button class="btn-remove-logo" (click)="removeLogo()">🗑️ Quitar logo</button>
+                  <button class="btn-remove-logo" (click)="removeLogo()"><um-icon name="trash" [size]="16"></um-icon> Quitar logo</button>
                 }
                 <label class="toggle-row">
                   <input type="checkbox" [(ngModel)]="tpl.showLogo" (ngModelChange)="saveTemplate()" />

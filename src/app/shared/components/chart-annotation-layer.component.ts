@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UmIconComponent } from './um-icon/um-icon';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ const PIN_COLORS = [
 @Component({
   selector: 'app-chart-annotation-layer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UmIconComponent],
   template: `
     <div
       class="cal-container"
@@ -84,7 +85,7 @@ const PIN_COLORS = [
           <div class="cal-card-author" *ngIf="ann.author">— {{ ann.author }}</div>
           <div class="cal-card-actions">
             <button class="cal-action-btn cal-action-delete" (click)="deleteAnnotation(ann.id); $event.stopPropagation()">
-              🗑️ Eliminar
+              <um-icon name="trash" [size]="16"></um-icon> Eliminar
             </button>
           </div>
         </div>

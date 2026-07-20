@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ShiftsService } from '../../../core/services/shifts.service';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import {
   TeamMember,
   Shift,
@@ -12,7 +13,7 @@ import {
 @Component({
   selector: 'um-shifts',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, UmIconComponent],
   template: `
     <div class="shifts-page">
 
@@ -91,7 +92,7 @@ import {
             <span class="member-hours">{{ getMemberHours(member.id) }}h</span>
             <div class="member-actions">
               <button class="btn-icon-sm" title="Editar" (click)="editMember(member)">✏️</button>
-              <button class="btn-icon-sm danger" title="Eliminar" (click)="svc.removeMember(member.id)">🗑️</button>
+              <button class="btn-icon-sm danger" title="Eliminar" (click)="svc.removeMember(member.id)"><um-icon name="trash" [size]="16"></um-icon></button>
             </div>
           </div>
 
