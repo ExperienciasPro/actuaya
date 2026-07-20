@@ -48,24 +48,8 @@ import {
         </div>
       }
 
-      <!-- Dollar Rate -->
-      <div class="dollar-card animate-fadeInUp stagger-2">
-        <div class="dollar-info">
-          <span class="dollar-flag">🇺🇸</span>
-          <div class="dollar-data">
-            <span class="dollar-label">Dólar USD/COP (TRM)</span>
-            @if (dollarRate()) {
-              <span class="dollar-value">\${{ dollarRate() | number:'1.2-2' }} COP</span>
-            } @else {
-              <span class="dollar-loading">Cargando...</span>
-            }
-          </div>
-        </div>
-        <button class="btn-refresh" (click)="fetchDollarRate()">↻ Actualizar</button>
-      </div>
-
       <!-- Add Form -->
-      <div class="form-card animate-fadeInUp stagger-3">
+      <div class="form-card animate-fadeInUp stagger-2">
         <h3>Nueva Inversión</h3>
         <form class="inline-form grid-investments" (ngSubmit)="addInvestment()">
           <div class="form-field">
@@ -107,7 +91,7 @@ import {
       </div>
 
       <!-- Table -->
-      <div class="table-wrap animate-fadeInUp stagger-4">
+      <div class="table-wrap animate-fadeInUp stagger-3">
         @if (finance.investments().length) {
           <table class="data-table">
             <thead>
@@ -165,6 +149,22 @@ import {
         } @else {
           <div class="empty">Sin inversiones registradas. Agrega la primera ☝️</div>
         }
+      </div>
+
+      <!-- Dollar Rate -->
+      <div class="dollar-card animate-fadeInUp stagger-4">
+        <div class="dollar-info">
+          <span class="dollar-flag">🇺🇸</span>
+          <div class="dollar-data">
+            <span class="dollar-label">Dólar USD/COP (TRM)</span>
+            @if (dollarRate()) {
+              <span class="dollar-value">\${{ dollarRate() | number:'1.2-2' }} COP</span>
+            } @else {
+              <span class="dollar-loading">Cargando...</span>
+            }
+          </div>
+        </div>
+        <button class="btn-refresh" (click)="fetchDollarRate()">↻ Actualizar</button>
       </div>
     </div>
   `,
