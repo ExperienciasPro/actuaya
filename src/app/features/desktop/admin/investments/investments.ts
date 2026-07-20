@@ -92,7 +92,7 @@ import {
       <!-- Portfolio Summary -->
       @if (finance.investments().length) {
         <div class="portfolio-grid animate-fadeInUp stagger-3">
-          @for (type of portfolioSummary(); track type.type) {
+          @for (type of portfolioSummary(); track type.id) {
             <div class="portfolio-card">
               <span class="port-icon">{{ type.icon }}</span>
               <span class="port-label">{{ type.label }}</span>
@@ -207,18 +207,38 @@ export class AdminInvestmentsComponent implements OnInit {
   }
 
   portfolioSummary = computed(() => {
-    const byType = this.finance.investmentsByType();
     const total = this.finance.totalCurrentValue();
+    const rate = this.dollarRate() || 4000;
     const icons: Record<string, string> = { stocks: '📊', fixed_income: '🏦', real_estate: '🏠', other: '💼', custom: '⚡' };
     const colors: Record<string, string> = { stocks: '#6c5ce7', fixed_income: '#00cec9', real_estate: '#e84393', other: '#feca57', custom: '#a29bfe' };
-    return INVESTMENT_TYPES.map(t => ({
-      type: t.value,
-      label: t.label,
-      icon: icons[t.value],
-      total: byType.get(t.value) || 0,
-      pct: total > 0 ? ((byType.get(t.value) || 0) / total) * 100 : 0,
-      color: colors[t.value],
-    })).filter(t => t.total > 0);
+    
+    const summaryMap = new Map<string, any>();
+    
+    for (const inv of this.finance.investments()) {
+      const value = inv.currency === 'USD' ? inv.currentValue * rate : inv.currentValue;
+      const key = inv.type === 'custom' ? `custom_${inv.name}` : inv.type;
+      
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          id: key,
+          type: inv.type,
+          label: inv.type === 'custom' ? inv.name : (this.investmentTypes.find(t => t.value === inv.type)?.label || inv.type),
+          icon: icons[inv.type] || '💼',
+          total: 0,
+          color: colors[inv.type] || '#a29bfe'
+        });
+      }
+      
+      summaryMap.get(key).total += value;
+    }
+    
+    return Array.from(summaryMap.values())
+      .map(entry => ({
+        ...entry,
+        pct: total > 0 ? (entry.total / total) * 100 : 0
+      }))
+      .filter(t => t.total > 0)
+      .sort((a, b) => b.total - a.total);
   });
 
   ngOnInit(): void {
