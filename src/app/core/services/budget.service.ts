@@ -27,10 +27,73 @@ export class BudgetService {
     this.storage.set(this.STORAGE_KEY, this.budgetsSignal());
   }
 
-  /** Called by DataSyncService to set server data directly into the signal */
-  hydrateDirectly(data: any): void {
-    if (Array.isArray(data)) {
-      this.budgetsSignal.set(data as AnnualBudget[]);
+  /**
+   * Called by DataSyncService to merge server data with local data.
+   * Local deletions are preserved: if a local year has fewer entries
+   * (IDs removed), the local version wins for that year.
+   */
+  hydrateDirectly(serverData: any): void {
+    if (!Array.isArray(serverData)) return;
+
+    const serverBudgets = serverData as AnnualBudget[];
+    const localBudgets = this.loadFromStorage();
+
+    // If no local data, just accept server data
+    if (!localBudgets.length) {
+      this.budgetsSignal.set(serverBudgets);
+      return;
+    }
+
+    const localMap = new Map(localBudgets.map(b => [b.year, b]));
+    const serverMap = new Map(serverBudgets.map(b => [b.year, b]));
+    const allYears = new Set([...localMap.keys(), ...serverMap.keys()]);
+
+    const merged: AnnualBudget[] = [];
+    let localWins = false;
+
+    for (const year of allYears) {
+      const local = localMap.get(year);
+      const server = serverMap.get(year);
+
+      if (!server) {
+        // Only exists locally (user created a new year) → keep local
+        merged.push(local!);
+        localWins = true;
+      } else if (!local) {
+        // Only exists on server → accept server
+        merged.push(server);
+      } else {
+        // Both exist: check if local has removed entries (deletions)
+        const serverIds = new Set(server.entries.map(e => e.id));
+        const localIds = new Set(local.entries.map(e => e.id));
+        const localDeletedSomething = [...serverIds].some(id => !localIds.has(id));
+        const localAddedSomething = [...localIds].some(id => !serverIds.has(id));
+
+        if (localDeletedSomething || localAddedSomething) {
+          // Local has modifications (deletes or adds) → local wins
+          merged.push(local);
+          localWins = true;
+        } else {
+          // Same set of IDs — check if local has edits (different amounts/names)
+          const localHasEdits = local.entries.some(le => {
+            const se = server.entries.find(e => e.id === le.id);
+            return se && (se.name !== le.name || se.amount !== le.amount);
+          });
+          if (localHasEdits) {
+            merged.push(local);
+            localWins = true;
+          } else {
+            merged.push(server);
+          }
+        }
+      }
+    }
+
+    this.budgetsSignal.set(merged);
+
+    // If local had changes, persist to ensure server gets updated on next save
+    if (localWins) {
+      this.persist();
     }
   }
 

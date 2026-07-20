@@ -45,6 +45,17 @@ export class DataSyncService {
     'um_nav_order',
   ]);
 
+  /**
+   * Keys whose services have hydrateDirectly() methods with merge logic.
+   * These are skipped in the generic key-restore loop to prevent blind overwrites.
+   */
+  private readonly EXPLICITLY_HYDRATED_KEYS = new Set([
+    'um_goals',
+    'um_tasks',
+    'um_radar',
+    'um_annual_budget',
+  ]);
+
   /** Claves globales compartidas entre todos los usuarios */
   private readonly GLOBAL_KEYS = new Set([
     'um_users',
@@ -219,6 +230,7 @@ export class DataSyncService {
 
               if (!baseKey || !baseKey.startsWith(this.UM_PREFIX)) continue;
               if (this.SESSION_LOCAL_KEYS.has(baseKey)) continue;
+              if (this.EXPLICITLY_HYDRATED_KEYS.has(baseKey)) continue; // handled by hydrateDirectly()
               if (processedBaseKeys.has(baseKey)) continue;
               processedBaseKeys.add(baseKey);
 
