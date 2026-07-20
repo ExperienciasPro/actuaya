@@ -31,8 +31,25 @@ import {
         </div>
       </div>
 
+      <!-- Portfolio Summary -->
+      @if (finance.investments().length) {
+        <div class="portfolio-grid animate-fadeInUp stagger-1">
+          @for (type of portfolioSummary(); track type.id) {
+            <div class="portfolio-card">
+              <span class="port-icon">{{ type.icon }}</span>
+              <span class="port-label">{{ type.label }}</span>
+              <span class="port-value">\${{ type.total | number:'1.0-0' }}</span>
+              <div class="port-bar">
+                <div class="port-fill" [style.width.%]="type.pct" [style.background]="type.color"></div>
+              </div>
+              <span class="port-pct">{{ type.pct | number:'1.1-1' }}%</span>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Dollar Rate -->
-      <div class="dollar-card animate-fadeInUp stagger-1">
+      <div class="dollar-card animate-fadeInUp stagger-2">
         <div class="dollar-info">
           <span class="dollar-flag">🇺🇸</span>
           <div class="dollar-data">
@@ -48,7 +65,7 @@ import {
       </div>
 
       <!-- Add Form -->
-      <div class="form-card animate-fadeInUp stagger-2">
+      <div class="form-card animate-fadeInUp stagger-3">
         <h3>Nueva Inversión</h3>
         <form class="inline-form grid-investments" (ngSubmit)="addInvestment()">
           <div class="form-field">
@@ -89,25 +106,8 @@ import {
         </form>
       </div>
 
-      <!-- Portfolio Summary -->
-      @if (finance.investments().length) {
-        <div class="portfolio-grid animate-fadeInUp stagger-3">
-          @for (type of portfolioSummary(); track type.id) {
-            <div class="portfolio-card">
-              <span class="port-icon">{{ type.icon }}</span>
-              <span class="port-label">{{ type.label }}</span>
-              <span class="port-value">\${{ type.total | number:'1.0-0' }}</span>
-              <div class="port-bar">
-                <div class="port-fill" [style.width.%]="type.pct" [style.background]="type.color"></div>
-              </div>
-              <span class="port-pct">{{ type.pct | number:'1.1-1' }}%</span>
-            </div>
-          }
-        </div>
-      }
-
       <!-- Table -->
-      <div class="table-wrap animate-fadeInUp stagger-3">
+      <div class="table-wrap animate-fadeInUp stagger-4">
         @if (finance.investments().length) {
           <table class="data-table">
             <thead>
