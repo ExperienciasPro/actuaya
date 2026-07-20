@@ -277,6 +277,18 @@ export const routes: Routes = [
           import('./features/desktop/admin/investments/investments').then((m) => m.AdminInvestmentsComponent),
       },
       {
+        path: 'admin/education',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./features/desktop/admin/education/education-dashboard').then((m) => m.EducationDashboardComponent),
+      },
+      {
+        path: 'admin/education/:id',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./features/desktop/admin/education/education-detail').then((m) => m.EducationDetailComponent),
+      },
+      {
         path: 'admin/panel',
         canActivate: [superAdminGuard],
         loadComponent: () =>

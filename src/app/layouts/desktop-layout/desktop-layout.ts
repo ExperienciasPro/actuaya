@@ -542,6 +542,7 @@ export class DesktopLayoutComponent implements OnInit {
         );
         finSection.items.push(
           { label: 'Inversiones', icon: '💎', iconKey: 'subscriptions', route: '/d/admin/investments', moduleId: 'investments' },
+          { label: 'Proyectos Educativos', icon: '🎓', iconKey: 'education', route: '/d/admin/education', moduleId: 'education' },
           { label: 'Planeación Financiera', icon: '💰', iconKey: 'finance', route: '/d/budget-planner', moduleId: 'budget_planner' },
           { label: 'Calculadora de Rentabilidad', icon: '📐', iconKey: 'profitability', route: '/d/profitability', moduleId: 'profitability' },
           { label: 'Analítica Finanzas', icon: '📊', iconKey: 'finance', route: '/d/finance/analytics', moduleId: ['cashflow', 'profitability'] }

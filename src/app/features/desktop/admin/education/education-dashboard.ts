@@ -1,0 +1,135 @@
+import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DecimalPipe, DatePipe } from '@angular/common';
+import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from '../../../../core/services/education.service';
+
+@Component({
+  selector: 'um-education-dashboard',
+  standalone: true,
+  imports: [RouterLink, FormsModule, DecimalPipe, DatePipe],
+  template: `
+    <div class="admin-page">
+      <div class="page-header animate-fadeInUp">
+        <div>
+          <h1>🎓 Proyectos Educativos</h1>
+          <p class="subtitle">Gestiona programas, inscripciones y finanzas.</p>
+        </div>
+        <div class="header-totals">
+          <div class="total-badge green">
+            <span class="total-label">Ingresos Totales</span>
+            <span class="total-value">\${{ educationService.totalIncome() | number:'1.0-0' }} COP</span>
+          </div>
+          <div class="total-badge red">
+            <span class="total-label">Gastos Totales</span>
+            <span class="total-value">\${{ educationService.totalExpenses() | number:'1.0-0' }} COP</span>
+          </div>
+          <div class="total-badge" [class.positive]="educationService.netProfit() >= 0" [class.negative]="educationService.netProfit() < 0">
+            <span class="total-label">Rentabilidad Neta</span>
+            <span class="total-value">\${{ educationService.netProfit() | number:'1.0-0' }} COP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Form -->
+      <div class="form-card animate-fadeInUp stagger-1">
+        <h3>Nuevo Proyecto Educativo</h3>
+        <form class="inline-form" (ngSubmit)="addProgram()">
+          <div class="form-field">
+            <label>Tipo</label>
+            <select [(ngModel)]="newType" name="type" required>
+              <option value="">Seleccionar...</option>
+              @for (t of programTypes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field flex-2">
+            <label>Nombre del Programa</label>
+            <input type="text" [(ngModel)]="newName" name="name" placeholder="Ej. Diplomado Liderazgo" required />
+          </div>
+          <div class="form-field flex-2">
+            <label>Descripción</label>
+            <input type="text" [(ngModel)]="newDesc" name="desc" placeholder="Breve descripción..." />
+          </div>
+          <button type="submit" class="btn-add" [disabled]="!canSubmit">+ Crear</button>
+        </form>
+      </div>
+
+      <!-- Program Grid -->
+      <div class="program-grid animate-fadeInUp stagger-2">
+        @if (educationService.programs().length) {
+          @for (prog of educationService.programs(); track prog.id) {
+            <a class="program-card" [routerLink]="['/d/admin/education', prog.id]">
+              <div class="prog-header">
+                <span class="prog-type tag-{{ prog.type }}">{{ getTypeLabel(prog.type) }}</span>
+                <span class="prog-status" [class.completed]="prog.status === 'completed'">
+                  {{ prog.status === 'active' ? 'Activo' : 'Finalizado' }}
+                </span>
+              </div>
+              <h3 class="prog-name">{{ prog.name }}</h3>
+              <p class="prog-desc">{{ prog.description || 'Sin descripción' }}</p>
+
+              <div class="prog-stats">
+                <div class="stat-col">
+                  <span class="stat-lbl">Ingresos</span>
+                  <span class="stat-val">\${{ getStats(prog.id)?.income | number:'1.0-0' }}</span>
+                </div>
+                <div class="stat-col">
+                  <span class="stat-lbl">Gastos</span>
+                  <span class="stat-val">\${{ getStats(prog.id)?.expense | number:'1.0-0' }}</span>
+                </div>
+                <div class="stat-col">
+                  <span class="stat-lbl">Ganancia</span>
+                  <span class="stat-val profit" [class.loss]="(getStats(prog.id)?.income || 0) < (getStats(prog.id)?.expense || 0)">
+                    \${{ ((getStats(prog.id)?.income || 0) - (getStats(prog.id)?.expense || 0)) | number:'1.0-0' }}
+                  </span>
+                </div>
+                <div class="stat-col">
+                  <span class="stat-lbl">Inscritos</span>
+                  <span class="stat-val">{{ getStats(prog.id)?.attendees || 0 }}</span>
+                </div>
+              </div>
+            </a>
+          }
+        } @else {
+          <div class="empty-state">No hay proyectos educativos registrados. Crea el primero arriba.</div>
+        }
+      </div>
+    </div>
+  `,
+  styleUrl: 'education-dashboard.scss'
+})
+export class EducationDashboardComponent {
+  educationService = inject(EducationService);
+  programTypes = EDUCATION_PROGRAM_TYPES;
+
+  newType: EducationProgramType | '' = '';
+  newName = '';
+  newDesc = '';
+
+  get canSubmit(): boolean {
+    return !!this.newType && this.newName.trim().length > 0;
+  }
+
+  addProgram() {
+    if (!this.canSubmit) return;
+    this.educationService.addProgram({
+      name: this.newName.trim(),
+      type: this.newType as EducationProgramType,
+      status: 'active',
+      description: this.newDesc.trim()
+    });
+    this.newName = '';
+    this.newType = '';
+    this.newDesc = '';
+  }
+
+  getTypeLabel(type: string): string {
+    return this.programTypes.find(t => t.value === type)?.label || type;
+  }
+
+  getStats(programId: string) {
+    return this.educationService.programStats().get(programId);
+  }
+}
