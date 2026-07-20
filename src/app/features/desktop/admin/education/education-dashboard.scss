@@ -68,11 +68,12 @@
 
 .program-card {
   display: block; text-decoration: none; @include card($spacing-md);
-  border: 1px solid transparent; border-radius: $radius-lg;
+  border: 1px solid $color-border-subtle; border-radius: $radius-lg;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   color: inherit;
   
-  &:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-color: $color-accent-primary; }
+  &:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); border-color: $color-accent-primary; }
 
   .prog-header {
     @include flex-between; margin-bottom: $spacing-md;
