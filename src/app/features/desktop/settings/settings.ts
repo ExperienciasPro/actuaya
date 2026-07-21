@@ -243,6 +243,7 @@ export class SettingsComponent {
         { id: 'income', icon: '🧾', name: 'Ingresos', desc: 'Control de facturas y órdenes de compra', superAdminOnly: true },
         { id: 'cashflow', icon: '💸', name: 'Flujo de Caja', desc: 'Balance diario entre ingresos y egresos' },
         { id: 'investments', icon: '💎', name: 'Gestión de Inversiones', desc: 'Seguimiento de portafolio y retornos', superAdminOnly: true },
+        { id: 'education', icon: '🎓', name: 'Proyectos Educativos', desc: 'Gestión de programas, ingresos y gastos educativos', superAdminOnly: true },
         { id: 'profitability', icon: '📐', name: 'Calculadora de Rentabilidad', desc: 'Margen real de productos y servicios' },
         { id: 'budget_planner', icon: '💰', name: 'Planeación Financiera', desc: 'Capital disponible y planificación de inversiones', superAdminOnly: true },
       ],

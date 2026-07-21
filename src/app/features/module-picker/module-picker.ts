@@ -347,6 +347,16 @@ export class ModulePickerComponent {
           superAdminOnly: true,
         },
         {
+          id: 'education',
+          icon: '🎓',
+          name: 'Proyectos Educativos',
+          tagline: 'Controla tus programas',
+          description: 'Lleva registro independiente de ingresos y gastos por cada curso, taller o diplomado.',
+          example: 'Registras 20 inscritos a un diplomado y mides su rentabilidad real.',
+          color: '#3498db',
+          superAdminOnly: true,
+        },
+        {
           id: 'profitability',
           icon: '📐',
           name: 'Calculadora de Rentabilidad',

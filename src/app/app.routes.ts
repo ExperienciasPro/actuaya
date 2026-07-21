@@ -426,6 +426,15 @@ export const routes: Routes = [
   },
 
   // ═══════════════════════════════════════════
+  // 📊 REPORTE PÚBLICO (Educación) — /reportes/educacion
+  // ═══════════════════════════════════════════
+  {
+    path: 'reportes/educacion',
+    loadComponent: () =>
+      import('./public-portal/education-report/education-report').then((m) => m.EducationReportComponent),
+  },
+
+  // ═══════════════════════════════════════════
   // 🍽️ MENÚ DIGITAL PÚBLICO — /menu
   // ═══════════════════════════════════════════
   {
