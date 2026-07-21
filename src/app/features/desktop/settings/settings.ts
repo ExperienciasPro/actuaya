@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ThemeService, AppTheme } from '../../../core/services/theme.service';
 import { StorageService } from '../../../core/services/storage.service';
 import { UserService, UserProfile } from '../../../core/services/user.service';
+import { DataSyncService } from '../../../core/services/data-sync.service';
 
 interface ModuleDef {
   id: string;
@@ -176,6 +177,7 @@ export class SettingsComponent {
   themeService = inject(ThemeService);
   private storage = inject(StorageService);
   private userService = inject(UserService);
+  private dataSync = inject(DataSyncService);
 
   toast = signal('');
 
@@ -344,6 +346,7 @@ export class SettingsComponent {
 
   private saveModules(set: Set<string>): void {
     this.storage.set(this.MODULES_KEY, Array.from(set));
+    this.dataSync.saveToServer();
   }
 
   private getModuleName(id: string): string {

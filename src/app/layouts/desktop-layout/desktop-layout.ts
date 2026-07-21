@@ -453,7 +453,7 @@ export class DesktopLayoutComponent implements OnInit {
     if (!moduleId) return true;
     const isSuper = this.userService.isSuperAdmin();
     if (!isSuper) {
-      if (moduleId === 'income' || moduleId === 'investments') return false;
+      if (moduleId === 'income' || moduleId === 'investments' || moduleId === 'education' || moduleId === 'budget_planner') return false;
     }
     const enabled = this.enabledModules();
     if (!enabled) return true;
