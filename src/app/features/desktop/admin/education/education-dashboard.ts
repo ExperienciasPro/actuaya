@@ -11,9 +11,12 @@ import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from 
   template: `
     <div class="admin-page">
       <div class="page-header animate-fadeInUp">
-        <div>
+        <div class="header-titles">
           <h1>🎓 Proyectos Educativos</h1>
           <p class="subtitle">Gestiona programas, inscripciones y finanzas.</p>
+          <a routerLink="/reportes/educacion" target="_blank" class="btn-share">
+            🔗 Compartir Reporte Público
+          </a>
         </div>
         <div class="header-totals">
           <div class="total-badge green">

@@ -4,9 +4,28 @@
 .admin-page { max-width: 100%; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; padding-right: 4px; padding-bottom: 24px; }
 
 .page-header {
-  @include flex-between; margin-bottom: $spacing-xl; flex-wrap: wrap; gap: $spacing-md;
-  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 2px; }
-  .subtitle { font-size: 0.9rem; color: $color-text-muted; margin: 0; }
+  @include flex-between; flex-wrap: wrap; gap: $spacing-md; margin-bottom: $spacing-xl;
+  
+  .header-titles {
+    display: flex; flex-direction: column; align-items: flex-start;
+  }
+
+  h1 { font-size: 2rem; font-weight: 700; margin: 0 0 8px 0; color: $color-text-primary; }
+  .subtitle { font-size: 1rem; color: $color-text-muted; margin: 0; }
+  
+  .btn-share {
+    margin-top: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: $radius-md;
+    background: rgba(14, 165, 233, 0.1); color: #0ea5e9;
+    text-decoration: none; font-size: 0.85rem; font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    &:hover {
+      background: rgba(14, 165, 233, 0.2);
+      transform: translateY(-2px);
+    }
+  }
 }
 
 .header-totals { display: flex; gap: $spacing-md; flex-wrap: wrap; }
