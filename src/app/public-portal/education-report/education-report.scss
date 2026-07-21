@@ -63,39 +63,54 @@
   .brand {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
 
     .brand-icon {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
+      padding-right: 16px;
+      border-right: 1px solid rgba(255,255,255,0.1);
     }
     
     .brand-logo {
-      height: 48px;
+      height: 42px;
+      max-width: 200px;
       width: auto;
       object-fit: contain;
-      border-radius: 8px;
+    }
+
+    .brand-divider {
+      width: 1px;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 1px;
     }
     
     .brand-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
       h1 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 700;
         background: linear-gradient(90deg, #38bdf8, #818cf8);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
       }
       p {
-        margin: 4px 0 0;
-        font-size: 0.9rem;
+        margin: 4px 0 0 0;
+        font-size: 0.75rem;
         color: #94a3b8;
-        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.15em;
+        font-weight: 600;
       }
     }
   }
-
+  
   .header-controls {
     .year-selector {
       display: flex;

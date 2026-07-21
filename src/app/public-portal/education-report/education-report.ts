@@ -22,6 +22,7 @@ import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
           <div class="brand">
             @if (companyLogo()) {
               <img [src]="companyLogo()" alt="Company Logo" class="brand-logo" />
+              <div class="brand-divider"></div>
             } @else {
               <span class="brand-icon">🎓</span>
             }
