@@ -70,9 +70,9 @@ import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
 
         <!-- Charts Section -->
         <section class="charts-section">
-          <div class="chart-card glass-panel">
-            <h3 class="chart-title">Programas más rentables</h3>
-            <div class="chart-container">
+          <div class="chart-card">
+            <h3 class="chart-title"><span class="chart-icon">📊</span> Programas más y menos rentables</h3>
+            <div class="chart-wrapper">
               <canvas baseChart
                 [data]="profitChartData()"
                 [options]="profitChartOptions"
@@ -326,16 +326,23 @@ export class EducationReportComponent implements OnInit {
 
   profitChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
     const stats = this.yearlyStats();
-    // Top 5 profitable programs
-    const topPrograms = [...stats.programs].filter(p => p.profit > 0).slice(0, 5);
+    // Sort by profit descending
+    const sortedPrograms = [...stats.programs].sort((a, b) => b.profit - a.profit);
+    
+    let displayPrograms = sortedPrograms;
+    // If there are too many, show top 5 and bottom 5
+    if (sortedPrograms.length > 10) {
+       displayPrograms = [...sortedPrograms.slice(0, 5), ...sortedPrograms.slice(-5)];
+    }
     
     return {
-      labels: topPrograms.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name),
+      labels: displayPrograms.map(p => p.name),
       datasets: [
         {
-          data: topPrograms.map(p => p.profit),
-          backgroundColor: 'rgba(56, 189, 248, 0.6)',
-          borderColor: 'rgba(56, 189, 248, 1)',
+          data: displayPrograms.map(p => p.profit),
+          label: 'Ganancia Neta',
+          backgroundColor: displayPrograms.map(p => p.profit >= 0 ? 'rgba(56, 189, 248, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+          borderColor: displayPrograms.map(p => p.profit >= 0 ? 'rgba(56, 189, 248, 1)' : 'rgba(239, 68, 68, 1)'),
           borderWidth: 1,
           borderRadius: 4
         }
