@@ -12,6 +12,7 @@ export interface UserProfile {
   phone?: string;            // Full phone with country code, e.g. '+573001234567'
   occupation?: string;
   companyName?: string;
+  companyLogo?: string;
   businessType?: string;       // Tipo de empresa (sector)
   age?: number;
   companySize?: string;
@@ -235,6 +236,7 @@ export class UserService {
       phone: data.phone ?? baseUser?.phone,
       occupation: data.occupation ?? baseUser?.occupation,
       companyName: data.companyName ?? baseUser?.companyName,
+      companyLogo: data.companyLogo ?? baseUser?.companyLogo,
       age: data.age ?? baseUser?.age,
       companySize: data.companySize ?? baseUser?.companySize,
       department: data.department ?? baseUser?.department,
@@ -333,6 +335,7 @@ export class UserService {
       phone: data.phone,
       occupation: data.occupation,
       companyName: data.companyName,
+      companyLogo: data.companyLogo,
       age: data.age,
       companySize: data.companySize,
       department: data.department,

@@ -39,6 +39,21 @@ interface CategoryDef {
               <label>Nombre de Usuario</label>
               <input type="text" [(ngModel)]="editName" placeholder="Tu nombre..." />
             </div>
+            <div class="input-group logo-upload">
+              <label>Logotipo de la Empresa</label>
+              <div class="logo-preview-container">
+                @if (editLogo) {
+                  <img [src]="editLogo" alt="Logo" class="logo-preview" />
+                  <button class="remove-logo-btn" (click)="editLogo = ''" title="Eliminar logo">🗑️</button>
+                } @else {
+                  <div class="logo-placeholder">Sin logo</div>
+                }
+                <label class="action-btn upload-btn">
+                  <span class="action-icon">🖼️</span> Subir
+                  <input type="file" accept="image/*" (change)="onLogoSelected($event)" style="display:none" />
+                </label>
+              </div>
+            </div>
             <div class="input-group">
               <label>Correo Electrónico</label>
               <input type="email" [(ngModel)]="editEmail" placeholder="tu@correo.com" />
@@ -182,17 +197,39 @@ export class SettingsComponent {
   // ─── Profile & Security ───────────────────
   editName = this.userService.profile()?.name || '';
   editEmail = this.userService.profile()?.email || '';
+  editLogo = this.userService.profile()?.companyLogo || '';
   showPasswordForm = signal(false);
   newPassword = signal('');
 
   isProfileDirty(): boolean {
-    const current = this.userService.profile() || { name: '', email: '' };
-    return this.editName !== current.name || this.editEmail !== current.email;
+    const current = this.userService.profile() || { name: '', email: '', companyLogo: '' };
+    return this.editName !== current.name || 
+           this.editEmail !== current.email || 
+           this.editLogo !== (current.companyLogo || '');
   }
 
   async saveUserProfile(): Promise<void> {
-    await this.userService.saveProfile({ name: this.editName, email: this.editEmail });
+    await this.userService.saveProfile({ 
+      name: this.editName, 
+      email: this.editEmail,
+      companyLogo: this.editLogo 
+    });
     this.showToast('✅ Perfil actualizado correctamente');
+  }
+
+  onLogoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        this.showToast('❌ El logo debe ser menor a 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.editLogo = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   updatePassword(): void {

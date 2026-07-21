@@ -2,12 +2,15 @@ import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EducationService, EDUCATION_PROGRAM_TYPES, EducationalProgram } from '../../core/services/education.service';
+import { UserService } from '../../core/services/user.service';
 import { Title } from '@angular/platform-browser';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
 
 @Component({
   selector: 'um-education-report',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, FormsModule],
+  imports: [CommonModule, DecimalPipe, FormsModule, BaseChartDirective],
   template: `
     <div class="public-report-layout">
       <!-- Decorator elements for premium look -->
@@ -17,7 +20,11 @@ import { Title } from '@angular/platform-browser';
       <div class="container animate-fadeInUp">
         <header class="report-header glass-panel">
           <div class="brand">
-            <span class="brand-icon">🎓</span>
+            @if (companyLogo()) {
+              <img [src]="companyLogo()" alt="Company Logo" class="brand-logo" />
+            } @else {
+              <span class="brand-icon">🎓</span>
+            }
             <div class="brand-text">
               <h1>Proyectos Educativos</h1>
               <p>Reporte Financiero</p>
@@ -36,6 +43,12 @@ import { Title } from '@angular/platform-browser';
         </header>
 
         <section class="kpi-section">
+          <div class="kpi-card glass-panel highlight">
+            <div class="kpi-label">Rentabilidad Neta</div>
+            <div class="kpi-value" [class.profit]="yearlyStats().netProfit >= 0" [class.loss]="yearlyStats().netProfit < 0">
+              \${{ yearlyStats().netProfit | number:'1.0-0' }}
+            </div>
+          </div>
           <div class="kpi-card glass-panel">
             <div class="kpi-label">Ingresos Totales ({{ selectedYear() }})</div>
             <div class="kpi-value">\${{ yearlyStats().totalIncome | number:'1.0-0' }}</div>
@@ -44,15 +57,37 @@ import { Title } from '@angular/platform-browser';
             <div class="kpi-label">Gastos Totales ({{ selectedYear() }})</div>
             <div class="kpi-value">\${{ yearlyStats().totalExpense | number:'1.0-0' }}</div>
           </div>
-          <div class="kpi-card glass-panel highlight">
-            <div class="kpi-label">Rentabilidad Neta</div>
-            <div class="kpi-value" [class.profit]="yearlyStats().netProfit >= 0" [class.loss]="yearlyStats().netProfit < 0">
-              \${{ yearlyStats().netProfit | number:'1.0-0' }}
-            </div>
-          </div>
           <div class="kpi-card glass-panel">
             <div class="kpi-label">Inscritos Totales</div>
             <div class="kpi-value">{{ yearlyStats().totalAttendees }}</div>
+          </div>
+          <div class="kpi-card glass-panel">
+            <div class="kpi-label">Programas Realizados</div>
+            <div class="kpi-value">{{ yearlyStats().programs.length }}</div>
+          </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+          <div class="chart-card glass-panel">
+            <h3 class="chart-title">Programas más rentables</h3>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="profitChartData()"
+                [options]="profitChartOptions"
+                [type]="'bar'">
+              </canvas>
+            </div>
+          </div>
+          <div class="chart-card glass-panel">
+            <h3 class="chart-title">Inscripciones globales por mes</h3>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="attendeesChartData()"
+                [options]="attendeesChartOptions"
+                [type]="'line'">
+              </canvas>
+            </div>
           </div>
         </section>
 
@@ -119,9 +154,77 @@ import { Title } from '@angular/platform-browser';
 })
 export class EducationReportComponent implements OnInit {
   educationService = inject(EducationService);
+  userService = inject(UserService);
   titleService = inject(Title);
   
   selectedYear = signal<number>(new Date().getFullYear());
+  companyLogo = computed(() => this.userService.profile()?.companyLogo);
+
+  // Common chart options for a dark theme
+  commonChartOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    color: '#94a3b8',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        titleColor: '#f8fafc',
+        bodyColor: '#e2e8f0',
+        borderColor: 'rgba(56, 189, 248, 0.3)',
+        borderWidth: 1,
+        padding: 12
+      }
+    },
+    scales: {
+      x: { 
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#94a3b8', font: { size: 11 } }
+      },
+      y: { 
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#94a3b8', font: { size: 11 } }
+      }
+    }
+  };
+
+  profitChartOptions: ChartConfiguration<'bar'>['options'] = {
+    ...this.commonChartOptions,
+    scales: {
+      ...this.commonChartOptions.scales,
+      y: {
+        ...this.commonChartOptions.scales?.['y'],
+        ticks: {
+          ...this.commonChartOptions.scales?.['y']?.ticks,
+          callback: (value: any) => '$' + value
+        }
+      }
+    }
+  };
+
+  attendeesChartOptions: ChartConfiguration<'line'>['options'] = {
+    ...this.commonChartOptions,
+    scales: {
+      ...this.commonChartOptions.scales,
+      y: {
+        ...this.commonChartOptions.scales?.['y'],
+        beginAtZero: true,
+        ticks: {
+          ...this.commonChartOptions.scales?.['y']?.ticks,
+          stepSize: 1
+        }
+      }
+    },
+    plugins: {
+      ...this.commonChartOptions.plugins,
+      tooltip: {
+        ...this.commonChartOptions.plugins?.tooltip,
+        callbacks: {
+          label: (context) => context.parsed.y + ' inscritos'
+        }
+      }
+    }
+  };
 
   ngOnInit() {
     this.titleService.setTitle('Reporte Financiero | Proyectos Educativos');
@@ -200,12 +303,63 @@ export class EducationReportComponent implements OnInit {
     // Sort programs by profit descending
     programs.sort((a, b) => b.profit - a.profit);
     
+    // Calculate monthly attendees for the line chart
+    const monthlyAttendees = new Array(12).fill(0);
+    incomes.forEach(i => {
+      const att = Number(i.attendeesCount) || 0;
+      if (att > 0 && i.date) {
+        const month = new Date(i.date).getMonth(); // 0-11
+        monthlyAttendees[month] += att;
+      }
+    });
+
     return {
       totalIncome,
       totalExpense,
       netProfit,
       totalAttendees,
-      programs
+      programs,
+      monthlyAttendees
+    };
+  });
+
+  profitChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const stats = this.yearlyStats();
+    // Top 5 profitable programs
+    const topPrograms = [...stats.programs].filter(p => p.profit > 0).slice(0, 5);
+    
+    return {
+      labels: topPrograms.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name),
+      datasets: [
+        {
+          data: topPrograms.map(p => p.profit),
+          backgroundColor: 'rgba(56, 189, 248, 0.6)',
+          borderColor: 'rgba(56, 189, 248, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      ]
+    };
+  });
+
+  attendeesChartData = computed<ChartConfiguration<'line'>['data']>(() => {
+    const stats = this.yearlyStats();
+    return {
+      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      datasets: [
+        {
+          data: stats.monthlyAttendees,
+          backgroundColor: 'rgba(139, 92, 246, 0.2)',
+          borderColor: 'rgba(139, 92, 246, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: 'rgba(139, 92, 246, 1)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
     };
   });
 }
