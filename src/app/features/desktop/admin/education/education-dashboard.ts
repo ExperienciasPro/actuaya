@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from '../../../../core/services/education.service';
+import { UserService } from '../../../../core/services/user.service';
 
 @Component({
   selector: 'um-education-dashboard',
@@ -14,9 +15,27 @@ import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from 
         <div class="header-titles">
           <h1>🎓 Proyectos Educativos</h1>
           <p class="subtitle">Gestiona programas, inscripciones y finanzas.</p>
-          <a routerLink="/reportes/educacion" target="_blank" class="btn-share">
-            🔗 Compartir Reporte Público
-          </a>
+          <div class="header-actions">
+            <a routerLink="/reportes/educacion" target="_blank" class="btn-share">
+              🔗 Compartir Reporte Público
+            </a>
+            
+            <div class="logo-upload">
+              <span class="logo-label">Logo tipo personalizado del reporte:</span>
+              <div class="logo-preview-box">
+                @if (companyLogo()) {
+                  <img [src]="companyLogo()" alt="Logo" class="mini-logo" />
+                  <button type="button" class="btn-remove-logo" (click)="removeLogo()" title="Eliminar">🗑️</button>
+                } @else {
+                  <span class="no-logo">Sin logo</span>
+                }
+                <label class="btn-upload-logo">
+                  <span>🖼️ Subir</span>
+                  <input type="file" accept="image/*" (change)="onLogoSelected($event)" style="display:none" />
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="header-totals">
           <div class="total-badge green">
@@ -116,7 +135,10 @@ import { EducationService, EDUCATION_PROGRAM_TYPES, EducationProgramType } from 
 })
 export class EducationDashboardComponent {
   educationService = inject(EducationService);
+  userService = inject(UserService);
   programTypes = EDUCATION_PROGRAM_TYPES;
+
+  companyLogo = computed(() => this.userService.profile()?.companyLogo || '');
 
   newType: EducationProgramType | '' = '';
   newName = '';
@@ -160,6 +182,26 @@ export class EducationDashboardComponent {
     this.newName = '';
     this.newDesc = '';
     this.newWebsite = '';
+  }
+
+  async onLogoSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('❌ El logo debe ser menor a 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const logoData = e.target?.result as string;
+        await this.userService.saveProfile({ companyLogo: logoData });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async removeLogo() {
+    await this.userService.saveProfile({ companyLogo: '' });
   }
 
   getTypeLabel(type: string): string {

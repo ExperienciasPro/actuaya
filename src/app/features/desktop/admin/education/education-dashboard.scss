@@ -12,9 +12,15 @@
 
   h1 { font-size: 2rem; font-weight: 700; margin: 0 0 8px 0; color: $color-text-primary; }
   .subtitle { font-size: 1rem; color: $color-text-muted; margin: 0; }
-  
-  .btn-share {
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
     margin-top: 12px;
+  }
+
+  .btn-share {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 8px 16px; border-radius: $radius-md;
     background: rgba(14, 165, 233, 0.1); color: #0ea5e9;
@@ -24,6 +30,79 @@
     &:hover {
       background: rgba(14, 165, 233, 0.2);
       transform: translateY(-2px);
+    }
+  }
+
+  .logo-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .logo-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $color-text-secondary;
+    }
+
+    .logo-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .mini-logo {
+        width: 42px;
+        height: 42px;
+        border-radius: $radius-sm;
+        object-fit: contain;
+        background: $color-bg-primary;
+        border: 1px solid $color-border-subtle;
+      }
+
+      .no-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 42px;
+        border-radius: $radius-sm;
+        border: 1px dashed $color-border-default;
+        font-size: 0.75rem;
+        color: $color-text-muted;
+        background: rgba(255,255,255,0.05);
+      }
+
+      .btn-remove-logo {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        opacity: 0.7;
+        transition: 0.2s;
+        &:hover { opacity: 1; transform: scale(1.1); }
+      }
+
+      .btn-upload-logo {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        background: $color-bg-tertiary;
+        color: $color-text-secondary;
+        border: 1px solid $color-border-default;
+        border-radius: $radius-md;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: 36px;
+
+        &:hover {
+          background: $color-bg-secondary;
+          border-color: $color-accent-primary;
+          color: $color-accent-primary;
+        }
+      }
     }
   }
 }
