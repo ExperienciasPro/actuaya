@@ -1,11 +1,13 @@
 import { Component, inject, ViewChild, ElementRef, AfterViewInit, OnInit } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../core/services/user.service';
 import { MockSubscriptionService } from '../../core/services/mock-subscription.service';
 import { DataSyncService } from '../../core/services/data-sync.service';
 import { UmIconComponent } from '../../shared/components/um-icon/um-icon';
 import { LOGO_FULL } from '../../core/constants/logo.constants';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'um-login',
@@ -147,9 +149,9 @@ import { LOGO_FULL } from '../../core/constants/logo.constants';
               <button
                 type="submit"
                 class="login-btn"
-                [disabled]="!recoverEmail.trim()"
+                [disabled]="!recoverEmail.trim() || isLoading"
               >
-                Verificar correo
+                {{ isLoading ? 'Enviando...' : 'Verificar correo' }}
               </button>
             </form>
 
@@ -159,117 +161,18 @@ import { LOGO_FULL } from '../../core/constants/logo.constants';
           </div>
         }
 
-        <!-- ═══ RECOVER: STEP 2 — VERIFY IDENTITY ═══ -->
-        @if (view === 'recover-verify') {
-          <div class="login-card animate-fadeInUp">
-            <div class="card-top-bar recover-bar"></div>
-            <h2>🛡️ Verificar Identidad</h2>
-            <p class="login-subtitle">
-              Encontramos la cuenta de <strong>{{ foundUserHint }}</strong>.
-              Escribe el nombre completo registrado para confirmar tu identidad.
-            </p>
-
-            <form class="login-form" (ngSubmit)="verifyIdentity()">
-              <div class="form-group">
-                <label for="verify-name">
-                  <um-icon name="user" [size]="16"></um-icon>
-                  Nombre completo
-                </label>
-                <input
-                  id="verify-name"
-                  class="form-input"
-                  type="text"
-                  [(ngModel)]="verifyName"
-                  name="verifyName"
-                  placeholder="Tu nombre como lo registraste"
-                  autofocus
-                  required
-                />
-              </div>
-
-              @if (errorMsg) {
-                <p class="error-msg">{{ errorMsg }}</p>
-              }
-
-              <button
-                type="submit"
-                class="login-btn"
-                [disabled]="!verifyName.trim()"
-              >
-                Confirmar identidad
-              </button>
-            </form>
-
-            <button class="forgot-link" (click)="view = 'recover-email'; errorMsg = ''">
-              ← Cambiar correo
-            </button>
-          </div>
-        }
-
-        <!-- ═══ RECOVER: STEP 3 — NEW PASSWORD ═══ -->
-        @if (view === 'recover-reset') {
+        <!-- ═══ RECOVER: STEP 2 — SENT MESSAGE ═══ -->
+        @if (view === 'recover-sent') {
           <div class="login-card animate-fadeInUp">
             <div class="card-top-bar success-bar"></div>
-            <h2>🔐 Nueva Contraseña</h2>
-            <p class="login-subtitle">Identidad confirmada. Establece tu nueva contraseña.</p>
+            <h2>📧 Revisa tu correo</h2>
+            <p class="login-subtitle">
+              {{ successMsg }}
+            </p>
 
-            <form class="login-form" (ngSubmit)="resetPassword()">
-              <div class="form-group">
-                <label for="new-pass">
-                  Nueva contraseña
-                </label>
-                <div class="password-wrap">
-                  <input
-                    id="new-pass"
-                    class="form-input"
-                    [type]="showPassword ? 'text' : 'password'"
-                    [(ngModel)]="newPassword"
-                    name="newPassword"
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                  <button type="button" class="toggle-pass" (click)="showPassword = !showPassword" tabindex="-1">
-                    {{ showPassword ? '🙈' : '👁️' }}
-                  </button>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="confirm-pass">
-                  Confirmar contraseña
-                </label>
-                <div class="password-wrap">
-                  <input
-                    id="confirm-pass"
-                    class="form-input"
-                    [type]="showPassword ? 'text' : 'password'"
-                    [(ngModel)]="confirmNewPassword"
-                    name="confirmNewPassword"
-                    placeholder="Repite la contraseña"
-                    required
-                  />
-                </div>
-                @if (confirmNewPassword && newPassword !== confirmNewPassword) {
-                  <span class="field-error">Las contraseñas no coinciden</span>
-                }
-              </div>
-
-              @if (errorMsg) {
-                <p class="error-msg">{{ errorMsg }}</p>
-              }
-
-              @if (successMsg) {
-                <p class="success-msg">{{ successMsg }}</p>
-              }
-
-              <button
-                type="submit"
-                class="login-btn"
-                [disabled]="newPassword.length < 6 || newPassword !== confirmNewPassword"
-              >
-                Guardar nueva contraseña
-              </button>
-            </form>
+            <button class="login-btn" (click)="view = 'login'; errorMsg = ''; successMsg = ''">
+              Volver al inicio de sesión
+            </button>
           </div>
         }
       </div>
@@ -284,6 +187,7 @@ export class LoginComponent implements OnInit {
   private userService = inject(UserService);
   private mockSubService = inject(MockSubscriptionService);
   private dataSync = inject(DataSyncService);
+  private http = inject(HttpClient);
 
   async ngOnInit(): Promise<void> {
     // Sincronizar lista de usuarios ANTES de login/registro
@@ -296,7 +200,7 @@ export class LoginComponent implements OnInit {
   @ViewChild('passwordInput') passwordInputRef!: ElementRef<HTMLInputElement>;
 
   // View state
-  view: 'login' | 'recover-email' | 'recover-verify' | 'recover-reset' = 'login';
+  view: 'login' | 'recover-email' | 'recover-sent' = 'login';
 
   // Login
   username = '';
@@ -306,12 +210,8 @@ export class LoginComponent implements OnInit {
 
   // Recovery
   recoverEmail = '';
-  foundUserId = '';
-  foundUserHint = '';
-  verifyName = '';
-  newPassword = '';
-  confirmNewPassword = '';
   successMsg = '';
+  isLoading = false;
 
   async login(): Promise<void> {
     // Safari autocomplete can fill fields without updating ngModel.
@@ -399,75 +299,26 @@ export class LoginComponent implements OnInit {
     this.recoverEmail = this.username; // pre-fill if they already typed something
   }
 
-  verifyEmail(): void {
-    this.errorMsg = '';
-    // Force reload from localStorage to get latest user list
-    this.userService.reloadUsersFromStorage();
-    const users = this.userService.getAllUsers();
-    const found = users.find(
-      u => u.email?.toLowerCase() === this.recoverEmail.trim().toLowerCase()
-    );
-
-    if (!found) {
-      this.errorMsg = 'No existe una cuenta con ese correo electrónico';
-      return;
-    }
-
-    this.foundUserId = found.id;
-    // Show hint: first name + masked last name
-    const parts = found.name.split(' ');
-    this.foundUserHint = parts[0] + (parts.length > 1 ? ' ' + parts[1][0] + '***' : '');
-    this.view = 'recover-verify';
-  }
-
-  verifyIdentity(): void {
-    this.errorMsg = '';
-    const user = this.userService.getUserById(this.foundUserId);
-    if (!user) return;
-
-    if (this.verifyName.trim().toLowerCase() === user.name.toLowerCase()) {
-      this.view = 'recover-reset';
-      this.showPassword = false;
-    } else {
-      this.errorMsg = 'El nombre no coincide con la cuenta registrada';
-    }
-  }
-
-  async resetPassword(): Promise<void> {
+  async verifyEmail(): Promise<void> {
     this.errorMsg = '';
     this.successMsg = '';
-
-    if (this.newPassword.length < 6) {
-      this.errorMsg = 'La contraseña debe tener al menos 6 caracteres';
-      return;
-    }
-    if (this.newPassword !== this.confirmNewPassword) {
-      this.errorMsg = 'Las contraseñas no coinciden';
-      return;
-    }
-
-    // Hash the password before saving for consistency
-    const hashedPassword = await this.userService.hashPassword(this.newPassword);
-    this.userService.updateUserPassword(this.foundUserId, hashedPassword);
     
-    // CRITICAL: Save to server to persist the password change
+    if (!this.recoverEmail.trim()) {
+      return;
+    }
+
+    this.isLoading = true;
+
     try {
-      await this.dataSync.saveUsersToServer();
-    } catch (err) {
-      console.warn('[Login] Error saving password change to server:', err);
+      const url = `${environment.apiUrl}/auth/forgot-password`;
+      const response = await this.http.post<any>(url, { email: this.recoverEmail.trim() }).toPromise();
+      
+      this.successMsg = response?.message || 'Si el correo existe, se ha enviado un enlace.';
+      this.view = 'recover-sent';
+    } catch (err: any) {
+      this.errorMsg = err.error?.error || 'Error al intentar enviar el correo. Intenta de nuevo.';
+    } finally {
+      this.isLoading = false;
     }
-    
-    this.successMsg = '✅ Contraseña actualizada correctamente';
-
-    // Auto-redirect to login after 2s
-    setTimeout(() => {
-      this.view = 'login';
-      this.username = this.recoverEmail;
-      this.password = '';
-      this.successMsg = '';
-      this.errorMsg = '';
-      this.newPassword = '';
-      this.confirmNewPassword = '';
-    }, 2000);
   }
 }

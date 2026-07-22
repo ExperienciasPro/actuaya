@@ -26,6 +26,15 @@ export const routes: Routes = [
   },
 
   // ═══════════════════════════════════════════
+  // 🔑  RESET PASSWORD — /reset-password/:token
+  // ═══════════════════════════════════════════
+  {
+    path: 'reset-password/:token',
+    loadComponent: () =>
+      import('./features/reset-password/reset-password').then((m) => m.ResetPasswordComponent),
+  },
+
+  // ═══════════════════════════════════════════
   // 👋  WELCOME / REGISTRO — /welcome
   // ═══════════════════════════════════════════
   {

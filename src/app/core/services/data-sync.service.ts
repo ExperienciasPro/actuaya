@@ -361,6 +361,12 @@ export class DataSyncService {
             if (localUser.isActive !== undefined && localUser.isActive !== u.isActive) {
               merged.isActive = localUser.isActive;
             }
+            // Preserve local lastLogin if it's more recent than server's
+            const localLoginTime = new Date(localUser.lastLogin || 0).getTime();
+            const serverLoginTime = new Date(u.lastLogin || 0).getTime();
+            if (localLoginTime > serverLoginTime) {
+              merged.lastLogin = localUser.lastLogin;
+            }
             mergedMap.set(u.id, merged);
           }
         } else {
@@ -527,6 +533,15 @@ export class DataSyncService {
         const keyCount = Object.keys(payload).length;
         if (keyCount === 0) return;
 
+        // Merge um_users with server data to preserve server-only fields (e.g. password)
+        if (payload['um_users']) {
+          try {
+            await this.mergeUsersBeforeSave(payload);
+          } catch (mergeErr) {
+            console.warn('[DataSync] Error merging users before save:', mergeErr);
+          }
+        }
+
         console.log(`[DataSync] Guardando ${keyCount} claves al servidor...`);
         const response = await fetch(`${this.API_URL}?key=_bulk`, {
           method: 'POST',
@@ -547,6 +562,49 @@ export class DataSyncService {
         }
       }
     }
+  }
+
+  /**
+   * Before saving um_users to server, fetch server version and preserve
+   * any fields that exist on the server but not locally (e.g. password set via backend reset).
+   */
+  private async mergeUsersBeforeSave(payload: Record<string, unknown>): Promise<void> {
+    const localUsers = payload['um_users'] as any[];
+    if (!Array.isArray(localUsers) || localUsers.length === 0) return;
+
+    const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
+      headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+      cache: 'no-store',
+    });
+    if (!response.ok) return;
+
+    const serverUsers = await response.json();
+    if (!Array.isArray(serverUsers) || serverUsers.length === 0) return;
+
+    // Build server user map by ID
+    const serverMap = new Map<string, any>();
+    for (const u of serverUsers) {
+      if (u?.id) serverMap.set(u.id, u);
+    }
+
+    // For each local user, preserve server-only fields
+    // Fields the frontend never manages but the backend might set
+    const SERVER_PROTECTED_FIELDS = ['password'];
+
+    for (let i = 0; i < localUsers.length; i++) {
+      const localUser = localUsers[i];
+      if (!localUser?.id) continue;
+      const serverUser = serverMap.get(localUser.id);
+      if (!serverUser) continue;
+
+      for (const field of SERVER_PROTECTED_FIELDS) {
+        if (serverUser[field] && !localUser[field]) {
+          localUsers[i][field] = serverUser[field];
+        }
+      }
+    }
+
+    payload['um_users'] = localUsers;
   }
 
   /**

@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Security Middleware ─────────────────────
 app.use(helmet());
+app.set('trust proxy', 1); // Trust first proxy (Nginx) — required for express-rate-limit behind reverse proxy
 
 // ─── Rate Limiting ───────────────────────────
 const globalLimiter = rateLimit({
@@ -42,6 +43,7 @@ const writeLimiter = rateLimit({
 const ALLOWED_ORIGINS = [
   process.env.CORS_ORIGIN || 'https://www.actuaya.co',
   'https://actuaya.co',            // Sin www
+  'https://www.actuaya.co',        // Con www
   'http://localhost:4200',   // Angular dev server
   'http://localhost:3000',   // Local testing
 ];
@@ -85,7 +87,9 @@ apiRouter.get('/status', (req, res) => {
 
 // Data persistence (replaces data.php)
 const dataRoutes = require('./routes/data.routes');
+const authRoutes = require('./routes/auth.routes');
 apiRouter.use('/data', writeLimiter, dataRoutes);
+apiRouter.use('/auth', writeLimiter, authRoutes);
 
 // Mount only under /api (HAL-07: removed duplicate root mount)
 app.use('/api', apiRouter);
