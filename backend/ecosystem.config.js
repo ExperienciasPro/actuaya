@@ -11,16 +11,16 @@
 module.exports = {
   apps: [
     {
-      name: 'actuaya-backend',
+      name: 'api.actuaya.co',
       script: 'server.js',
-      cwd: '/var/www/actuaya-backend',
+      cwd: '/var/www/api.actuaya.co',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 3005,
       },
       // Logging
       error_file: '/var/log/pm2/actuaya-backend-error.log',
