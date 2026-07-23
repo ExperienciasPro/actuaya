@@ -87,10 +87,14 @@ export class MenuService {
   }
 
   // ─── Helpers ────────────────────────────
-  private load<T>(key: string, fallback: T): T {
+  private load<T extends object>(key: string, fallback: T): T {
     try {
-      const stored = this.storage.get<T>(key);
-      return stored !== null && stored !== undefined ? stored : fallback;
+      const stored = this.storage.get<Partial<T>>(key);
+      if (stored !== null && stored !== undefined && typeof stored === 'object') {
+        if (Array.isArray(stored)) return stored as unknown as T;
+        return { ...fallback, ...stored };
+      }
+      return fallback;
     } catch { return fallback; }
   }
 

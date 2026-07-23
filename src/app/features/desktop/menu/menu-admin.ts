@@ -119,11 +119,11 @@ type AdminView = 'items' | 'categories' | 'config';
                   </div>
                   <span class="item-price">{{ fmt(item.price) }}</span>
                   <div class="item-actions">
-                    <button class="btn-avail" (click)="menu.toggleAvailable(item.id)" [title]="item.available ? 'Deshabilitar' : 'Habilitar'">
+                    <button class="btn-avail" (click)="toggleAvailable(item.id)" [title]="item.available ? 'Deshabilitar' : 'Habilitar'">
                       {{ item.available ? '✅' : '❌' }}
                     </button>
                     <button class="btn-edit-item" (click)="startEdit(item)">✏️</button>
-                    <button class="btn-delete-item" (click)="menu.deleteItem(item.id)"><um-icon name="trash" [size]="16"></um-icon></button>
+                    <button class="btn-delete-item" (click)="deleteItem(item.id)"><um-icon name="trash" [size]="16"></um-icon></button>
                   </div>
                 </div>
               }
@@ -214,17 +214,10 @@ type AdminView = 'items' | 'categories' | 'config';
         <!-- Section: Identidad -->
         <div class="card animate-fadeInUp stagger-2">
           <h3>🏪 Identidad del negocio</h3>
-          <div class="form-row-2">
+          <div class="form-row-1">
             <div class="form-field">
               <label>Nombre del negocio</label>
               <input type="text" [(ngModel)]="cfg.businessName" name="bizName" (ngModelChange)="onBusinessNameChange()" />
-            </div>
-            <div class="form-field">
-              <label>Enlace personalizado</label>
-              <div class="slug-input-wrap">
-                <span class="slug-prefix">actuaya.co/menu/</span>
-                <input type="text" class="slug-input" [(ngModel)]="cfg.slug" name="slug" (ngModelChange)="onSlugChange()" placeholder="mi-negocio" />
-              </div>
             </div>
           </div>
           <div class="form-field">
@@ -536,7 +529,6 @@ export class MenuAdminComponent {
       category: this.f.category,
       available: this.f.available,
       imageDataUrl: this.f.imageDataUrl,
-      tags,
     };
     const editing = this.editingItem();
     if (editing) {
@@ -545,6 +537,7 @@ export class MenuAdminComponent {
     } else {
       this.menu.addItem(data);
     }
+    this.hasUnsavedChanges.set(true);
     this.f = this.blankItem();
   }
 
@@ -573,6 +566,7 @@ export class MenuAdminComponent {
     if (!this.cForm.name.trim()) return;
     this.menu.addCategory({ name: this.cForm.name.trim(), emoji: this.cForm.emoji || '🍽️', order: this.cForm.order });
     this.cForm = { name: '', emoji: '🍽️', order: this.menu.categories().length + 1 };
+    this.hasUnsavedChanges.set(true);
   }
 
   deleteCategory(id: string): void {
@@ -581,6 +575,17 @@ export class MenuAdminComponent {
       return;
     }
     this.menu.deleteCategory(id);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  deleteItem(id: string): void {
+    this.menu.deleteItem(id);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  toggleAvailable(id: string): void {
+    this.menu.toggleAvailable(id);
+    this.hasUnsavedChanges.set(true);
   }
 
   itemsInCat(catId: string): MenuItem[] {
