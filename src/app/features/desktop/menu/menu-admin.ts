@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MenuService } from '../../../core/services/menu.service';
+import { DataSyncService } from '../../../core/services/data-sync.service';
 import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 
 import {
@@ -181,10 +182,24 @@ type AdminView = 'items' | 'categories' | 'config';
             <p class="hint" style="margin-top: 0;">Puedes compartir este enlace con tus clientes:</p>
             <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
               <a [href]="publicUrl" target="_blank" class="pub-link" style="font-size: 1rem;">{{ publicUrl }}</a>
-              <button class="btn-copy-link" (click)="copyLink()">
+              
+              <button class="btn-primary" style="padding: 6px 16px; font-size: 0.9rem;" (click)="saveAndPublish()" [disabled]="!hasUnsavedChanges() || isSaving()">
+                @if (isSaving()) {
+                  ⏳ Guardando...
+                } @else if (hasUnsavedChanges()) {
+                  💾 Guardar cambios
+                } @else {
+                  ✅ Cambios guardados
+                }
+              </button>
+
+              <button class="btn-copy-link" (click)="copyLink()" [disabled]="hasUnsavedChanges() || isSaving()">
                 {{ copiedLink() ? '✅ Copiado' : '📋 Copiar enlace' }}
               </button>
             </div>
+            @if (hasUnsavedChanges()) {
+              <p style="color: #ea580c; font-size: 0.85rem; margin-top: 12px; margin-bottom: 0;">⚠️ Tienes cambios sin publicar. Haz clic en "Guardar cambios" para que tus clientes puedan verlos y para habilitar el enlace.</p>
+            }
           </div>
         </div>
 
@@ -416,10 +431,13 @@ type AdminView = 'items' | 'categories' | 'config';
 })
 export class MenuAdminComponent {
   menu = inject(MenuService);
+  dataSync = inject(DataSyncService);
 
   currentView = signal<AdminView>('categories');
   editingItem = signal<MenuItem | null>(null);
   copiedLink = signal(false);
+  hasUnsavedChanges = signal(false);
+  isSaving = signal(false);
 
   // Constants for template
   fonts = FONT_FAMILIES;
