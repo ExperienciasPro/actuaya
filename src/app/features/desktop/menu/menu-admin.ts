@@ -435,6 +435,7 @@ export class MenuAdminComponent {
   cForm = { name: '', emoji: '🍽️', order: this.menu.categories().length + 1 };
   // Config form (clone to allow live editing)
   cfg = { ...this.menu.config() };
+  slugManuallyEdited = !!this.cfg.slug;
 
   get publicUrl() {
     return this.cfg.slug 
@@ -449,13 +450,14 @@ export class MenuAdminComponent {
   }
 
   onBusinessNameChange(): void {
-    if (!this.cfg.slug) {
+    if (!this.slugManuallyEdited) {
       this.cfg.slug = this.formatSlug(this.cfg.businessName);
     }
     this.saveConfig();
   }
 
   onSlugChange(): void {
+    this.slugManuallyEdited = true;
     this.cfg.slug = this.formatSlug(this.cfg.slug || '');
     this.saveConfig();
   }
