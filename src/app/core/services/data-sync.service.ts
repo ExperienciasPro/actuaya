@@ -565,7 +565,15 @@ export class DataSyncService {
         const result = await response.json();
         console.log('[DataSync] Respuesta:', result);
         // Server now has our latest data — safe to clear local modification tracking
-        this.locallyModifiedKeys.clear();
+        for (const k of Object.keys(payload)) {
+          if (k.endsWith(`_${userId}`)) {
+            const baseKey = k.substring(0, k.length - userId.length - 1);
+            this.locallyModifiedKeys.delete(baseKey);
+            this.locallyModifiedKeys.delete(k);
+          } else {
+            this.locallyModifiedKeys.delete(k);
+          }
+        }
         return; // Éxito
       } catch (e) {
         console.warn(`[DataSync] Error guardando (intento ${attempt}/3):`, e);
@@ -621,7 +629,7 @@ export class DataSyncService {
 
   /**
    * Guardado de emergencia para beforeunload/pagehide.
-   * Usa navigator.sendBeacon() que es confiable durante el cierre de pestaña.
+   * Usa fetch keepalive en vez de beacon con json (para evitar CORS preflight fails).
    */
   saveToServerBeacon(): void {
     if (!this.hasSynced) return;
@@ -632,17 +640,20 @@ export class DataSyncService {
       const payload = this.collectLocalData();
       if (Object.keys(payload).length === 0) return;
 
-      const payloadWithToken = {
-        ...payload,
-        token: this.AUTH_TOKEN
-      };
-
-      const blob = new Blob([JSON.stringify(payloadWithToken)], { type: 'application/json' });
       const url = `${this.API_URL}?key=_bulk`;
-      navigator.sendBeacon(url, blob);
-      console.log('[DataSync] Beacon enviado al cerrar pestaña');
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': this.AUTH_TOKEN,
+        },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {});
+      
+      console.log('[DataSync] Petición keepalive enviada al cerrar pestaña');
     } catch (e) {
-      console.warn('[DataSync] Error en beacon:', e);
+      console.warn('[DataSync] Error en saveToServerBeacon:', e);
     }
   }
 
