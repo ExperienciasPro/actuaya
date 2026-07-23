@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { NgTemplateOutlet } from '@angular/common';
@@ -151,14 +151,10 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
   `,
   styleUrl: 'goal-list.scss',
 })
-export class GoalListComponent implements OnInit {
+export class GoalListComponent {
   private goalService = inject(GoalService);
   private taskService = inject(TaskService);
   private dataSync = inject(DataSyncService);
-
-  ngOnInit() {
-    this.dataSync.syncFromServer();
-  }
 
   goals = this.goalService.goals;
   activeCount = computed(() => this.goalService.activeGoals().length);
@@ -249,6 +245,8 @@ export class GoalListComponent implements OnInit {
     const goal = this.deletingGoal();
     if (goal) {
       this.goalService.delete(goal.id);
+      // Push deletion to server immediately (bypass 300ms debounce)
+      this.dataSync.saveToServerImmediate();
     }
     this.showDeleteDialog.set(false);
     this.deletingGoal.set(null);

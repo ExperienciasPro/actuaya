@@ -35,6 +35,7 @@ export class DataSyncService {
   private hasSynced = false;
   private isSyncing = false; // Fix A1: mutex para evitar llamadas concurrentes
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingSave = false; // Track saves attempted before initial sync
 
   /**
    * Keys that are LOCAL to the current browser session and must NEVER be
@@ -251,6 +252,13 @@ export class DataSyncService {
 
             console.log(`[DataSync] Hidratadas ${restored} claves del servidor`);
             this.hasSynced = true;
+
+            // Flush any saves that were attempted before sync completed
+            if (this.pendingSave) {
+              this.pendingSave = false;
+              console.log('[DataSync] Flushing pending save after initial sync...');
+              setTimeout(() => this.saveToServer(), 500);
+            }
           });
 
           // 3. Auto-migración servidor: re-guardar con claves scoped
@@ -507,7 +515,10 @@ export class DataSyncService {
    * Usa debounce para no hacer demasiadas peticiones.
    */
   saveToServerDebounced(): void {
-    if (!this.hasSynced) return;
+    if (!this.hasSynced) {
+      this.pendingSave = true;
+      return;
+    }
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
@@ -516,9 +527,23 @@ export class DataSyncService {
     }, 300);
   }
 
+  /** Bypass debounce — use for critical operations like deletions */
+  saveToServerImmediate(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.saveToServer();
+  }
+
   /** Guarda inmediatamente al servidor */
   async saveToServer(): Promise<void> {
-    if (!this.hasSynced) return;
+    if (!this.hasSynced) {
+      // Don't silently discard — mark as pending so it runs after sync
+      this.pendingSave = true;
+      console.log('[DataSync] Save deferred: initial sync not complete yet.');
+      return;
+    }
 
     const userId = this.storage.getActiveUserId();
     if (!userId) {
