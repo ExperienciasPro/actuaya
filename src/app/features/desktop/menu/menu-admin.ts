@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService } from '../../../core/services/menu.service';
 import { DataSyncService } from '../../../core/services/data-sync.service';
@@ -14,7 +15,7 @@ type AdminView = 'items' | 'categories' | 'config';
 @Component({
   selector: 'um-menu-admin',
   standalone: true,
-  imports: [FormsModule, UmIconComponent],
+  imports: [FormsModule, UmIconComponent, NgClass],
   template: `
     <div class="menu-admin-page">
       <div class="page-header animate-fadeInUp">
