@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { StorageService } from './storage.service';
 import { MenuItem, MenuCategory, MenuConfig, DEFAULT_MENU_CONFIG } from '../models/menu.model';
 
 const ITEMS_KEY = 'um_menu_items';
@@ -7,6 +8,7 @@ const CFG_KEY   = 'um_menu_config';
 
 @Injectable({ providedIn: 'root' })
 export class MenuService {
+  private storage = inject(StorageService);
 
   // ─── State ──────────────────────────────
   items      = signal<MenuItem[]>(this.load<MenuItem[]>(ITEMS_KEY, []));
@@ -35,9 +37,13 @@ export class MenuService {
     [...this.categories()].sort((a, b) => a.order - b.order)
   );
 
+  private generateId(): string {
+    return 'm-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+  }
+
   // ─── Items CRUD ─────────────────────────
   addItem(data: Omit<MenuItem, 'id'>): void {
-    const item: MenuItem = { ...data, id: crypto.randomUUID() };
+    const item: MenuItem = { ...data, id: this.generateId() };
     this.items.update(list => [item, ...list]);
     this.persist(ITEMS_KEY, this.items());
   }
@@ -59,7 +65,7 @@ export class MenuService {
 
   // ─── Categories CRUD ────────────────────
   addCategory(data: Omit<MenuCategory, 'id'>): void {
-    const cat: MenuCategory = { ...data, id: crypto.randomUUID() };
+    const cat: MenuCategory = { ...data, id: this.generateId() };
     this.categories.update(list => [...list, cat]);
     this.persist(CATS_KEY, this.categories());
   }
@@ -83,13 +89,13 @@ export class MenuService {
   // ─── Helpers ────────────────────────────
   private load<T>(key: string, fallback: T): T {
     try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : fallback;
+      const stored = this.storage.get<T>(key);
+      return stored !== null && stored !== undefined ? stored : fallback;
     } catch { return fallback; }
   }
 
   private persist(key: string, value: unknown): void {
-    localStorage.setItem(key, JSON.stringify(value));
+    this.storage.set(key, value);
   }
 
   // fix: addItem update pattern correction
