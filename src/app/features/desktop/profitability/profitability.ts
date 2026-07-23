@@ -1,7 +1,8 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe, PercentPipe } from '@angular/common';
 import { CurrencyInputDirective } from '../../../shared/directives/currency-input.directive';
+import { StorageService } from '../../../core/services/storage.service';
 
 interface CostItem {
   id: string;
@@ -32,11 +33,11 @@ interface CostItem {
             <h3>📦 Producto o Servicio</h3>
             <div class="form-field">
               <label>Nombre</label>
-              <input type="text" [(ngModel)]="productName" placeholder="Ej: Consultoría de 3 meses" />
+              <input type="text" [ngModel]="productName()" (ngModelChange)="setProductName($event)" placeholder="Ej: Consultoría de 3 meses" />
             </div>
             <div class="form-field">
               <label>Unidades esperadas a vender (mes)</label>
-              <input type="number" [ngModel]="unitsSold()" (ngModelChange)="unitsSold.set($event)" placeholder="1" min="1" />
+              <input type="number" [ngModel]="unitsSold()" (ngModelChange)="setUnitsSold($event)" placeholder="1" min="1" />
             </div>
           </div>
 
@@ -99,7 +100,7 @@ interface CostItem {
               <input
                 type="range"
                 [ngModel]="desiredMargin()"
-                (ngModelChange)="desiredMargin.set($event)"
+                (ngModelChange)="setDesiredMargin($event)"
                 min="1" max="80" step="1"
                 class="margin-slider" />
               <span class="margin-value">{{ desiredMargin() }}%</span>
@@ -176,20 +177,20 @@ interface CostItem {
   styleUrl: 'profitability.scss',
 })
 export class ProfitabilityComponent {
-  productName = '';
-  unitsSold = signal(10);
-  desiredMargin = signal(30);
+  private storage = inject(StorageService);
 
-  fixedCosts = signal<CostItem[]>([
-    { id: crypto.randomUUID(), name: 'Arriendo', amount: 2000000 },
-    { id: crypto.randomUUID(), name: 'Servicios públicos', amount: 400000 },
-    { id: crypto.randomUUID(), name: 'Nómina', amount: 5000000 },
-  ]);
+  private readonly FK = 'um_fixed_costs';
+  private readonly VK = 'um_variable_costs';
+  private readonly PNK = 'um_profit_product_name';
+  private readonly USK = 'um_profit_units_sold';
+  private readonly DMK = 'um_profit_desired_margin';
 
-  variableCosts = signal<CostItem[]>([
-    { id: crypto.randomUUID(), name: 'Materiales', amount: 50000 },
-    { id: crypto.randomUUID(), name: 'Envío', amount: 15000 },
-  ]);
+  productName = signal<string>(this.storage.get<string>(this.PNK) ?? '');
+  unitsSold = signal<number>(this.storage.get<number>(this.USK) ?? 1);
+  desiredMargin = signal<number>(this.storage.get<number>(this.DMK) ?? 30);
+
+  fixedCosts = signal<CostItem[]>(this.storage.get<CostItem[]>(this.FK) ?? []);
+  variableCosts = signal<CostItem[]>(this.storage.get<CostItem[]>(this.VK) ?? []);
 
   totalFixed = computed(() =>
     this.fixedCosts().reduce((sum, c) => sum + (c.amount || 0), 0)
@@ -248,15 +249,32 @@ export class ProfitabilityComponent {
     });
   });
 
+  setProductName(value: string): void {
+    this.productName.set(value);
+    this.storage.set(this.PNK, value);
+  }
+
+  setUnitsSold(value: number): void {
+    this.unitsSold.set(value);
+    this.storage.set(this.USK, value);
+  }
+
+  setDesiredMargin(value: number): void {
+    this.desiredMargin.set(value);
+    this.storage.set(this.DMK, value);
+  }
+
   addFixed(): void {
     this.fixedCosts.update(list => [
       ...list,
       { id: crypto.randomUUID(), name: '', amount: 0 },
     ]);
+    this.persistFixed();
   }
 
   removeFixed(id: string): void {
     this.fixedCosts.update(list => list.filter(c => c.id !== id));
+    this.persistFixed();
   }
 
   addVariable(): void {
@@ -264,17 +282,29 @@ export class ProfitabilityComponent {
       ...list,
       { id: crypto.randomUUID(), name: '', amount: 0 },
     ]);
+    this.persistVariable();
   }
 
   removeVariable(id: string): void {
     this.variableCosts.update(list => list.filter(c => c.id !== id));
+    this.persistVariable();
   }
 
   notifyFixed(): void {
     this.fixedCosts.update(list => [...list]);
+    this.persistFixed();
   }
 
   notifyVariable(): void {
     this.variableCosts.update(list => [...list]);
+    this.persistVariable();
+  }
+
+  private persistFixed(): void {
+    this.storage.set(this.FK, this.fixedCosts());
+  }
+
+  private persistVariable(): void {
+    this.storage.set(this.VK, this.variableCosts());
   }
 }

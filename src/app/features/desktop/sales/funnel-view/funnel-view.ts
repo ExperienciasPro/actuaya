@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { SalesService } from '../../../../core/services/sales.service';
+import { DataSyncService } from '../../../../core/services/data-sync.service';
 import { ProductDataService } from '../../../../core/services/product.service';
 import { Deal } from '../../../../core/models/sales-funnel.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
@@ -117,6 +118,7 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 })
 export class FunnelViewComponent {
   private salesService = inject(SalesService);
+  private dataSync = inject(DataSyncService);
   private productService = inject(ProductDataService);
   private route = inject(ActivatedRoute);
 
@@ -184,6 +186,7 @@ export class FunnelViewComponent {
 
   executeDeleteDeal(): void {
     this.salesService.deleteDeal(this.deletingDealId());
+    this.dataSync.saveToServerImmediate();
     this.showDeleteDealDialog.set(false);
   }
 }

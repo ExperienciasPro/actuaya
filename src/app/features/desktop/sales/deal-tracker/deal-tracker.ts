@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SalesService } from '../../../../core/services/sales.service';
+import { DataSyncService } from '../../../../core/services/data-sync.service';
 import { Deal, DealStatus } from '../../../../core/models/sales-funnel.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
@@ -101,6 +102,7 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 })
 export class DealTrackerComponent {
   private salesService = inject(SalesService);
+  private dataSync = inject(DataSyncService);
 
   statusFilter = signal<DealStatus | 'all'>('all');
   statusFilters: { value: DealStatus | 'all'; label: string }[] = [
@@ -153,6 +155,7 @@ export class DealTrackerComponent {
 
   executeDelete(): void {
     this.salesService.deleteDeal(this.deletingId());
+    this.dataSync.saveToServerImmediate();
     this.showDelete.set(false);
   }
 }

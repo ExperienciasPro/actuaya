@@ -1,8 +1,9 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { TestsDataService, TestItem } from '../../shared/tests-data.service';
+import { StorageService } from '../../core/services/storage.service';
 
 @Component({
   selector: 'app-admin-formularios',
@@ -910,33 +911,18 @@ export class AdminFormulariosComponent implements OnInit {
   @Input() wizardMode: boolean = false;
   vistaActual: 'galeria' | 'constructor' | 'papelera' = 'galeria';
 
-  // Formularios simulados para la galería
-  formulariosMock = [
-    {
-      id: 1,
-      nombre: 'Formulario Básico',
-      descripcion: 'Recopila los datos mínimos y esenciales para contactar e identificar rápidamente al candidato.',
-      campos: ['Nombre', 'Correo', 'Teléfono'],
-      isDeleted: false,
-      deletedAt: null as Date | null
-    },
-    {
-      id: 2,
-      nombre: 'Datos Demográficos Compuestos',
-      descripcion: 'Permite un perfilamiento mucho más profundo incluyendo residencia, estudios y trayectoria profesional.',
-      campos: ['Nombre', 'Correo', 'Edad', 'Ciudad', 'Ocupación'],
-      isDeleted: false,
-      deletedAt: null
-    },
-    {
-      id: 3,
-      nombre: 'Test de Clima Organizacional',
-      descripcion: 'Encuesta anónima para conocer la percepción actual del ambiente laboral interno.',
-      campos: ['Departamento', 'Años antigüedad', 'Satisfacción'],
-      isDeleted: false,
-      deletedAt: null
-    }
-  ];
+  // Formularios persistidos en localStorage
+  private storage = inject(StorageService);
+  private readonly STORAGE_KEY = 'um_formularios';
+  formulariosMock: { id: number; nombre: string; descripcion: string; campos: string[]; isDeleted: boolean; deletedAt: Date | null }[] = [];
+
+  private loadFromStorage(): typeof this.formulariosMock {
+    return this.storage.get<typeof this.formulariosMock>(this.STORAGE_KEY) || [];
+  }
+
+  private persist(): void {
+    this.storage.set(this.STORAGE_KEY, this.formulariosMock);
+  }
 
   testsLocales: TestItem[] = [];
   mostrandoModalVincular: boolean = false;
@@ -947,6 +933,8 @@ export class AdminFormulariosComponent implements OnInit {
   constructor(private testsService: TestsDataService) { }
 
   ngOnInit(): void {
+    this.formulariosMock = this.loadFromStorage();
+
     if (this.wizardMode) {
       this.vistaActual = 'constructor';
       // Pre-cargar campos básicos en wizard mode
@@ -1019,6 +1007,7 @@ export class AdminFormulariosComponent implements OnInit {
     if (confirm(`¿Estás seguro de que deseas enviar la plantilla "${form.nombre}" a la papelera?`)) {
       form.isDeleted = true;
       form.deletedAt = new Date();
+      this.persist();
       alert('Formulario movido a la papelera.');
     }
   }
@@ -1026,6 +1015,7 @@ export class AdminFormulariosComponent implements OnInit {
   restaurarFormulario(form: any) {
     form.isDeleted = false;
     form.deletedAt = null;
+    this.persist();
     alert('Formulario restaurado con éxito.');
   }
 
@@ -1034,6 +1024,7 @@ export class AdminFormulariosComponent implements OnInit {
       const idx = this.formulariosMock.findIndex(f => f.id === form.id);
       if (idx > -1) {
         this.formulariosMock.splice(idx, 1);
+        this.persist();
         alert('Formulario eliminado de la base de datos.');
       }
     }
