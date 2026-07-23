@@ -457,6 +457,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./public-portal/menu-public/menu-public').then((m) => m.MenuPublicComponent),
   },
+  {
+    path: 'menu/:slug',
+    loadComponent: () =>
+      import('./public-portal/menu-public/menu-public').then((m) => m.MenuPublicComponent),
+  },
 
   {
     path: '**',

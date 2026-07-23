@@ -181,12 +181,19 @@ type AdminView = 'items' | 'categories' | 'config';
           <div class="form-row-2">
             <div class="form-field">
               <label>Nombre del negocio</label>
-              <input type="text" [(ngModel)]="cfg.businessName" name="bizName" (ngModelChange)="saveConfig()" />
+              <input type="text" [(ngModel)]="cfg.businessName" name="bizName" (ngModelChange)="onBusinessNameChange()" />
             </div>
             <div class="form-field">
-              <label>Eslogan</label>
-              <input type="text" [(ngModel)]="cfg.tagline" name="tagline" (ngModelChange)="saveConfig()" />
+              <label>Enlace personalizado</label>
+              <div class="slug-input-wrap">
+                <span class="slug-prefix">actuaya.co/menu/</span>
+                <input type="text" class="slug-input" [(ngModel)]="cfg.slug" name="slug" (ngModelChange)="onSlugChange()" placeholder="mi-negocio" />
+              </div>
             </div>
+          </div>
+          <div class="form-field">
+            <label>Eslogan</label>
+            <input type="text" [(ngModel)]="cfg.tagline" name="tagline" (ngModelChange)="saveConfig()" />
           </div>
           <div class="form-row-2">
             <div class="form-field">
@@ -424,7 +431,30 @@ export class MenuAdminComponent {
   cfg = { ...this.menu.config() };
 
   get publicUrl() {
-    return `${window.location.origin}/menu`;
+    return this.cfg.slug 
+      ? `${window.location.origin}/menu/${this.cfg.slug}`
+      : `${window.location.origin}/menu`;
+  }
+
+  onBusinessNameChange(): void {
+    if (!this.cfg.slug) {
+      this.cfg.slug = this.formatSlug(this.cfg.businessName);
+    }
+    this.saveConfig();
+  }
+
+  onSlugChange(): void {
+    this.cfg.slug = this.formatSlug(this.cfg.slug || '');
+    this.saveConfig();
+  }
+
+  private formatSlug(val: string): string {
+    return val
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove accents
+      .replace(/[^a-z0-9]+/g, '-') // replace non-alphanumeric with dash
+      .replace(/^-+|-+$/g, ''); // remove leading/trailing dashes
   }
 
   // ── Item helpers ─────────────────────────

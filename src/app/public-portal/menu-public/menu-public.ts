@@ -1,6 +1,9 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { MenuService } from '../../core/services/menu.service';
-import { MenuConfig } from '../../core/models/menu.model';
+import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../core/models/menu.model';
 
 @Component({
   selector: 'um-menu-public',
@@ -65,9 +68,9 @@ import { MenuConfig } from '../../core/models/menu.model';
       }
 
       <!-- Category navigation pills -->
-      @if (menu.sortedCategories().length > 1) {
+      @if (sortedCategories().length > 1 && !loading() && !error()) {
         <nav class="cat-nav">
-          @for (cat of menu.sortedCategories(); track cat.id) {
+          @for (cat of sortedCategories(); track cat.id) {
             @if (hasCatItems(cat.id)) {
               <a class="cat-pill" [href]="'#cat-' + cat.id">{{ cat.emoji }} {{ cat.name }}</a>
             }
@@ -76,13 +79,22 @@ import { MenuConfig } from '../../core/models/menu.model';
       }
 
       <!-- Categories and items -->
-      <main class="menu-body">
-        @for (cat of menu.sortedCategories(); track cat.id) {
-          @if (hasCatItems(cat.id)) {
-            <section class="menu-section" [id]="'cat-' + cat.id">
-              <h2 class="section-title">{{ cat.emoji }} {{ cat.name }}</h2>
-              <div class="items-container" [class.with-images]="cfg().showImages">
-                @for (item of itemsForCat(cat.id); track item.id) {
+      @if (loading()) {
+        <div class="loading-state">
+          <p>Cargando menú...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <p>⚠️ No se pudo cargar el menú. Asegúrate de que el enlace sea correcto.</p>
+        </div>
+      } @else {
+        <main class="menu-body">
+          @for (cat of sortedCategories(); track cat.id) {
+            @if (hasCatItems(cat.id)) {
+              <section class="menu-section" [id]="'cat-' + cat.id">
+                <h2 class="section-title">{{ cat.emoji }} {{ cat.name }}</h2>
+                <div class="items-container" [class.with-images]="cfg().showImages">
+                  @for (item of itemsForCat(cat.id); track item.id) {
                   <div class="menu-item-card">
                     @if (cfg().showImages && item.imageDataUrl) {
                       <img class="item-photo" [src]="item.imageDataUrl" [alt]="item.name" loading="lazy" />
@@ -110,14 +122,14 @@ import { MenuConfig } from '../../core/models/menu.model';
               </div>
             </section>
           }
-        }
 
-        @if (!menu.availableItems().length) {
-          <div class="empty-menu">
-            <p>🍽️ La carta estará disponible pronto.</p>
-          </div>
-        }
-      </main>
+          @if (!availableItems().length) {
+            <div class="empty-menu">
+              <p>🍽️ La carta estará disponible pronto.</p>
+            </div>
+          }
+        </main>
+      }
 
       <!-- Footer -->
       @if (cfg().footerNote) {
@@ -476,11 +488,62 @@ import { MenuConfig } from '../../core/models/menu.model';
       opacity: 0.6;
       strong { color: var(--brand); }
     }
+    
+    .loading-state, .error-state {
+      text-align: center;
+      padding: 60px 24px;
+      font-size: 1.1rem;
+      color: var(--text-sec);
+    }
   `],
 })
-export class MenuPublicComponent {
+export class MenuPublicComponent implements OnInit {
   menu = inject(MenuService);
-  cfg  = this.menu.config;
+  route = inject(ActivatedRoute);
+  http = inject(HttpClient);
+
+  // Local state for fetched data
+  fetchedCfg = signal<MenuConfig | null>(null);
+  fetchedItems = signal<MenuItem[] | null>(null);
+  fetchedCats = signal<MenuCategory[] | null>(null);
+
+  loading = signal(true);
+  error = signal(false);
+
+  // Computed signals that fallback to local MenuService for preview
+  cfg = computed(() => this.fetchedCfg() || this.menu.config());
+  availableItems = computed(() => this.fetchedItems() || this.menu.availableItems());
+  sortedCategories = computed(() => this.fetchedCats() || this.menu.sortedCategories());
+
+  ngOnInit() {
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (slug) {
+      this.fetchMenu(slug);
+    } else {
+      // Preview mode (no slug in URL)
+      this.loading.set(false);
+    }
+  }
+
+  fetchMenu(slug: string) {
+    this.loading.set(true);
+    this.http.get<any>(`${environment.apiUrl}/menu/${slug}`).subscribe({
+      next: (data) => {
+        this.fetchedCfg.set(data.config || DEFAULT_MENU_CONFIG);
+        // We only care about available items for the public view
+        const items: MenuItem[] = data.items || [];
+        this.fetchedItems.set(items.filter(i => i.available !== false));
+        
+        const cats: MenuCategory[] = data.categories || [];
+        this.fetchedCats.set(cats.sort((a, b) => (a.order || 0) - (b.order || 0)));
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set(true);
+        this.loading.set(false);
+      }
+    });
+  }
 
   fontFamily = computed(() => {
     const ff = this.cfg().fontFamily || 'Inter';
@@ -519,11 +582,11 @@ export class MenuPublicComponent {
   }
 
   hasCatItems(catId: string): boolean {
-    return this.menu.availableItems().some(i => i.category === catId);
+    return this.availableItems().some(i => i.category === catId);
   }
 
   itemsForCat(catId: string) {
-    return this.menu.availableItems().filter(i => i.category === catId);
+    return this.availableItems().filter(i => i.category === catId);
   }
 
   fmt(price: number): string {

@@ -154,6 +154,22 @@ router.post('/', async (req, res) => {
         if (!/^[a-zA-Z0-9_-]+$/.test(dataKey)) continue;
         savedKeys.push(dataKey);
 
+        // ── SLUG MAPPING para Menú Público ──
+        if (dataKey.startsWith('um_menu_config_')) {
+          if (dataValue && dataValue.slug) {
+            const userId = dataKey.split('um_menu_config_')[1];
+            if (userId && /^[a-z0-9-]+$/.test(dataValue.slug)) {
+              operations.push({
+                updateOne: {
+                  filter: { key: `menu_slug_${dataValue.slug}` },
+                  update: { $set: { key: `menu_slug_${dataValue.slug}`, value: { userId }, updatedAt: new Date() } },
+                  upsert: true,
+                },
+              });
+            }
+          }
+        }
+
         // ── MERGE para listas de usuarios (um_users) ──
         // En vez de sobreescribir, fusionar por ID para evitar pérdida
         // cuando múltiples navegadores sincronizan al mismo tiempo.

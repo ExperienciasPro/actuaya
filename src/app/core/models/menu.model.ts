@@ -30,9 +30,11 @@ export type MenuFontSize = 'normal' | 'large' | 'xlarge';
 export interface MenuConfig {
   businessName: string;
   tagline: string;
+  slug?: string;
+  logoDataUrl?: string;
+  coverImageDataUrl?: string;
   primaryColor: string;
   secondaryColor: string;
-  logoDataUrl?: string;
   currency: string;       // 'COP', 'USD', 'MXN', etc.
   showImages: boolean;
   showPrices: boolean;

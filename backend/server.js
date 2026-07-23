@@ -90,6 +90,7 @@ const dataRoutes = require('./routes/data.routes');
 const authRoutes = require('./routes/auth.routes');
 apiRouter.use('/data', writeLimiter, dataRoutes);
 apiRouter.use('/auth', writeLimiter, authRoutes);
+apiRouter.use('/menu', require('./routes/menu.routes'));
 
 // Mount only under /api (HAL-07: removed duplicate root mount)
 app.use('/api', apiRouter);
