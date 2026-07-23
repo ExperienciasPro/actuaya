@@ -20,7 +20,7 @@ module.exports = {
       max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
-        PORT: 3005,
+        PORT: '3005',
       },
       // Logging
       error_file: '/var/log/pm2/actuaya-backend-error.log',

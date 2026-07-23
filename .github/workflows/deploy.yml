@@ -97,9 +97,10 @@ jobs:
         run: |
           cd /var/www/api.actuaya.co
 
-          # Reiniciar si ya existe, sino iniciar
-          pm2 restart api.actuaya.co 2>/dev/null || \
-          pm2 start ecosystem.config.js --name api.actuaya.co
+          # Remove any existing instance to ensure clean env start
+          pm2 delete api.actuaya.co 2>/dev/null || true
+          pm2 delete actuaya-backend 2>/dev/null || true
+          pm2 start ecosystem.config.js
 
           pm2 save
           echo "✅ Backend reiniciado"
