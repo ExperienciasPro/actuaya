@@ -28,8 +28,8 @@ type AdminView = 'items' | 'categories' | 'config';
 
       <!-- Tabs -->
       <div class="menu-tabs animate-fadeInUp stagger-1">
-        <button class="tab-btn" [class.active]="currentView() === 'items'" (click)="currentView.set('items')">🍴 Platillos</button>
         <button class="tab-btn" [class.active]="currentView() === 'categories'" (click)="currentView.set('categories')">📂 Categorías</button>
+        <button class="tab-btn" [class.active]="currentView() === 'items'" (click)="currentView.set('items')">🍴 Platillos</button>
         <button class="tab-btn" [class.active]="currentView() === 'config'" (click)="currentView.set('config')">⚙️ Apariencia</button>
       </div>
 
@@ -405,7 +405,7 @@ type AdminView = 'items' | 'categories' | 'config';
 export class MenuAdminComponent {
   menu = inject(MenuService);
 
-  currentView = signal<AdminView>('items');
+  currentView = signal<AdminView>('categories');
   editingItem = signal<MenuItem | null>(null);
 
   // Constants for template
