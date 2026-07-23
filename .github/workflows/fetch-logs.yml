@@ -1,0 +1,14 @@
+name: Fetch PM2 Logs
+on:
+  push:
+    branches:
+      - main
+jobs:
+  fetch_logs:
+    runs-on: [self-hosted, backend]
+    steps:
+      - name: Get PM2 Logs
+        run: |
+          cat /var/log/pm2/actuaya-backend-error.log | tail -n 100
+          cat /var/log/pm2/actuaya-backend-out.log | tail -n 100
+          pm2 status
