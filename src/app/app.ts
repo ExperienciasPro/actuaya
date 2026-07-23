@@ -47,6 +47,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.storage.set = function<T>(key: string, value: T) {
       originalSet(key, value);
       if (key.startsWith('um_')) {
+        // Track this key as locally modified so syncFromServer won't overwrite it
+        syncRef.trackLocalModification(key);
         syncRef.saveToServerDebounced();
       }
     };

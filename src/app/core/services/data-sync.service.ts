@@ -36,6 +36,8 @@ export class DataSyncService {
   private isSyncing = false; // Fix A1: mutex para evitar llamadas concurrentes
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingSave = false; // Track saves attempted before initial sync
+  /** Tracks keys modified locally (via storage.set) since last syncFromServer */
+  private locallyModifiedKeys = new Set<string>();
 
   /**
    * Keys that are LOCAL to the current browser session and must NEVER be
@@ -237,6 +239,12 @@ export class DataSyncService {
 
               const val = getValue(baseKey);
               if (val !== undefined) {
+                // Protect locally-modified keys from being overwritten by stale server data
+                const resolvedKey = `${baseKey}_${userId}`;
+                if (this.locallyModifiedKeys.has(baseKey) || this.locallyModifiedKeys.has(resolvedKey)) {
+                  console.log(`[DataSync] Skipping overwrite of '${baseKey}' — modified locally since sync started`);
+                  continue;
+                }
                 // storage.set('um_goals', data) → internamente escribe um_goals_sa-001
                 this.storage.set(baseKey, val);
                 restored++;
@@ -514,6 +522,11 @@ export class DataSyncService {
    * Guarda TODOS los datos de localStorage al servidor.
    * Usa debounce para no hacer demasiadas peticiones.
    */
+  /** Mark a key as locally modified — prevents syncFromServer from overwriting it */
+  trackLocalModification(key: string): void {
+    this.locallyModifiedKeys.add(key);
+  }
+
   saveToServerDebounced(): void {
     if (!this.hasSynced) {
       this.pendingSave = true;
@@ -579,6 +592,8 @@ export class DataSyncService {
 
         const result = await response.json();
         console.log('[DataSync] Respuesta:', result);
+        // Server now has our latest data — safe to clear local modification tracking
+        this.locallyModifiedKeys.clear();
         return; // Éxito
       } catch (e) {
         console.warn(`[DataSync] Error guardando (intento ${attempt}/3):`, e);

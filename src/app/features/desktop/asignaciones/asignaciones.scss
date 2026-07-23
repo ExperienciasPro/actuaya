@@ -622,7 +622,19 @@ $asignaciones-primary-glow: color-mix(in srgb, var(--accent, #0ea5e9) 20%, trans
   gap: 8px;
   font-size: 0.8rem;
   color: $color-text-secondary;
-  text-transform: none; // Prevent emails from displaying in uppercase
+  text-transform: none;
+  letter-spacing: normal;
+  overflow: hidden;
+
+  span {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
 
   svg {
     width: 14px;
