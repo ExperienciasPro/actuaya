@@ -629,7 +629,10 @@ $asignaciones-primary-glow: color-mix(in srgb, var(--accent, #0ea5e9) 20%, trans
   span {
     text-transform: none !important;
     letter-spacing: normal !important;
+    font-variant: normal !important;
+    font-family: var(--font-family, inherit) !important;
     font-size: 0.8rem;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
