@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import { AsignacionesService } from '../../../core/services/asignaciones.service';
+import { DataSyncService } from '../../../core/services/data-sync.service';
 import {
   Technician, Assignment, ASSIGNMENT_TYPES, STATUS_CONFIG, WEEKDAYS, WEEKDAYS_SHORT, AssignmentType, AssignmentStatus
 } from '../../../core/models/asignaciones.model';
@@ -188,10 +189,13 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
           <div class="technician-card" *ngFor="let p of filteredTechnicians()" (click)="selectedTechnician.set(p)">
             <div class="technician-card-header">
               <div class="technician-avatar">{{ p.firstName[0] }}{{ p.lastName[0] }}</div>
-              <div>
+              <div class="header-content">
                 <div class="technician-name">{{ p.firstName }} {{ p.lastName }}</div>
                 <div class="technician-meta">{{ p.specialty || 'General' }}</div>
               </div>
+              <button class="tech-remove" (click)="deleteTechnician(p, $event)" title="Eliminar técnico">
+                <um-icon name="trash" [size]="14"></um-icon>
+              </button>
             </div>
             <div class="technician-card-body">
               <div class="technician-info-row">
@@ -326,6 +330,7 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
 })
 export class AsignacionesComponent implements OnInit {
   asignacionesService = inject(AsignacionesService);
+  private dataSync = inject(DataSyncService);
 
   // ─── State ──────────────────────
   activeTab = signal<MainTab>('agenda');
@@ -509,6 +514,14 @@ export class AsignacionesComponent implements OnInit {
   openNewTechnicianModal(): void {
     this.technicianForm = this.emptyTechnicianForm();
     this.showTechnicianModal.set(true);
+  }
+
+  deleteTechnician(tech: Technician, event: Event): void {
+    event.stopPropagation();
+    if (confirm(`¿Estás seguro de que deseas eliminar al técnico ${tech.firstName} ${tech.lastName}?`)) {
+      this.asignacionesService.deleteTechnician(tech.id);
+      this.dataSync.saveToServerImmediate();
+    }
   }
 
   saveTechnician(): void {

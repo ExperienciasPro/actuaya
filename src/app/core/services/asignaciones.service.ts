@@ -64,6 +64,11 @@ export class AsignacionesService {
     return this._technicians().find(t => t.id === id);
   }
 
+  deleteTechnician(id: string): void {
+    this._technicians.update(ts => ts.filter(t => t.id !== id));
+    this.persistTechnicians();
+  }
+
   // ─── Assignments ────────────
 
   addAssignment(ass: Omit<Assignment, 'id' | 'createdAt'>): Assignment {

@@ -599,6 +599,32 @@ $asignaciones-primary-glow: color-mix(in srgb, var(--accent, #0ea5e9) 20%, trans
   flex-shrink: 0;
 }
 
+.header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.tech-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  opacity: 0;
+  transition: opacity 150ms ease, transform 150ms ease;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+  }
+}
+
+.technician-card:hover .tech-remove {
+  opacity: 0.6;
+  &:hover { opacity: 1; }
+}
+
 .technician-name {
   font-size: 1rem;
   font-weight: 700;
