@@ -175,6 +175,19 @@ type AdminView = 'items' | 'categories' | 'config';
       <!-- ── CONFIG VIEW ────────────────────────── -->
       @if (currentView() === 'config') {
 
+        <!-- Share link (Moved to top) -->
+        <div class="card animate-fadeInUp stagger-1" style="background: #f8fafc; border-color: #cbd5e1;">
+          <div class="config-preview-link" style="margin-top: 0; padding-top: 0; border-top: none;">
+            <p class="hint" style="margin-top: 0;">Puedes compartir este enlace con tus clientes:</p>
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <a [href]="publicUrl" target="_blank" class="pub-link" style="font-size: 1rem;">{{ publicUrl }}</a>
+              <button class="btn-copy-link" (click)="copyLink()">
+                {{ copiedLink() ? '✅ Copiado' : '📋 Copiar enlace' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Section: Identidad -->
         <div class="card animate-fadeInUp stagger-2">
           <h3>🏪 Identidad del negocio</h3>
@@ -396,14 +409,6 @@ type AdminView = 'items' | 'categories' | 'config';
             </div>
           </div>
         </div>
-
-        <!-- Share link -->
-        <div class="card animate-fadeInUp stagger-3">
-          <div class="config-preview-link">
-            <p class="hint">Puedes compartir este enlace con tus clientes:</p>
-            <a [href]="publicUrl" target="_blank" class="pub-link">{{ publicUrl }}</a>
-          </div>
-        </div>
       }
     </div>
   `,
@@ -414,6 +419,7 @@ export class MenuAdminComponent {
 
   currentView = signal<AdminView>('categories');
   editingItem = signal<MenuItem | null>(null);
+  copiedLink = signal(false);
 
   // Constants for template
   fonts = FONT_FAMILIES;
@@ -434,6 +440,12 @@ export class MenuAdminComponent {
     return this.cfg.slug 
       ? `${window.location.origin}/menu/${this.cfg.slug}`
       : `${window.location.origin}/menu`;
+  }
+
+  copyLink() {
+    navigator.clipboard.writeText(this.publicUrl);
+    this.copiedLink.set(true);
+    setTimeout(() => this.copiedLink.set(false), 2000);
   }
 
   onBusinessNameChange(): void {

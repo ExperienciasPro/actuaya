@@ -290,6 +290,22 @@
   border-radius: 12px;
 }
 
+.btn-copy-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: white;
+  color: #1e293b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  font-family: inherit;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover { background: #f8fafc; border-color: #94a3b8; }
+}
+
 .btn-cover-change {
   padding: 8px 18px;
   border-radius: 999px;
