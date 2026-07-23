@@ -597,13 +597,13 @@ export class MenuAdminComponent {
   async saveAndPublish(): Promise<void> {
     this.isSaving.set(true);
     this.menu.saveConfig(this.cfg);
-    const res = await this.dataSync.saveToServer();
-    this.isSaving.set(false);
-    
-    if (res.success || res.msg === 'Nada que guardar') {
+    try {
+      await this.dataSync.saveToServer();
       this.hasUnsavedChanges.set(false);
-    } else {
-      alert('Hubo un problema al subir los datos: ' + res.msg);
+    } catch (e) {
+      alert('Hubo un problema al subir los datos.');
+    } finally {
+      this.isSaving.set(false);
     }
   }
 
