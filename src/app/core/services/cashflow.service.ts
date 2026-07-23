@@ -22,9 +22,28 @@ export class CashflowService {
     return this._transactions().filter(t => t.date.startsWith(month));
   });
 
-  /** Summary for active month */
+  /** Summary for active month — only COP transactions (primary currency) */
   summary = computed<CashflowSummary>(() => {
     const txs = this.monthTransactions();
+    // Only sum transactions in COP (or without currency, which defaults to COP)
+    const copTxs = txs.filter(t => !t.currency || t.currency === 'COP');
+    const totalIngresos = copTxs
+      .filter(t => t.type === 'ingreso')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalEgresos = copTxs
+      .filter(t => t.type === 'egreso')
+      .reduce((sum, t) => sum + t.amount, 0);
+    return {
+      totalIngresos,
+      totalEgresos,
+      balance: totalIngresos - totalEgresos,
+      transactionCount: copTxs.length,
+    };
+  });
+
+  /** Separate summary for USD transactions */
+  summaryUSD = computed<CashflowSummary>(() => {
+    const txs = this.monthTransactions().filter(t => t.currency === 'USD');
     const totalIngresos = txs
       .filter(t => t.type === 'ingreso')
       .reduce((sum, t) => sum + t.amount, 0);

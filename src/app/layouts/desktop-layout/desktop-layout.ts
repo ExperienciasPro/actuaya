@@ -8,7 +8,7 @@ import { TaskService } from '../../core/services/task.service';
 import { SalesService } from '../../core/services/sales.service';
 import { UserService } from '../../core/services/user.service';
 import { StorageService } from '../../core/services/storage.service';
-import { SyncService } from '../../core/services/sync.service';
+import { DeviceService } from '../../core/services/device.service';
 import { DataSyncService } from '../../core/services/data-sync.service';
 import { MockSubscriptionService } from '../../core/services/mock-subscription.service';
 import { UmIconComponent } from '../../shared/components/um-icon/um-icon';
@@ -293,7 +293,7 @@ export class DesktopLayoutComponent implements OnInit {
   readonly logoFull = LOGO_FULL;
   readonly logoOrange = LOGO_ORANGE;
   private platformId = inject(PLATFORM_ID);
-  private syncService = inject(SyncService);
+  private deviceService = inject(DeviceService);
   private router = inject(Router);
   themeService = inject(ThemeService);
   private goalService = inject(GoalService);
@@ -316,7 +316,7 @@ export class DesktopLayoutComponent implements OnInit {
   searchQuery = signal('');
   mobileDrawerOpen = signal(false);
 
-  isMobile = computed(() => this.syncService.isMobile());
+  isMobile = computed(() => this.deviceService.isMobile());
   isExpanded = computed(() => !this.collapsed() || this.isHovered());
 
   /** Dynamic page title based on current route */
@@ -339,7 +339,7 @@ export class DesktopLayoutComponent implements OnInit {
       // Auto-sync cloud data on Desktop init
       this.dataSync.syncFromServer();
       // On mobile, start with sidebar collapsed
-      if (this.syncService.isMobile()) {
+      if (this.deviceService.isMobile()) {
         this.collapsed.set(true);
       }
       // Check subscription status on layout init

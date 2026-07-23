@@ -1447,3 +1447,25 @@ $accent: $color-accent-primary;
   .detail-metrics { grid-template-columns: 1fr; }
 }
 
+
+.financial-warning {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  margin-top: 16px;
+  background-color: rgba(232, 67, 147, 0.08);
+  border: 1px dashed rgba(232, 67, 147, 0.4);
+  border-radius: 8px;
+  color: #e84393;
+  
+  .warning-text {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    
+    strong {
+      font-weight: 700;
+    }
+  }
+}
+

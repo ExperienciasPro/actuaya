@@ -1,8 +1,9 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import {
   Licitacion, LicitacionBatch, SECTORES_LICITACION,
 } from '../models/licitacion.model';
+import { DataSyncService } from './data-sync.service';
 import { environment } from '../../../environments/environment';
 
 // ═══════════════════════════════════════════
@@ -16,8 +17,18 @@ import { environment } from '../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class LicitacionesService {
   private storage = inject(StorageService);
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
   private readonly STORAGE_KEY = 'um_licitaciones';
   private readonly WEBHOOK_KEY = 'um_licitaciones_webhook';
+
+  /** Lazy-resolve DataSyncService to avoid circular dependency */
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   /** URL del backend Express */
   private readonly backendUrl = '/api/licitaciones';
@@ -205,6 +216,9 @@ export class LicitacionesService {
   // — Helpers —
   private persist(): void {
     this.storage.set(this.STORAGE_KEY, this.batches());
+    // Push changes to server immediately (bidirectional sync)
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   private getCurrentWeekLabel(): string {

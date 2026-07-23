@@ -27,6 +27,7 @@ export interface UserProfile {
   trialEndsAt: string;                   // ISO date string
   subscriptionActivatedByAdmin: boolean;
   isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 // Superadmin seed data
@@ -249,6 +250,7 @@ export class UserService {
       subscriptionStatus: baseUser?.subscriptionStatus ?? data.subscriptionStatus ?? 'trial',
       trialEndsAt: baseUser?.trialEndsAt ?? data.trialEndsAt ?? this.calculateTrialEnd(now),
       subscriptionActivatedByAdmin: baseUser?.subscriptionActivatedByAdmin ?? data.subscriptionActivatedByAdmin ?? false,
+      updatedAt: now.toISOString(),
     };
     this.saveUserToList(updated);
     this.storage.setActiveUser(updated.id);
@@ -290,7 +292,7 @@ export class UserService {
     const users = this.storage.get<UserProfile[]>(this.USERS_KEY) || [];
     const idx = users.findIndex(u => u.id === id);
     if (idx >= 0) {
-      users[idx] = { ...users[idx], ...changes };
+      users[idx] = { ...users[idx], ...changes, updatedAt: new Date().toISOString() };
       this.storage.set(this.USERS_KEY, users);
       this._usersSignal.set(users.filter(u => !u.isDeleted));
       // If editing the active user, refresh profile
@@ -325,13 +327,17 @@ export class UserService {
   }
 
   /** Admin: create a new user without affecting the active profile */
-  adminCreateUser(data: Partial<UserProfile>): UserProfile {
+  async adminCreateUser(data: Partial<UserProfile>): Promise<UserProfile> {
     const now = new Date();
+    // Hash the password before storing
+    const hashedPassword = data.password
+      ? await this.hashPassword(data.password)
+      : undefined;
     const newUser: UserProfile = {
       id: this.generateId(),
       name: data.name || '',
       email: data.email,
-      password: data.password,
+      password: hashedPassword,
       phone: data.phone,
       occupation: data.occupation,
       companyName: data.companyName,

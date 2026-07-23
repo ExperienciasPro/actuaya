@@ -17,6 +17,15 @@ export const authGuard: CanActivateFn = async (route: ActivatedRouteSnapshot, st
   if (magicToken) {
     const user = userService.getUserById(magicToken);
     if (user) {
+      // Validate user is active and not deleted before auto-login
+      if (user.isDeleted) {
+        console.warn('[AuthGuard] Magic link blocked: user is deleted', magicToken);
+        return router.createUrlTree(['/login']);
+      }
+      if (user.isActive === false) {
+        console.warn('[AuthGuard] Magic link blocked: user is inactive', magicToken);
+        return router.createUrlTree(['/login']);
+      }
       await userService.saveProfile(user); // Auto-login
     }
     

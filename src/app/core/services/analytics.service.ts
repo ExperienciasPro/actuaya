@@ -1,7 +1,7 @@
 import { Injectable, computed } from '@angular/core';
 import { GoalService } from './goal.service';
 import { TaskService } from './task.service';
-import { SalesFunnelService } from './sales-funnel.service';
+import { SalesService } from './sales.service';
 import {
   PerformanceMetrics,
   SalesMetrics,
@@ -20,7 +20,7 @@ export class AnalyticsService {
   constructor(
     private goalService: GoalService,
     private taskService: TaskService,
-    private salesFunnelService: SalesFunnelService
+    private salesService: SalesService
   ) {}
 
   getPerformanceMetrics(period: PerformanceMetrics['period'], startDate: Date, endDate: Date): PerformanceMetrics {

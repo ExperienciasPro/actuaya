@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { SyncService } from '../services/sync.service';
+import { DeviceService } from '../services/device.service';
 
 /**
  * Guard para rutas desktop (/d/...).
@@ -16,9 +16,10 @@ export const desktopOnlyGuard: CanActivateFn = () => {
  * Guard que bloquea rutas móviles en escritorio.
  * Redirige a la Consola de Mando (desktop/dashboard).
  */
-export const mobileOnlyGuard: CanActivateFn = () => {
-  const syncService = inject(SyncService);
+export const mobileOnlyGuard: CanActivateFn = (route, state) => {
+  const syncService = inject(DeviceService);
   const router = inject(Router);
+  const isDesktopPath = state.url.startsWith('/d');
 
   if (syncService.isDesktop()) {
     router.navigate(['/d/dashboard']);

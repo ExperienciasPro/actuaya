@@ -13,6 +13,52 @@ const express = require('express');
 const router = express.Router();
 const DataStore = require('../models/data.model');
 
+// ─── Merge Helper for ID-based arrays ────────
+// Keys whose arrays should be merged by ID instead of blindly overwritten.
+// This prevents stale cached data from resurrecting deleted records.
+const MERGEABLE_ARRAY_KEYS = new Set([
+  'um_subscribers',
+  'um_subscriptions',
+  'subscriptions',
+]);
+
+/**
+ * Merge two arrays of objects by `id`, keeping the most recently updated version.
+ * Items present on the client but absent on the server are added.
+ * Items present on the server but absent on the client are KEPT (not deleted by stale cache).
+ * To truly delete, the client must send { id, _deleted: true }.
+ */
+function mergeArrayById(serverArr, clientArr) {
+  const map = new Map();
+  // Start with server data as base
+  for (const item of serverArr) {
+    if (item && item.id) map.set(item.id, item);
+  }
+  // Apply client changes
+  for (const item of clientArr) {
+    if (!item || !item.id) continue;
+    // Support soft-delete: client sends { id, _deleted: true }
+    if (item._deleted) {
+      map.delete(item.id);
+      continue;
+    }
+    const existing = map.get(item.id);
+    if (!existing) {
+      // New record from client
+      map.set(item.id, item);
+    } else {
+      // Both exist — keep the one with the most recent updatedAt
+      const tServer = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+      const tClient = new Date(item.updatedAt || item.createdAt || 0).getTime();
+      if (tClient >= tServer) {
+        map.set(item.id, item);
+      }
+      // else: server version is newer, keep it
+    }
+  }
+  return Array.from(map.values());
+}
+
 // ─── Auth Middleware ──────────────────────────
 function authCheck(req, res, next) {
   // Accept token from header OR query param (needed for navigator.sendBeacon) OR request body
@@ -144,20 +190,18 @@ router.post('/', async (req, res) => {
             if (!prev) {
               byEmail.set(email, u);
             } else {
-              // Score: prefer superadmin > active sub > lastLogin > more fields
-              const scoreUser = (x) => {
-                let s = 0;
-                if (x.role === 'superadmin') s += 1000;
-                if (x.subscriptionStatus === 'active') s += 100;
-                if (x.subscriptionActivatedByAdmin) s += 50;
-                if (x.lastLogin) s += 20;
-                if (x.phone) s += 5;
-                if (x.occupation) s += 3;
-                if (x.companyName) s += 3;
-                return s;
-              };
-              if (scoreUser(u) > scoreUser(prev)) {
+              const isPrevSA = prev.role === 'superadmin';
+              const isUSA = u.role === 'superadmin';
+              if (isPrevSA && !isUSA) {
+                // keep prev
+              } else if (isUSA && !isPrevSA) {
                 byEmail.set(email, u);
+              } else {
+                const t1 = new Date(prev.updatedAt || prev.lastLogin || prev.createdAt || 0).getTime();
+                const t2 = new Date(u.updatedAt || u.lastLogin || u.createdAt || 0).getTime();
+                if (t2 > t1) {
+                  byEmail.set(email, u);
+                }
               }
             }
           }
@@ -166,6 +210,23 @@ router.post('/', async (req, res) => {
             updateOne: {
               filter: { key: dataKey },
               update: { $set: { key: dataKey, value: mergedUsers, updatedAt: new Date() } },
+              upsert: true,
+            },
+          });
+          continue;
+        }
+
+        // ── MERGE para listas con ID (subscribers, subscriptions) ──
+        // Fusionar por ID usando updatedAt para evitar que dispositivos
+        // con caché antigua resuciten registros eliminados.
+        if (MERGEABLE_ARRAY_KEYS.has(dataKey) && Array.isArray(dataValue)) {
+          const existing = await DataStore.findOne({ key: dataKey });
+          const serverArr = (existing && Array.isArray(existing.value)) ? existing.value : [];
+          const merged = mergeArrayById(serverArr, dataValue);
+          operations.push({
+            updateOne: {
+              filter: { key: dataKey },
+              update: { $set: { key: dataKey, value: merged, updatedAt: new Date() } },
               upsert: true,
             },
           });
@@ -226,23 +287,29 @@ router.post('/', async (req, res) => {
          if (!prev) {
            byEmail.set(email, u);
          } else {
-           const scoreUser = (x) => {
-             let s = 0;
-             if (x.role === 'superadmin') s += 1000;
-             if (x.subscriptionStatus === 'active') s += 100;
-             if (x.subscriptionActivatedByAdmin) s += 50;
-             if (x.lastLogin) s += 20;
-             if (x.phone) s += 5;
-             if (x.occupation) s += 3;
-             if (x.companyName) s += 3;
-             return s;
-           };
-           if (scoreUser(u) > scoreUser(prev)) {
+           const isPrevSA = prev.role === 'superadmin';
+           const isUSA = u.role === 'superadmin';
+           if (isPrevSA && !isUSA) {
+             // keep prev
+           } else if (isUSA && !isPrevSA) {
              byEmail.set(email, u);
+           } else {
+             const t1 = new Date(prev.updatedAt || prev.lastLogin || prev.createdAt || 0).getTime();
+             const t2 = new Date(u.updatedAt || u.lastLogin || u.createdAt || 0).getTime();
+             if (t2 > t1) {
+               byEmail.set(email, u);
+             }
            }
          }
        }
        valueToSave = [...noEmail, ...Array.from(byEmail.values())];
+    }
+
+    // ── MERGE para listas con ID (subscribers, subscriptions) ──
+    if (MERGEABLE_ARRAY_KEYS.has(key) && Array.isArray(req.body)) {
+       const existing = await DataStore.findOne({ key });
+       const serverArr = (existing && Array.isArray(existing.value)) ? existing.value : [];
+       valueToSave = mergeArrayById(serverArr, req.body);
     }
 
     await DataStore.findOneAndUpdate(

@@ -73,27 +73,26 @@ export class BriefingService {
   }
 
   private calculateStreak(): number {
-    // Simplified streak calculation - counts consecutive days with completed tasks
+    const tasks = this.taskService.tasks()
+      .filter(t => t.completedAt)
+      .map(t => new Date(t.completedAt!).toDateString());
+    
+    const uniqueDays = new Set(tasks);
     let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const d = new Date();
 
-    for (let i = 0; i < 365; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const nextDay = new Date(checkDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-
-      const hasCompleted = this.taskService.tasks().some((t) => {
-        if (!t.completedAt) return false;
-        const completed = new Date(t.completedAt);
-        return completed >= checkDate && completed < nextDay;
-      });
-
-      if (hasCompleted) {
+    // If today has completed tasks, count today and go backwards
+    if (uniqueDays.has(d.toDateString())) {
+      while (uniqueDays.has(d.toDateString())) {
         streak++;
-      } else if (i > 0) {
-        break;
+        d.setDate(d.getDate() - 1);
+      }
+    } else {
+      // Today has no completions yet — don't penalize, start from yesterday
+      d.setDate(d.getDate() - 1);
+      while (uniqueDays.has(d.toDateString())) {
+        streak++;
+        d.setDate(d.getDate() - 1);
       }
     }
     return streak;

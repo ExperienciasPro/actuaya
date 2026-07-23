@@ -226,17 +226,50 @@ export class PerformanceComponent {
     const tasks = this.taskService.tasks()
       .filter(t => t.completedAt)
       .map(t => new Date(t.completedAt!).toDateString());
-    const unique = [...new Set(tasks)];
+    const unique = new Set(tasks);
     let streak = 0;
     const d = new Date();
-    while (unique.includes(d.toDateString())) {
-      streak++;
+
+    // If today has completed tasks, count today and go backwards
+    if (unique.has(d.toDateString())) {
+      while (unique.has(d.toDateString())) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+    } else {
+      // Today has no completions yet — don't penalize, start from yesterday
       d.setDate(d.getDate() - 1);
+      while (unique.has(d.toDateString())) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
     }
     return streak;
   });
 
-  bestStreak = computed(() => Math.max(this.currentStreak(), 1));
+  bestStreak = computed(() => {
+    // Calculate the longest ever streak from all completed task dates
+    const tasks = this.taskService.tasks()
+      .filter(t => t.completedAt)
+      .map(t => new Date(t.completedAt!));
+    if (tasks.length === 0) return 0;
+
+    const uniqueDays = [...new Set(tasks.map(d => d.toDateString()))]
+      .map(ds => new Date(ds))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    let best = 1, current = 1;
+    for (let i = 1; i < uniqueDays.length; i++) {
+      const diff = (uniqueDays[i].getTime() - uniqueDays[i - 1].getTime()) / 86400000;
+      if (Math.round(diff) === 1) {
+        current++;
+        best = Math.max(best, current);
+      } else {
+        current = 1;
+      }
+    }
+    return Math.max(best, this.currentStreak());
+  });
 
   goalSnapshots = computed(() => {
     return this.goalService.goals().map(g => {

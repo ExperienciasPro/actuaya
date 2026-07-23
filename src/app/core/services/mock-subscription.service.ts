@@ -69,6 +69,7 @@ export class MockSubscriptionService {
       if (now > expirationDate) {
         this.updateUserSubscription(user.id, {
           subscriptionStatus: 'expired',
+          subscriptionActivatedByAdmin: false,
         });
       }
     }
@@ -88,6 +89,7 @@ export class MockSubscriptionService {
       if (now > expirationDate) {
         this.updateUserSubscription(userId, {
           subscriptionStatus: 'expired',
+          subscriptionActivatedByAdmin: false,
         });
       }
     }
@@ -106,9 +108,25 @@ export class MockSubscriptionService {
 
     let expirationDate = '2099-12-31T23:59:59.000Z'; // Indefinido por defecto
     if (months && months > 0) {
-      const date = new Date();
-      date.setMonth(date.getMonth() + months);
-      expirationDate = date.toISOString();
+      const now = new Date();
+      let baseDate = now;
+      // Si ya tiene una suscripción/prueba vigente, sumar a partir de ahí
+      if (user.trialEndsAt) {
+        const currentExp = new Date(user.trialEndsAt);
+        if (currentExp > now) {
+          baseDate = currentExp;
+        }
+      }
+      
+      const targetMonth = baseDate.getMonth() + months;
+      baseDate.setMonth(targetMonth);
+      
+      // Fix JS month rollover bug (e.g. Jan 31 + 1 month = Mar 3 instead of Feb 28/29)
+      if (baseDate.getMonth() !== (targetMonth % 12)) {
+        baseDate.setDate(0);
+      }
+      
+      expirationDate = baseDate.toISOString();
     }
 
     this.updateUserSubscription(userId, {
@@ -129,6 +147,7 @@ export class MockSubscriptionService {
 
     this.updateUserSubscription(userId, {
       subscriptionStatus: 'expired',
+      subscriptionActivatedByAdmin: false,
     });
 
     return true;

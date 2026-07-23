@@ -333,29 +333,23 @@ export class DataSyncService {
       if (wasDeletedLocally) {
         mergedMap.set(u.id, { ...u, isDeleted: true });
       } else {
-        // Check if local version is more recent (admin changes like subscription)
+        // Check if local version has admin upgrades not yet synced to server
         const localUser = localMap.get(u.id);
         if (localUser && !localUser.isDeleted) {
-          // Prefer local if it has admin-activated subscription that server doesn't
           const localHasAdminSub = localUser.subscriptionActivatedByAdmin || localUser.subscriptionStatus === 'active';
           const serverHasAdminSub = u.subscriptionActivatedByAdmin || u.subscriptionStatus === 'active';
+          
           if (localHasAdminSub && !serverHasAdminSub) {
-            // Local has admin subscription changes not yet on server — keep local
-            mergedMap.set(u.id, localUser);
-          } else {
-            // Merge: use server as base, overlay local subscription fields if they're set
+            // Local has admin subscription changes not yet on server — keep local's subscription data
             const merged = { ...u };
-            // Preserve local subscription fields if they differ (admin-made changes)
-            if (localUser.subscriptionStatus && localUser.subscriptionStatus !== u.subscriptionStatus) {
-              merged.subscriptionStatus = localUser.subscriptionStatus;
-              merged.subscriptionActivatedByAdmin = localUser.subscriptionActivatedByAdmin ?? merged.subscriptionActivatedByAdmin;
-              merged.trialEndsAt = localUser.trialEndsAt ?? merged.trialEndsAt;
-            }
-            // Preserve local isActive flag
-            if (localUser.isActive !== undefined && localUser.isActive !== u.isActive) {
-              merged.isActive = localUser.isActive;
-            }
-            // Preserve local lastLogin if it's more recent than server's
+            merged.subscriptionStatus = localUser.subscriptionStatus;
+            merged.subscriptionActivatedByAdmin = localUser.subscriptionActivatedByAdmin;
+            merged.trialEndsAt = localUser.trialEndsAt;
+            mergedMap.set(u.id, merged);
+          } else {
+            // Trust server as source of truth for this user
+            const merged = { ...u };
+            // But preserve local lastLogin if it's more recent than server's
             const localLoginTime = new Date(localUser.lastLogin || 0).getTime();
             const serverLoginTime = new Date(u.lastLogin || 0).getTime();
             if (localLoginTime > serverLoginTime) {

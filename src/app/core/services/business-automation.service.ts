@@ -38,6 +38,7 @@ export class BusinessAutomationService {
       category: 'ventas',
       description: `Venta Cotización - Cliente: ${quote.clientName}`,
       amount: total,
+      currency: 'COP', // TODO: read from quote.currency when available
       date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString(),
       notes: `Auto-generado por cotización vendida. Ref: ${quote.id}`,
@@ -110,6 +111,7 @@ export class BusinessAutomationService {
       category: 'ventas',
       description: `Venta rápida: ${product.name} (x${qty})`,
       amount: totalAmount,
+      currency: 'COP',
       date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString(),
       notes: `Venta de producto enlazada a inventario`,
@@ -156,6 +158,7 @@ export class BusinessAutomationService {
       category: 'proveedores',
       description: `Compra / Reabastecimiento: ${product.name} (x${qty})`,
       amount: totalAmount,
+      currency: 'COP',
       date: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString(),
       notes: `Compra de producto enlazada a inventario`,

@@ -49,13 +49,9 @@ export class StorageService {
   /**
    * Sets the active user ID for key scoping.
    * Called by UserService on login/logout.
-   * Also triggers one-time migration of legacy unscoped data.
    */
   setActiveUser(userId: string | null): void {
     this._activeUserId = userId;
-    if (userId) {
-      this.migrateLocalLegacyData(userId);
-    }
     console.log(`[StorageService] Usuario activo: ${userId ?? '(ninguno)'}`);
   }
 
@@ -233,64 +229,12 @@ export class StorageService {
     }
   }
 
-  // ─── Legacy Data Migration ─────────────────────
-
-  /**
-   * One-time, non-destructive migration of legacy unscoped data.
-   * For each known um_ key: if the scoped key doesn't exist but the
-   * legacy unscoped key does, COPY (not move) the data to the scoped key.
-   * Original unscoped keys are NEVER deleted.
-   */
-  private migrateLocalLegacyData(userId: string): void {
-    const migrationFlag = `um_migrated_v2_${userId}`;
-    if (this.getRawValue<boolean>(migrationFlag)) return; // Already migrated
-
-    console.log(`[StorageService] Ejecutando migración local para usuario ${userId}...`);
-
-    // Collect all um_ keys from storage that DON'T have a userId suffix
-    const allKeys = this.getAllKeys('um_');
-
-    // Prevent legacy data leakage if the user already has scoped keys
-    const hasScopedKeys = allKeys.some(k => k.endsWith(`_${userId}`) && k !== migrationFlag);
-    if (hasScopedKeys) {
-      console.log(`[StorageService] El usuario ${userId} ya tiene claves con scope. Omitiendo migración.`);
-      this.setRawValue(migrationFlag, true);
-      return;
-    }
-
-    let migratedCount = 0;
-
-    for (const key of allKeys) {
-      // Skip if it's not a base um_ key (already scoped, global, or session-local)
-      if (this.GLOBAL_KEYS.has(key)) continue;
-      if (this.SESSION_LOCAL_KEYS.has(key)) continue;
-      if (key.includes('_migrated_v2_')) continue;
-
-      // Check if this is a legacy unscoped key (no userId suffix)
-      // A scoped key looks like um_goals_u-abc123 — has underscore + ID pattern
-      // We only want to migrate base keys like um_goals, um_cashflow, etc.
-      const isScoped = allKeys.some(k => k !== key && k.startsWith(key + '_'));
-      if (key.match(/_[a-z]+-[a-z0-9]+$/i)) continue; // Already a scoped key
-
-      const scopedKey = `${key}_${userId}`;
-
-      // Only copy if scoped version doesn't exist
-      const scopedValue = this.getRawValue(scopedKey);
-      if (scopedValue !== null) continue; // Scoped data already exists, don't overwrite
-
-      const legacyValue = this.getRawValue(key);
-      if (legacyValue === null) continue; // Nothing to migrate
-
-      // COPY legacy data to scoped key (non-destructive)
-      this.setRawValue(scopedKey, legacyValue);
-      migratedCount++;
-      console.log(`[StorageService] Migrada: ${key} → ${scopedKey}`);
-    }
-
-    // Set migration flag
-    this.setRawValue(migrationFlag, true);
-    console.log(`[StorageService] Migración completa: ${migratedCount} claves copiadas`);
-  }
+  // ─── Legacy Data Migration (DESACTIVADA) ──────
+  // La migración legacy se desactivó porque el sistema multi-cuenta ya está
+  // maduro y todos los usuarios existentes ya migraron sus datos.
+  // Mantenerla activa causaba que datos huérfanos de otros usuarios se
+  // copiaran erróneamente a la cuenta de quien iniciara sesión después
+  // en el mismo navegador, contaminando su panel con datos ajenos.
 
   /**
    * Detect whether localStorage is actually available and writable.

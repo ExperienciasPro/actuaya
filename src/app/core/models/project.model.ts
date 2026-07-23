@@ -39,7 +39,8 @@ export interface ProjectTask {
   sectionId: string;
   title: string;
   description?: string;
-  assignee?: string;
+  assignee?: string;       // Member name (legacy, kept for backward compat)
+  assigneeId?: string;     // Member ID (preferred for lookups)
   dueDate?: string;
   priority: TaskPriority;
   completed: boolean;

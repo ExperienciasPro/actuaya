@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import {
   WorkOrder,
   OtStatus,
@@ -7,15 +7,19 @@ import {
   OtCompletionData,
 } from '../models/work-order.model';
 import { StorageService } from './storage.service';
+import { UserService } from './user.service';
+import { DataSyncService } from './data-sync.service';
+import { environment } from '../../../environments/environment';
 
 // ═══════════════════════════════════════════
 // Work Order Service — Técnicos de Campo
 // ═══════════════════════════════════════════
 // Connects to backend-ot API at /api/ot
 // Falls back to localStorage for offline / demo mode.
+// Fix: Uses real user ID, syncs evidence/signatures via DataSync,
+//      and retries offline queue on reconnect.
 
-const API_BASE = 'http://localhost:3500/api/ot';
-const MOCK_USER_ID = 'tech-001';
+const API_BASE = `${environment.apiUrl.replace('/data', '')}/ot`;
 
 @Injectable({ providedIn: 'root' })
 export class WorkOrderService {
@@ -23,6 +27,24 @@ export class WorkOrderService {
   private readonly EVIDENCE_KEY = 'um_ot_evidence';
   private readonly PARTS_KEY = 'um_ot_parts';
   private readonly COMPLETION_KEY = 'um_ot_completion';
+  private readonly OFFLINE_QUEUE_KEY = 'um_ot_offline_queue';
+
+  private userService = inject(UserService);
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+
+  /** Lazy-resolve DataSyncService to avoid circular dependency */
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
+
+  /** Get the real user ID from the active profile */
+  private get userId(): string {
+    return this.userService.profile()?.id || 'anonymous';
+  }
 
   // ─── Signals ───
   private _orders = signal<WorkOrder[]>([]);
@@ -51,6 +73,7 @@ export class WorkOrderService {
   constructor(private storage: StorageService) {
     this.loadFromLocalStorage();
     this.fetchOrders(); // Try backend
+    this.setupOnlineListener(); // Retry offline queue on reconnect
   }
 
   // ─── API Calls ─────────────────────────────
@@ -59,7 +82,7 @@ export class WorkOrderService {
     try {
       const res = await fetch(API_BASE, {
         headers: {
-          'X-User-Id': MOCK_USER_ID,
+          'X-User-Id': this.userId,
           'X-User-Role': 'user',
         },
       });
@@ -80,7 +103,7 @@ export class WorkOrderService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': MOCK_USER_ID,
+          'X-User-Id': this.userId,
           'X-User-Role': 'user',
         },
         body: JSON.stringify({ title, description }),
@@ -92,7 +115,7 @@ export class WorkOrderService {
         return data.data;
       }
     } catch {
-      // Offline fallback
+      // Offline fallback — queue for later sync
       const ot: WorkOrder = {
         id: crypto.randomUUID(),
         title,
@@ -100,12 +123,13 @@ export class WorkOrderService {
         status: 'abierta',
         assigned_to: null,
         justification_reason: null,
-        created_by: MOCK_USER_ID,
+        created_by: this.userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       this._orders.update(list => [ot, ...list]);
       this.persistOrders();
+      this.addToOfflineQueue({ action: 'create', data: { title, description } });
       return ot;
     }
     return null;
@@ -117,7 +141,7 @@ export class WorkOrderService {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': MOCK_USER_ID,
+          'X-User-Id': this.userId,
           'X-User-Role': 'user',
         },
         body: JSON.stringify({
@@ -140,7 +164,7 @@ export class WorkOrderService {
       alert(`❌ ${err.error}`);
       return false;
     } catch {
-      // Offline fallback
+      // Offline fallback — update locally and queue
       this._orders.update(list =>
         list.map(o =>
           o.id === id
@@ -151,6 +175,7 @@ export class WorkOrderService {
       const updated = this._orders().find(o => o.id === id) || null;
       if (this._activeOt()?.id === id) this._activeOt.set(updated);
       this.persistOrders();
+      this.addToOfflineQueue({ action: 'transition', data: { id, status: newStatus, justification } });
       return true;
     }
   }
@@ -167,6 +192,7 @@ export class WorkOrderService {
       [otId]: [...(map[otId] || []), evidence],
     }));
     this.persistEvidence();
+    this.syncToServer(); // Push to server immediately
   }
 
   removeEvidence(otId: string, evidenceId: string): void {
@@ -175,6 +201,7 @@ export class WorkOrderService {
       [otId]: (map[otId] || []).filter(e => e.id !== evidenceId),
     }));
     this.persistEvidence();
+    this.syncToServer();
   }
 
   hasRequiredEvidence(otId: string): boolean {
@@ -206,6 +233,7 @@ export class WorkOrderService {
       [otId]: [...(map[otId] || []), part],
     }));
     this.persistParts();
+    this.syncToServer();
   }
 
   removeSparePart(otId: string, partId: string): void {
@@ -214,6 +242,7 @@ export class WorkOrderService {
       [otId]: (map[otId] || []).filter(p => p.id !== partId),
     }));
     this.persistParts();
+    this.syncToServer();
   }
 
   getPartsTotalCost(otId: string): number {
@@ -228,6 +257,7 @@ export class WorkOrderService {
       [otId]: { ...(map[otId] || {}), findings },
     }));
     this.persistCompletion();
+    this.syncToServer();
   }
 
   setSignature(otId: string, dataUrl: string | null): void {
@@ -236,6 +266,7 @@ export class WorkOrderService {
       [otId]: { ...(map[otId] || {}), signatureDataUrl: dataUrl },
     }));
     this.persistCompletion();
+    this.syncToServer();
   }
 
   getCompletionData(otId: string): Partial<OtCompletionData> {
@@ -250,6 +281,92 @@ export class WorkOrderService {
 
   getById(id: string): WorkOrder | undefined {
     return this._orders().find(o => o.id === id);
+  }
+
+  // ─── Sync to Server via DataSync ───────────
+
+  /** Push OT data (evidence, parts, completion) to server via DataSync */
+  private syncToServer(): void {
+    this.dataSync.trackLocalModification(this.EVIDENCE_KEY);
+    this.dataSync.trackLocalModification(this.PARTS_KEY);
+    this.dataSync.trackLocalModification(this.COMPLETION_KEY);
+    this.dataSync.saveToServerImmediate();
+  }
+
+  // ─── Offline Queue ─────────────────────────
+
+  private addToOfflineQueue(entry: { action: string; data: any }): void {
+    const queue = this.storage.get<any[]>(this.OFFLINE_QUEUE_KEY) || [];
+    queue.push({ ...entry, timestamp: new Date().toISOString() });
+    this.storage.set(this.OFFLINE_QUEUE_KEY, queue);
+    console.log(`[OT Service] Queued offline action: ${entry.action}`);
+  }
+
+  /** Listen for online event and retry queued operations */
+  private setupOnlineListener(): void {
+    window.addEventListener('online', () => {
+      console.log('[OT Service] Back online — flushing offline queue');
+      this.flushOfflineQueue();
+    });
+  }
+
+  /** Retry all queued offline operations */
+  private async flushOfflineQueue(): Promise<void> {
+    const queue = this.storage.get<any[]>(this.OFFLINE_QUEUE_KEY) || [];
+    if (queue.length === 0) return;
+
+    console.log(`[OT Service] Flushing ${queue.length} offline operations...`);
+    const remaining: any[] = [];
+
+    for (const entry of queue) {
+      try {
+        let success = false;
+        if (entry.action === 'create') {
+          const res = await fetch(API_BASE, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': this.userId,
+              'X-User-Role': 'user',
+            },
+            body: JSON.stringify(entry.data),
+          });
+          success = res.ok;
+        } else if (entry.action === 'transition') {
+          const res = await fetch(`${API_BASE}/${entry.data.id}/transition`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': this.userId,
+              'X-User-Role': 'user',
+            },
+            body: JSON.stringify({
+              status: entry.data.status,
+              justification_reason: entry.data.justification,
+            }),
+          });
+          success = res.ok;
+        }
+
+        if (!success) {
+          remaining.push(entry);
+        }
+      } catch {
+        remaining.push(entry); // Still offline or server error
+      }
+    }
+
+    this.storage.set(this.OFFLINE_QUEUE_KEY, remaining);
+    if (remaining.length === 0) {
+      console.log('[OT Service] All offline operations synced successfully.');
+    } else {
+      console.warn(`[OT Service] ${remaining.length} operations still pending.`);
+    }
+
+    // Also push evidence/completion data to server
+    this.syncToServer();
+    // Refresh orders from server
+    await this.fetchOrders();
   }
 
   // ─── Persistence ───────────────────────────

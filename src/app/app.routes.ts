@@ -217,6 +217,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/desktop/profitability/profitability').then((m) => m.ProfitabilityComponent),
       },
+      // — Licitaciones —
+      {
+        path: 'licitaciones',
+        loadComponent: () =>
+          import('./features/desktop/licitaciones/licitaciones').then((m) => m.LicitacionesComponent),
+      },
 
       // — Formularios —
       {

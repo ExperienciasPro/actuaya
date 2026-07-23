@@ -51,7 +51,14 @@ export class GoalService {
   }
 
   delete(id: string): void {
+    // Recursively delete child goals first
+    const children = this.getChildren(id);
+    for (const child of children) {
+      this.delete(child.id); // Recursive cascade
+    }
+    // Delete tasks belonging to this goal
     this.taskService.deleteByGoalId(id);
+    // Delete the goal itself
     this.goalsSignal.update((goals) => goals.filter((g) => g.id !== id));
     this.saveToStorage();
   }

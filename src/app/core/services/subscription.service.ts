@@ -191,7 +191,28 @@ export class SubscriptionService {
 
   delete(id: string): void {
     const updated = this.subscriptions().filter(s => s.id !== id);
-    this.persist(updated);
+    this.subscriptions.set(updated);
+    this.storage.set(this.STORAGE_KEY, updated);
+    // Send deletion marker to server so merge logic removes the record
+    this.sendDeletionToServer(id);
+    // Also save the full list
+    this.saveToServer(updated);
+  }
+
+  /** Sends a _deleted marker so the server's merge logic removes the record */
+  private async sendDeletionToServer(id: string): Promise<void> {
+    try {
+      await fetch(`${this.API_URL}?key=subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': this.AUTH_TOKEN,
+        },
+        body: JSON.stringify([{ id, _deleted: true }]),
+      });
+    } catch (e) {
+      console.warn('[SAVE] Error enviando eliminación:', e);
+    }
   }
 
   /** Reemplaza todas las suscripciones (usado por import/restore) */

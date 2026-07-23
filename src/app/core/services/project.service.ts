@@ -109,10 +109,12 @@ export class ProjectService {
     this.projectsSignal.update((projects) =>
       projects.map((p) => {
         if (p.id !== projectId) return p;
-        // Also unassign tasks belonging to this member
         const member = (p.members || []).find(m => m.id === memberId);
+        // Unassign tasks by member ID (not name) to avoid collisions with same-name members
         const updatedTasks = member
-          ? p.tasks.map(t => t.assignee === member.name ? { ...t, assignee: undefined } : t)
+          ? p.tasks.map(t => (t.assigneeId === memberId || t.assignee === member.name)
+              ? { ...t, assignee: undefined, assigneeId: undefined }
+              : t)
           : p.tasks;
         return {
           ...p,

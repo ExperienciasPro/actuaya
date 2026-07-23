@@ -25,6 +25,7 @@ export interface Transaction {
   category: TransactionCategory;
   description: string;
   amount: number;              // always positive
+  currency?: string;           // 'COP' | 'USD' — defaults to 'COP'
   date: string;                // ISO date YYYY-MM-DD
   createdAt: string;           // ISO datetime
   notes?: string;

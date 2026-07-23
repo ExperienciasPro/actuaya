@@ -3,7 +3,7 @@ import { Injectable, signal, computed } from '@angular/core';
 export type DeviceType = 'desktop' | 'mobile';
 
 @Injectable({ providedIn: 'root' })
-export class SyncService {
+export class DeviceService {
   private deviceTypeSignal = signal<DeviceType>(this.detectDevice());
 
   readonly deviceType = this.deviceTypeSignal.asReadonly();

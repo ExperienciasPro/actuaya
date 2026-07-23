@@ -119,9 +119,11 @@ export class RadarService {
     private salesService: SalesService,
   ) {
     this.loadFromStorage();
+    this.processOverdues(); // Mark overdue contacts on init
     effect(() => {
       if (this.storage.updateToken() >= 0) {
         this.loadFromStorage();
+        this.processOverdues();
       }
     });
   }

@@ -995,7 +995,7 @@ export class SubscribersComponent {
     this.newUserModal.set(false);
   }
 
-  saveNewUser(): void {
+  async saveNewUser(): Promise<void> {
     const { name, email, phone, password } = this.newUser;
     if (!name.trim() || !email.trim() || !phone.trim()) {
       this.newUserError = 'Nombre, correo y teléfono son obligatorios';
@@ -1028,7 +1028,7 @@ export class SubscribersComponent {
     };
 
     // Create via admin method (does NOT overwrite active profile)
-    this.userService.adminCreateUser(profile);
+    await this.userService.adminCreateUser(profile);
     this.closeNewUserModal();
     this.refreshUsers();
     this.dataSyncService.saveToServer();
@@ -1056,7 +1056,7 @@ export class SubscribersComponent {
     reader.readAsText(file);
   }
 
-  private processCSV(text: string): void {
+  private async processCSV(text: string): Promise<void> {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
       this.showToast('⚠️ El archivo está vacío o no tiene datos');
@@ -1109,7 +1109,7 @@ export class SubscribersComponent {
           subscriptionStatus: 'trial' as any,
           trialEndsAt: trialEnd,
         };
-        this.userService.adminCreateUser(profile);
+        await this.userService.adminCreateUser(profile);
         existingEmails.add(email);
         created++;
       } catch {

@@ -1,94 +1,47 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { SalesFunnel, Deal, FunnelStage } from '../models/sales-funnel.model';
-import { StorageService } from './storage.service';
+import { Injectable, inject } from '@angular/core';
+import { SalesService } from './sales.service';
+import { SalesFunnel, Deal } from '../models/sales-funnel.model';
 
+/**
+ * @deprecated Use SalesService instead. This service is kept only for backward compatibility.
+ * All funnel and deal operations should go through SalesService which is the single source of truth.
+ */
 @Injectable({ providedIn: 'root' })
 export class SalesFunnelService {
-  private readonly STORAGE_KEY = 'um_sales_funnels';
+  private salesService = inject(SalesService);
 
-  private funnelsSignal = signal<SalesFunnel[]>([]);
-
-  readonly funnels = this.funnelsSignal.asReadonly();
-
-  constructor(private storage: StorageService) {
-    this.loadFromStorage();
+  /** @deprecated Use SalesService.funnels() instead */
+  get funnels() {
+    return this.salesService.funnels;
   }
 
+  /** @deprecated Use SalesService.createFunnel() instead */
   createFunnel(funnel: Omit<SalesFunnel, 'id' | 'createdAt' | 'updatedAt'>): SalesFunnel {
-    const newFunnel: SalesFunnel = {
-      ...funnel,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.funnelsSignal.update((f) => [...f, newFunnel]);
-    this.saveToStorage();
-    return newFunnel;
+    return this.salesService.createFunnel(funnel);
   }
 
+  /** @deprecated Use SalesService.createDeal() instead */
   addDeal(funnelId: string, stageId: string, deal: Omit<Deal, 'id' | 'funnelId' | 'stageId' | 'createdAt'>): void {
-    const newDeal: Deal = {
+    this.salesService.createDeal({
       ...deal,
-      id: crypto.randomUUID(),
       funnelId,
       stageId,
-      createdAt: new Date(),
-    };
-    this.funnelsSignal.update((funnels) =>
-      funnels.map((f) => {
-        if (f.id !== funnelId) return f;
-        return {
-          ...f,
-          updatedAt: new Date(),
-          stages: f.stages.map((s) =>
-            s.id === stageId ? { ...s, deals: [...s.deals, newDeal] } : s
-          ),
-        };
-      })
-    );
-    this.saveToStorage();
+      status: deal.status || 'open' as any,
+    } as any);
   }
 
-  moveDeal(funnelId: string, dealId: string, toStageId: string): void {
-    this.funnelsSignal.update((funnels) =>
-      funnels.map((f) => {
-        if (f.id !== funnelId) return f;
-        let deal: Deal | undefined;
-        const stages = f.stages.map((s) => {
-          const found = s.deals.find((d) => d.id === dealId);
-          if (found) deal = { ...found, stageId: toStageId };
-          return { ...s, deals: s.deals.filter((d) => d.id !== dealId) };
-        });
-        if (deal) {
-          return {
-            ...f,
-            updatedAt: new Date(),
-            stages: stages.map((s) =>
-              s.id === toStageId ? { ...s, deals: [...s.deals, deal!] } : s
-            ),
-          };
-        }
-        return f;
-      })
-    );
-    this.saveToStorage();
-  }
-
-  getByGoalId(goalId: string): SalesFunnel[] {
-    return this.funnelsSignal().filter((f) => f.goalId === goalId);
-  }
-
+  /** @deprecated Use SalesService.deleteFunnel() instead */
   delete(id: string): void {
-    this.funnelsSignal.update((f) => f.filter((funnel) => funnel.id !== id));
-    this.saveToStorage();
+    this.salesService.deleteFunnel(id);
   }
 
-  private loadFromStorage(): void {
-    const data = this.storage.get<SalesFunnel[]>(this.STORAGE_KEY);
-    if (data) this.funnelsSignal.set(data);
+  /** @deprecated */
+  getByGoalId(goalId: string): SalesFunnel[] {
+    return this.salesService.funnels().filter(f => (f as any).goalId === goalId);
   }
 
-  private saveToStorage(): void {
-    this.storage.set(this.STORAGE_KEY, this.funnelsSignal());
+  /** @deprecated */
+  moveDeal(_funnelId: string, dealId: string, toStageId: string): void {
+    this.salesService.updateDeal(dealId, { stageId: toStageId });
   }
 }
