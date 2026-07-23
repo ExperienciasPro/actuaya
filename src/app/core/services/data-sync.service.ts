@@ -156,16 +156,11 @@ export class DataSyncService {
 
           console.log('[DataSync] Datos del servidor:', serverKeys.length, 'claves');
 
-          // ── Helper: buscar primero la clave scoped, luego la legacy ──
+          // ── Helper: obtener SOLO la clave scoped (nada de legacy) ──
           const getArray = (baseKey: string): any[] => {
             const scopedKey = `${baseKey}_${userId}`;
             if (serverData[scopedKey] && Array.isArray(serverData[scopedKey])) {
               return serverData[scopedKey] as any[];
-            }
-            // Fallback: clave legacy sin sufijo (datos pre-migración)
-            if (serverData[baseKey] && Array.isArray(serverData[baseKey])) {
-              console.log(`[DataSync] Migración servidor: usando clave legacy '${baseKey}'`);
-              return serverData[baseKey] as any[];
             }
             return [];
           };
@@ -173,7 +168,6 @@ export class DataSyncService {
           const getValue = (baseKey: string): unknown => {
             const scopedKey = `${baseKey}_${userId}`;
             if (serverData[scopedKey] !== undefined) return serverData[scopedKey];
-            if (serverData[baseKey] !== undefined) return serverData[baseKey];
             return undefined;
           };
 
@@ -218,15 +212,9 @@ export class DataSyncService {
               if (key.endsWith(`_${userId}`)) {
                 baseKey = key.substring(0, key.length - userId.length - 1);
               }
-              // Clave legacy sin sufijo de usuario → candidata a migración
-              else if (!key.match(/_[a-z]+-[a-z0-9]{5,}$/i)) {
-                // No migrar claves de estado de UI para evitar saltarse onboarding/intro en usuarios nuevos
-                if (key === 'um_onboarding_welcome_seen' || key === 'um_setup_intro_seen') {
-                  continue;
-                }
-                baseKey = key;
-              }
-              // Clave scoped para OTRO usuario → ignorar
+              // IGNORAR CUALQUIER OTRA CLAVE. 
+              // Fix: Las claves legacy/sin scope causan fugas de datos entre cuentas (ej. un usuario ve el catálogo de otro).
+              // No migrar datos del servidor; la migración ya se hizo o se hace localmente.
               else {
                 continue;
               }
@@ -269,18 +257,8 @@ export class DataSyncService {
             }
           });
 
-          // 3. Auto-migración servidor: re-guardar con claves scoped
-          const needsMigration = serverKeys.some(k =>
-            k.startsWith(this.UM_PREFIX) &&
-            !this.GLOBAL_KEYS.has(k) &&
-            !this.SESSION_LOCAL_KEYS.has(k) &&
-            !k.endsWith('_' + userId) &&
-            !k.match(/_[a-z]+-[a-z0-9]{5,}$/i)
-          );
-          if (needsMigration) {
-            console.log('[DataSync] Data legacy detectada en servidor. Re-guardando con scope...');
-            setTimeout(() => this.saveToServer(), 2000);
-          }
+          // Eliminado: La auto-migración de claves legacy del servidor ha sido deshabilitada
+          // porque causaba fugas de datos entre cuentas y re-guardados innecesarios.
 
           return {
             success: true,

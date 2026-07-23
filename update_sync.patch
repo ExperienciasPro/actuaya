@@ -1,0 +1,20 @@
+--- src/app/core/services/data-sync.service.ts
++++ src/app/core/services/data-sync.service.ts
+@@ -216,19 +216,9 @@
+ 
+               // Clave scoped para ESTE usuario → extraer base
+               if (key.endsWith(`_${userId}`)) {
+                 baseKey = key.substring(0, key.length - userId.length - 1);
+               }
+-              // Clave legacy sin sufijo de usuario → candidata a migración
+-              else if (!key.match(/_[a-z]+-[a-z0-9]{5,}$/i)) {
+-                // No migrar claves de estado de UI para evitar saltarse onboarding/intro en usuarios nuevos
+-                if (key === 'um_onboarding_welcome_seen' || key === 'um_setup_intro_seen') {
+-                  continue;
+-                }
+-                baseKey = key;
+-              }
+-              // Clave scoped para OTRO usuario → ignorar
+               else {
+                 continue;
+               }
