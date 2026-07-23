@@ -3,20 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupportService, SupportTicket } from '../../../core/services/support.service';
 import { StorageService } from '../../../core/services/storage.service';
-import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { UserService } from '../../../core/services/user.service';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 
 type ViewMode = 'list' | 'create' | 'detail';
 
 @Component({
   selector: 'um-user-support',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, UmIconComponent],
   templateUrl: './support.html',
   styleUrls: ['./support.scss']
 })
 export class UserSupportComponent implements OnInit {
   private support = inject(SupportService);
   private storage = inject(StorageService);
+  private userService = inject(UserService);
 
   tickets = signal<SupportTicket[]>([]);
   view = signal<ViewMode>('list');
@@ -94,7 +96,7 @@ export class UserSupportComponent implements OnInit {
     if (!this.newSubject.trim() || !this.newDescription.trim()) return;
 
     const userId = this.storage.getActiveUserId();
-    const user = this.storage.getUserData();
+    const user = this.userService.profile();
     if (!userId) return;
 
     this.submitting.set(true);

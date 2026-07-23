@@ -2,12 +2,12 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupportService, SupportTicket } from '../../../../core/services/support.service';
-import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-admin-support',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, UmIconComponent],
   templateUrl: './admin-support.html',
   styleUrls: ['./admin-support.scss'] // Reusing or linking similar SCSS
 })
