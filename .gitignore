@@ -51,3 +51,8 @@ backend/.env
 
 # Backend dependencies (separate from frontend node_modules)
 backend/node_modules
+check-passwords.js
+debug-hash.js
+debug-user.js
+fix-password.js
+test-email.js
