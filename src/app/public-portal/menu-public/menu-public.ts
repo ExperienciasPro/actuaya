@@ -122,6 +122,7 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
               </div>
             </section>
           }
+        }
 
           @if (!availableItems().length) {
             <div class="empty-menu">

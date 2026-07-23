@@ -53,7 +53,6 @@ export interface MenuConfig {
   schedule: string;       // business hours text
   socialInstagram: string;
   socialWhatsapp: string;
-  coverImageDataUrl?: string; // header background image
 }
 
 export const FONT_FAMILIES: { value: MenuFontFamily; label: string }[] = [
