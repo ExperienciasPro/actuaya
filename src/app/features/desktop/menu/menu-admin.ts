@@ -591,6 +591,20 @@ export class MenuAdminComponent {
   // ── Config helpers ───────────────────────
   saveConfig(): void {
     this.menu.saveConfig(this.cfg);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  async saveAndPublish(): Promise<void> {
+    this.isSaving.set(true);
+    this.menu.saveConfig(this.cfg);
+    const res = await this.dataSync.saveToServer();
+    this.isSaving.set(false);
+    
+    if (res.success || res.msg === 'Nada que guardar') {
+      this.hasUnsavedChanges.set(false);
+    } else {
+      alert('Hubo un problema al subir los datos: ' + res.msg);
+    }
   }
 
   onLogo(event: Event): void {
