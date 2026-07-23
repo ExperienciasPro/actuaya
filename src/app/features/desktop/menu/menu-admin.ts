@@ -183,13 +183,20 @@ type AdminView = 'items' | 'categories' | 'config';
             <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
               <a [href]="publicUrl" target="_blank" class="pub-link" style="font-size: 1rem;">{{ publicUrl }}</a>
               
-              <button class="btn-primary" style="padding: 6px 16px; font-size: 0.9rem;" (click)="saveAndPublish()" [disabled]="!hasUnsavedChanges() || isSaving()">
+              <button class="btn-save-publish" 
+                      [ngClass]="{
+                        'state-saving': isSaving(),
+                        'state-unsaved': hasUnsavedChanges() && !isSaving(),
+                        'state-saved': !hasUnsavedChanges() && !isSaving()
+                      }"
+                      (click)="saveAndPublish()" 
+                      [disabled]="!hasUnsavedChanges() || isSaving()">
                 @if (isSaving()) {
                   ⏳ Guardando...
                 } @else if (hasUnsavedChanges()) {
                   💾 Guardar cambios
                 } @else {
-                  ✅ Cambios guardados
+                  <um-icon name="check-circle" [size]="16" color="#64748b"></um-icon> Cambios guardados
                 }
               </button>
 
