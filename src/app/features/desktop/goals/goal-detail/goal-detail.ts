@@ -145,7 +145,7 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
                     @if (task.status !== 'completed') {
                       <button class="task-action-btn" (click)="startEditTime(task)" title="Tiempo estimado"><um-icon name="timer" [size]="16"></um-icon></button>
                     }
-                    <button class="task-action-btn danger" (click)="deleteTask(task.id)" title="Eliminar">×</button>
+                    <button class="task-action-btn danger" (click)="deleteTask(task.id)" title="Eliminar"><um-icon name="trash" [size]="14"></um-icon></button>
                   </div>
                 </div>
               }

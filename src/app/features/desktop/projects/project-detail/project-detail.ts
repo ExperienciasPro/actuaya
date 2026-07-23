@@ -128,7 +128,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   <span class="section-dot" [style.background]="section.color"></span>
                   <span class="col-name">{{ section.name }}</span>
                   <span class="col-count">{{ getTasksBySection(section.id).length }}</span>
-                  <button class="section-del" (click)="confirmDeleteSection(section)" title="Eliminar sección">×</button>
+                  <button class="section-del" (click)="confirmDeleteSection(section)" title="Eliminar sección"><um-icon name="trash" [size]="14"></um-icon></button>
                 </div>
                 <div class="board-col-body"
                   [class.drag-over]="dragOverSection() === section.id"
@@ -337,7 +337,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                         <button class="leader-toggle" (click)="toggleLeader(member.id)"
                           [title]="p.leaderId === member.id ? 'Quitar líder' : 'Asignar como líder'"
                           [class.active]="p.leaderId === member.id">👑</button>
-                        <button class="member-remove" (click)="removeTeamMember(member.id)" title="Eliminar miembro">×</button>
+                        <button class="member-remove" (click)="removeTeamMember(member.id)" title="Eliminar miembro"><um-icon name="trash" [size]="14"></um-icon></button>
                       </div>
                     }
                   </div>

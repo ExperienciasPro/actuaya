@@ -622,6 +622,7 @@ $asignaciones-primary-glow: color-mix(in srgb, var(--accent, #0ea5e9) 20%, trans
   gap: 8px;
   font-size: 0.8rem;
   color: $color-text-secondary;
+  text-transform: none; // Prevent emails from displaying in uppercase
 
   svg {
     width: 14px;

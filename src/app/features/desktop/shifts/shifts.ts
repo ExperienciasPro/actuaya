@@ -108,7 +108,7 @@ import {
                   @if (shift.note) {
                     <span class="shift-note">{{ shift.note }}</span>
                   }
-                  <button class="shift-remove" (click)="removeShift($event, shift.id)">✕</button>
+                  <button class="shift-remove" (click)="removeShift($event, shift.id)"><um-icon name="trash" [size]="14"></um-icon></button>
                 </div>
               }
 

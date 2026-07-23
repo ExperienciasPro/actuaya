@@ -6,11 +6,12 @@ import { SalesService } from '../../../../core/services/sales.service';
 import { ProductDataService } from '../../../../core/services/product.service';
 import { Deal } from '../../../../core/models/sales-funnel.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-funnel-view',
   standalone: true,
-  imports: [RouterLink, FormsModule, DecimalPipe, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, DecimalPipe, ConfirmDialogComponent, UmIconComponent],
   template: `
     <div class="funnel-view-page">
       @if (funnel(); as f) {
@@ -45,7 +46,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                   <div class="deal-card" [class.won]="deal.status === 'won'" [class.lost]="deal.status === 'lost'">
                     <div class="deal-top">
                       <span class="deal-name">{{ deal.contactName }}</span>
-                      <button class="deal-menu-btn" (click)="confirmDeleteDeal(deal.id)">×</button>
+                      <button class="deal-menu-btn" (click)="confirmDeleteDeal(deal.id)"><um-icon name="trash" [size]="14"></um-icon></button>
                     </div>
                     @if (deal.company) {
                       <span class="deal-company">{{ deal.company }}</span>

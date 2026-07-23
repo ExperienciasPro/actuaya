@@ -187,7 +187,7 @@ import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
                       <span style="font-size: 0.5625rem; background: rgba(124,58,237,0.12); color: var(--accent); padding: 1px 5px; border-radius: 3px;">Sugerida</span>
                     }
                   </div>
-                  <button type="button" class="btn-ghost small" (click)="removeTaskLocally($index)" style="color: var(--accent-danger); padding: 4px; font-size: 1rem;">×</button>
+                  <button type="button" class="btn-ghost small" (click)="removeTaskLocally($index)" style="color: var(--accent-danger); padding: 4px; font-size: 1rem;"><um-icon name="trash" [size]="14"></um-icon></button>
                 </div>
               }
             </div>

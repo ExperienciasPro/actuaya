@@ -5,11 +5,12 @@ import { SalesService } from '../../../../core/services/sales.service';
 import { GoalService } from '../../../../core/services/goal.service';
 import { ProductDataService } from '../../../../core/services/product.service';
 import { FunnelStage } from '../../../../core/models/sales-funnel.model';
+import { UmIconComponent } from '../../../../shared/components/um-icon/um-icon';
 
 @Component({
   selector: 'um-funnel-builder',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, UmIconComponent],
   template: `
     <div class="funnel-builder-page">
       <div class="page-header animate-fadeInUp">
@@ -67,7 +68,7 @@ import { FunnelStage } from '../../../../core/models/sales-funnel.model';
                 <input class="form-input stage-input" [(ngModel)]="stage.name" [name]="'stage-' + i"
                   placeholder="Nombre de la etapa" />
                 <input class="color-input" type="color" [(ngModel)]="stage.color" [name]="'color-' + i" />
-                <button type="button" class="remove-btn" (click)="removeStage(i)" [disabled]="stages().length <= 2">×</button>
+                <button type="button" class="remove-btn" (click)="removeStage(i)" [disabled]="stages().length <= 2"><um-icon name="trash" [size]="14"></um-icon></button>
               </div>
             }
           </div>

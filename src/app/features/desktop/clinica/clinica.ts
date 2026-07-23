@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClinicaService } from '../../../core/services/clinica.service';
 import { CurrencyInputDirective } from '../../../shared/directives/currency-input.directive';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import {
   Patient, Appointment, ClinicalNote, ClinicalHistory,
   APPOINTMENT_TYPES, NOTE_TYPES, STATUS_CONFIG, RISK_LEVELS,
@@ -16,7 +17,7 @@ type ExpTab = 'historia' | 'notas' | 'timeline' | 'banderas' | 'evaluaciones';
 @Component({
   selector: 'app-clinica',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, CurrencyInputDirective],
+  imports: [CommonModule, FormsModule, DatePipe, CurrencyInputDirective, UmIconComponent],
   styleUrl: 'clinica.scss',
   template: `
     <div class="clinica-page">
@@ -156,7 +157,7 @@ type ExpTab = 'historia' | 'notas' | 'timeline' | 'banderas' | 'evaluaciones';
                    (click)="$event.stopPropagation(); openAppointmentDetail(cell.appointment)">
                 <span class="appt-time">{{ cell.appointment.startTime }}</span>
                 <span class="appt-name">{{ cell.appointment.patientName }}</span>
-                <button class="appt-remove" (click)="$event.stopPropagation()">×</button>
+                <button class="appt-remove" (click)="$event.stopPropagation()"><um-icon name="trash" [size]="12"></um-icon></button>
               </div>
             </div>
           </ng-container>

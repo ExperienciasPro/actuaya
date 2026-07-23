@@ -258,7 +258,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                 <div class="line-total">
                   {{ item.quantity * item.unitPrice | currency:'COP':'symbol-narrow':'1.0-0' }}
                 </div>
-                <button class="btn-remove-line" (click)="removeLine(i)">✕</button>
+                <button class="btn-remove-line" (click)="removeLine(i)"><um-icon name="trash" [size]="14"></um-icon></button>
               </div>
             }
 

@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import { AsignacionesService } from '../../../core/services/asignaciones.service';
 import {
   Technician, Assignment, ASSIGNMENT_TYPES, STATUS_CONFIG, WEEKDAYS, WEEKDAYS_SHORT, AssignmentType, AssignmentStatus
@@ -11,7 +12,7 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
 @Component({
   selector: 'app-asignaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, UmIconComponent],
   styleUrl: 'asignaciones.scss',
   template: `
     <div class="clinica-page">
@@ -138,7 +139,7 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
                    (click)="$event.stopPropagation(); openAssignmentDetail(cell.assignment)">
                 <span class="asg-time">{{ cell.assignment.startTime }}</span>
                 <span class="asg-name">{{ cell.assignment.technicianName }}</span>
-                <button class="asg-remove" (click)="$event.stopPropagation(); deleteAssignment(cell.assignment.id)">×</button>
+                <button class="asg-remove" (click)="$event.stopPropagation(); deleteAssignment(cell.assignment.id)"><um-icon name="trash" [size]="12"></um-icon></button>
               </div>
             </div>
           </ng-container>
