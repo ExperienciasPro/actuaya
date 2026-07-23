@@ -477,6 +477,7 @@ export class DesktopLayoutComponent implements OnInit {
         title: 'General',
         items: [
           { label: 'Dashboard', icon: '🏠', iconKey: 'home', route: '/d/dashboard' },
+          { label: 'Soporte', icon: '🎧', iconKey: 'coach', route: '/d/soporte' },
         ],
       },
       {
@@ -578,8 +579,9 @@ export class DesktopLayoutComponent implements OnInit {
       items: [
         { label: 'Panel Admin', icon: '⚙️', iconKey: 'settings', route: '/d/admin/panel' },
         { label: 'Usuarios', icon: '💎', iconKey: 'subscriptions', route: '/d/admin/subscriptions' },
+        { label: 'Bandeja de Soporte', icon: '🎧', iconKey: 'coach', route: '/d/admin/soporte' },
       ],
-    },
+    }
   ];
 
   toggleSidebar(): void {

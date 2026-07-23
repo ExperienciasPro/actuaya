@@ -315,6 +315,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/desktop/admin/subscribers/subscribers.component').then((m) => m.SubscribersComponent),
       },
+      {
+        path: 'admin/soporte',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./features/desktop/admin/support/admin-support').then((m) => m.AdminSupportComponent),
+      },
       // — Appearance —
       {
         path: 'appearance',
@@ -326,6 +332,12 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () =>
           import('./features/desktop/settings/settings').then((m) => m.SettingsComponent),
+      },
+      // — Soporte —
+      {
+        path: 'soporte',
+        loadComponent: () =>
+          import('./features/desktop/support/support').then((m) => m.UserSupportComponent),
       },
       // — CEO Dashboard (OT Analytics) —
       {

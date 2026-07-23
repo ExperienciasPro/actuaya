@@ -88,8 +88,11 @@ apiRouter.get('/status', (req, res) => {
 // Data persistence (replaces data.php)
 const dataRoutes = require('./routes/data.routes');
 const authRoutes = require('./routes/auth.routes');
+const supportRoutes = require('./routes/support.routes');
+
 apiRouter.use('/data', writeLimiter, dataRoutes);
 apiRouter.use('/auth', writeLimiter, authRoutes);
+apiRouter.use('/support', supportRoutes);
 apiRouter.use('/menu', require('./routes/menu.routes'));
 
 // Mount only under /api (HAL-07: removed duplicate root mount)

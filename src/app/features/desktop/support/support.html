@@ -1,0 +1,127 @@
+<div class="support-page">
+  <!-- Sidebar / List -->
+  <aside class="support-sidebar" [class.hidden-mobile]="view() !== 'list'">
+    <div class="sidebar-header">
+      <h2>Soporte</h2>
+      <button class="btn-primary" (click)="openCreate()">+ Nuevo ticket</button>
+    </div>
+
+    <div class="ticket-list">
+      @if (loading()) {
+        <p class="loading-text">Cargando...</p>
+      } @else if (tickets().length === 0) {
+        <p class="empty-text">No tienes tickets de soporte activos.</p>
+      } @else {
+        @for (t of tickets(); track t._id) {
+          <div class="ticket-item" 
+               [class.active]="selectedTicket()?._id === t._id"
+               (click)="openTicket(t)">
+            <div class="ticket-item-header">
+              <span class="status-badge" [class.closed]="t.status === 'closed'">
+                {{ t.status === 'open' ? 'Abierto' : 'Cerrado' }}
+              </span>
+              <span class="date">{{ t.updatedAt | date:'shortDate' }}</span>
+            </div>
+            <h4 class="ticket-subject">{{ t.subject }}</h4>
+            <p class="ticket-preview">{{ t.description }}</p>
+          </div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="support-main" [class.hidden-mobile]="view() === 'list'">
+    
+    @if (view() === 'create') {
+      <div class="create-view">
+        <button class="btn-back" (click)="goBack()"><um-icon name="arrow-left"></um-icon> Volver</button>
+        <h3>Crear nuevo ticket</h3>
+        <p class="subtitle">Describe tu problema o sugerencia. Te responderemos lo antes posible.</p>
+
+        <form class="ticket-form" (ngSubmit)="submitTicket()">
+          <div class="form-field">
+            <label>Asunto</label>
+            <input type="text" [(ngModel)]="newSubject" name="subject" placeholder="Ej. Problema con el menú" required />
+          </div>
+
+          <div class="form-field">
+            <label>Descripción detallada</label>
+            <textarea [(ngModel)]="newDescription" name="desc" rows="5" placeholder="Explica tu caso aquí..." required></textarea>
+          </div>
+
+          <div class="form-field">
+            <label>Captura de pantalla (Opcional)</label>
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input" />
+            @if (newScreenshot) {
+              <img [src]="newScreenshot" class="screenshot-preview" />
+            }
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="submitting() || !newSubject || !newDescription">
+              {{ submitting() ? 'Enviando...' : 'Enviar ticket' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    } 
+    
+    @else if (view() === 'detail' && selectedTicket()) {
+      <div class="detail-view">
+        <div class="detail-header">
+          <button class="btn-back" (click)="goBack()"><um-icon name="arrow-left"></um-icon></button>
+          <div class="detail-title">
+            <h3>{{ selectedTicket()!.subject }}</h3>
+            <span class="status-badge" [class.closed]="selectedTicket()!.status === 'closed'">
+              {{ selectedTicket()!.status === 'open' ? 'Abierto' : 'Cerrado' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="chat-history">
+          <!-- Initial message -->
+          <div class="chat-bubble user-bubble">
+            <div class="bubble-header">
+              <strong>Tú</strong>
+              <span>{{ selectedTicket()!.createdAt | date:'short' }}</span>
+            </div>
+            <div class="bubble-content">
+              <p>{{ selectedTicket()!.description }}</p>
+              @if (selectedTicket()!.screenshot) {
+                <img [src]="selectedTicket()!.screenshot" class="chat-img" />
+              }
+            </div>
+          </div>
+
+          <!-- Replies -->
+          @for (reply of selectedTicket()!.replies; track reply.createdAt) {
+            <div class="chat-bubble" [class.user-bubble]="reply.sender === 'user'" [class.admin-bubble]="reply.sender === 'admin'">
+              <div class="bubble-header">
+                <strong>{{ reply.sender === 'user' ? 'Tú' : 'Soporte ActuaYa' }}</strong>
+                <span>{{ reply.createdAt | date:'short' }}</span>
+              </div>
+              <div class="bubble-content">
+                <p>{{ reply.message }}</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="reply-box">
+          <textarea [(ngModel)]="replyMessage" placeholder="Escribe tu respuesta..." rows="3"></textarea>
+          <button class="btn-primary" [disabled]="submitting() || !replyMessage" (click)="sendReply()">
+            {{ submitting() ? 'Enviando...' : 'Responder' }}
+          </button>
+        </div>
+      </div>
+    } 
+    
+    @else {
+      <div class="empty-state">
+        <um-icon name="message-circle" size="48"></um-icon>
+        <p>Selecciona un ticket o crea uno nuevo</p>
+      </div>
+    }
+  </main>
+</div>
