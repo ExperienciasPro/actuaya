@@ -214,10 +214,14 @@ type AdminView = 'items' | 'categories' | 'config';
         <!-- Section: Identidad -->
         <div class="card animate-fadeInUp stagger-2">
           <h3>🏪 Identidad del negocio</h3>
-          <div class="form-row-1">
+          <div class="form-row-2">
             <div class="form-field">
               <label>Nombre del negocio</label>
               <input type="text" [(ngModel)]="cfg.businessName" name="bizName" (ngModelChange)="onBusinessNameChange()" />
+            </div>
+            <div class="form-field">
+              <label>Enlace personalizado</label>
+              <input type="text" [(ngModel)]="cfg.slug" name="slug" (ngModelChange)="onSlugChange()" placeholder="ej-mi-negocio" />
             </div>
           </div>
           <div class="form-field">
