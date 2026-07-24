@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject, Injector } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector, effect } from '@angular/core';
 import { SalesFunnel, FunnelStage, Deal, DealStatus } from '../models/sales-funnel.model';
 import { StorageService } from './storage.service';
 import { DataSyncService } from './data-sync.service';
@@ -55,6 +55,24 @@ export class SalesService {
   constructor(private storage: StorageService) {
     this.loadFromStorage();
     this.migrateLegacySalesFunnels();
+
+    // React to external storage changes (e.g. syncFromServer hydrating from server data)
+    effect(() => {
+      if (this.storage.updateToken() >= 0) {
+        this.reloadFromStorage();
+      }
+    });
+  }
+
+  /**
+   * Reload signals from localStorage without losing local-only state.
+   * Called by the storage-change effect to pick up changes from syncFromServer.
+   */
+  private reloadFromStorage(): void {
+    const funnels = this.storage.get<SalesFunnel[]>(this.FUNNELS_KEY);
+    const deals = this.storage.get<Deal[]>(this.DEALS_KEY);
+    if (funnels) this.funnelsSignal.set(funnels);
+    if (deals) this.dealsSignal.set(deals);
   }
 
   /**

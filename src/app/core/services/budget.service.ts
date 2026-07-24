@@ -1,11 +1,22 @@
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
+import { Injectable, inject, signal, computed, effect, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { AnnualBudget, BudgetEntry } from '../models/budget.model';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class BudgetService {
   private storage = inject(StorageService);
+  private injector = inject(Injector);
   private readonly STORAGE_KEY = 'um_annual_budget';
+
+  /** Lazy-resolve DataSyncService to avoid circular dependency */
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private budgetsSignal = signal<AnnualBudget[]>([]);
 
@@ -162,6 +173,8 @@ export class BudgetService {
       })
     );
     this.persist();
+    // Force immediate server save so deletions aren't lost to sync race conditions
+    try { this.dataSync.saveToServerImmediate(); } catch (e) { console.warn('[BudgetService] Error forzando guardado inmediato:', e); }
   }
 
   getIncomeEntries(year: number): BudgetEntry[] {

@@ -243,7 +243,17 @@ export class DataSyncService {
             try { this.goalService.hydrateDirectly(goalsArr); } catch (err) { console.error('Error hidratando goals:', err); }
             try { this.taskService.hydrateDirectly(tasksArr); } catch (err) { console.error('Error hidratando tasks:', err); }
             try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
-            try { if (budgetVal !== undefined) this.budgetService.hydrateDirectly(budgetVal); } catch (err) { console.error('Error hidratando budget:', err); }
+            try {
+              if (budgetVal !== undefined) {
+                const budgetKey = 'um_annual_budget';
+                const budgetKeyScoped = `${budgetKey}_${userId}`;
+                if (this.locallyModifiedKeys.has(budgetKey) || this.locallyModifiedKeys.has(budgetKeyScoped)) {
+                  console.log(`[DataSync] Skipping budget hydration — modified locally since sync started`);
+                } else {
+                  this.budgetService.hydrateDirectly(budgetVal);
+                }
+              }
+            } catch (err) { console.error('Error hidratando budget:', err); }
             try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
 
             console.log(`[DataSync] Hidratadas ${restored} claves del servidor`);
@@ -512,18 +522,18 @@ export class DataSyncService {
     }, 300);
   }
 
-  /** Bypass debounce — use for critical operations like deletions */
+  /** Bypass debounce AND hasSynced guard — use for critical operations like deletions */
   saveToServerImmediate(): void {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    this.saveToServer();
+    this.saveToServer(true);
   }
 
-  /** Guarda inmediatamente al servidor */
-  async saveToServer(): Promise<void> {
-    if (!this.hasSynced) {
+  /** Guarda inmediatamente al servidor. force=true bypasses the hasSynced guard for critical ops. */
+  async saveToServer(force = false): Promise<void> {
+    if (!this.hasSynced && !force) {
       // Don't silently discard — mark as pending so it runs after sync
       this.pendingSave = true;
       console.log('[DataSync] Save deferred: initial sync not complete yet.');
