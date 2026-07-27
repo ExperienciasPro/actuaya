@@ -382,6 +382,10 @@ export class WelcomeComponent implements OnInit {
       this.isLoading = true;
 
       try {
+        // SAFETY: Force logout of any previous session before registering.
+        // This prevents the new registration from inheriting another user's ID/data.
+        this.userService.clearProfile();
+
         // Email uniqueness check via syncUserList() + local check
         try {
           await this.syncService.syncUserList();
@@ -418,17 +422,13 @@ export class WelcomeComponent implements OnInit {
 
           // CRITICAL: First, merge the server's user list with our local list
           // so we don't overwrite other users when we save.
-          // syncUserList merges by ID and deduplicates by email, so the new user
-          // will be added to the full server list.
           await this.syncService.syncUserList();
 
           // Now save to server — um_users will contain the full merged list + our new user
           await this.syncService.saveToServer();
 
-          // Sincronizar en background para no demorar la navegación
-          this.syncService.syncFromServer().catch(err => {
-            console.warn('Error syncFromServer background:', err);
-          });
+          // NOTE: Do NOT call syncFromServer() here — it could overwrite the freshly
+          // created user with stale server data before the save propagates.
         } catch (e) {
           console.warn('Error en la sincronización inicial de registro:', e);
         }

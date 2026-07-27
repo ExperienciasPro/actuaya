@@ -209,9 +209,25 @@ export class UserService {
 
   /** Save/update user profile (used in registration and profile edit) */
   async saveProfile(data: Partial<UserProfile>): Promise<void> {
-    const current = this.profile();
-    const isNew = !current;
+    let current = this.profile();
     const now = new Date();
+
+    // ── Detect REGISTRATION vs PROFILE UPDATE ──
+    // If there's an active profile but the email being saved is DIFFERENT,
+    // this is a new user registering on a device that didn't logout properly.
+    // We must force logout first to avoid overwriting the previous user's account.
+    const isRegistration = !!(data.password && data.email) && (
+      !current ||
+      (current.email?.toLowerCase() !== data.email.toLowerCase())
+    );
+
+    if (isRegistration && current) {
+      console.warn(`[UserService] Registration detected with active session (${current.email}). Forcing logout first.`);
+      this.clearProfile();
+      current = null; // Reset so we generate a fresh ID
+    }
+
+    const isNew = !current;
 
     let password = data.password ?? current?.password;
     if (password && !password.startsWith('sha256$')) {
