@@ -415,22 +415,31 @@ export class WelcomeComponent implements OnInit {
           city: this.city === 'Otra ciudad / No listada' ? this.cityOther.trim() : this.city.trim(),
         });
 
-        // Ensure registration data forces a sync right away
+        // Ensure the new user reaches the server BEFORE navigating away.
+        // Use saveUsersToServer (lightweight, only um_users) instead of
+        // saveToServer (bulk, all data) — much more likely to succeed on slow mobile connections.
+        let serverSaveOk = false;
         try {
-          // Habilitar temporalmente hasSynced para poder subir la nueva cuenta
-          (this.syncService as any).hasSynced = true;
-
-          // CRITICAL: First, merge the server's user list with our local list
-          // so we don't overwrite other users when we save.
+          // Merge local list with server to preserve all existing users
           await this.syncService.syncUserList();
 
-          // Now save to server — um_users will contain the full merged list + our new user
-          await this.syncService.saveToServer();
+          // Push the merged list (with new user) to the server
+          await this.syncService.saveUsersToServer();
+          serverSaveOk = true;
 
-          // NOTE: Do NOT call syncFromServer() here — it could overwrite the freshly
-          // created user with stale server data before the save propagates.
+          // Now enable full sync for subsequent data saves
+          (this.syncService as any).hasSynced = true;
         } catch (e) {
-          console.warn('Error en la sincronización inicial de registro:', e);
+          console.warn('Error guardando nuevo usuario al servidor:', e);
+        }
+
+        if (!serverSaveOk) {
+          // Retry once more — critical that the user reaches the server
+          try {
+            await this.syncService.saveUsersToServer();
+          } catch (e2) {
+            console.error('CRITICAL: User registration may not have been saved to server:', e2);
+          }
         }
 
         this.router.navigate(['/setup']);
