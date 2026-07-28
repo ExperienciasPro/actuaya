@@ -151,6 +151,8 @@
       border-radius: 20px;
       cursor: pointer;
       font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
       white-space: nowrap;
       transition: all 0.2s;
       
@@ -159,9 +161,9 @@
       }
       
       &.active {
-        background: var(--accent);
-        color: white;
-        border-color: var(--accent);
+        background: var(--accent) !important;
+        color: white !important;
+        border-color: var(--accent) !important;
       }
     }
     
