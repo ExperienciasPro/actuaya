@@ -259,6 +259,7 @@ export class SettingsComponent {
         { id: 'inventory', icon: '📦', name: 'Control de Inventario', desc: 'Existencias con alertas de stock mínimo' },
         { id: 'menu_digital', icon: '🍽️', name: 'Menú Digital', desc: 'Carta digital para bares, restaurantes y cafés' },
         { id: 'shifts', icon: '🕐', name: 'Gestión de Turnos', desc: 'Horarios del equipo por semanas o meses' },
+        { id: 'pos', icon: '🛒', name: 'Punto de Venta (POS)', desc: 'Caja registradora para ventas rápidas con descuento automático de inventario' },
       ],
     },
     {

@@ -278,6 +278,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/desktop/shifts/shifts').then((m) => m.ShiftsComponent),
       },
+      // — POS (Punto de Venta) —
+      {
+        path: 'pos',
+        loadComponent: () =>
+          import('./features/desktop/pos/pos').then((m) => m.PosComponent),
+      },
+      // — Reportes de Operaciones —
+      {
+        path: 'operations-reports',
+        loadComponent: () =>
+          import('./features/desktop/operations-reports/operations-reports').then((m) => m.OperationsReportsComponent),
+      },
       // — SuperAdmin —
       {
         path: 'admin/income',

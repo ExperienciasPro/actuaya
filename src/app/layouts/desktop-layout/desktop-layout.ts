@@ -531,6 +531,8 @@ export class DesktopLayoutComponent implements OnInit {
           { label: 'Inventario', icon: '📦', iconKey: 'inventory', route: '/d/inventory', moduleId: 'inventory' },
           { label: 'Menú Digital', icon: '🍽️', iconKey: 'menu', route: '/d/menu', moduleId: 'menu_digital' },
           { label: 'Turnos', icon: '🕐', iconKey: 'shifts', route: '/d/shifts', moduleId: 'shifts' },
+          { label: 'Punto de Venta', icon: '🛒', iconKey: 'inventory', route: '/d/pos', moduleId: 'pos' },
+          { label: 'Reportes Operaciones', icon: '📊', iconKey: 'analytics', route: '/d/operations-reports', moduleId: ['inventory', 'pos'] },
         ],
       },
     ];
