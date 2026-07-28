@@ -44,19 +44,6 @@ interface CategoryDef {
               <label>Correo Electrónico</label>
               <input type="email" [(ngModel)]="editEmail" placeholder="tu@correo.com" />
             </div>
-            <div class="input-group full-width" style="margin-top: 16px;">
-              <label>Modo de Punto de Venta (POS)</label>
-              <div style="display: flex; gap: 12px; margin-top: 8px;">
-                <button type="button" [class.active]="editPosMode === 'retail'" (click)="editPosMode = 'retail'" 
-                        class="toggle-btn">
-                  🛒 Comercio / Retail
-                </button>
-                <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="editPosMode = 'gastronomy'" 
-                        class="toggle-btn">
-                  🍽️ Restaurante / Gastro
-                </button>
-              </div>
-            </div>
             <button class="save-profile-btn" (click)="saveUserProfile()" [disabled]="!isProfileDirty()" style="margin-top: 24px;">
               Guardar Cambios
             </button>
@@ -122,6 +109,21 @@ interface CategoryDef {
                         <div class="mod-switch-thumb"></div>
                       </div>
                     </button>
+                    @if (m.id === 'pos' && isEnabled('pos')) {
+                      <div class="pos-mode-selector" style="padding: 16px 20px; background: rgba(108, 60, 233, 0.03); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px;">
+                        <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">¿Qué tipo de negocio tienes?</label>
+                        <div style="display: flex; gap: 12px;">
+                          <button type="button" [class.active]="editPosMode === 'retail'" (click)="setPosMode('retail')" 
+                                  class="toggle-btn">
+                            🛒 Comercio / Retail
+                          </button>
+                          <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="setPosMode('gastronomy')" 
+                                  class="toggle-btn">
+                            🍽️ Restaurante / Gastro
+                          </button>
+                        </div>
+                      </div>
+                    }
                   }
                 </div>
               </div>
@@ -226,8 +228,7 @@ export class SettingsComponent {
   isProfileDirty(): boolean {
     const current = this.userService.profile() || { name: '', email: '', posMode: 'retail' };
     return this.editName !== current.name || 
-           this.editEmail !== current.email || 
-           this.editPosMode !== (current.posMode || 'retail');
+           this.editEmail !== current.email;
   }
 
   async saveUserProfile(): Promise<void> {
@@ -237,6 +238,16 @@ export class SettingsComponent {
       posMode: this.editPosMode as any
     });
     this.showToast('✅ Perfil actualizado correctamente');
+  }
+
+  async setPosMode(mode: 'retail' | 'gastronomy') {
+    this.editPosMode = mode;
+    await this.userService.saveProfile({ 
+      name: this.editName, 
+      email: this.editEmail,
+      posMode: mode
+    });
+    this.showToast('✅ Modo de Punto de Venta guardado');
   }
 
   updatePassword(): void {
