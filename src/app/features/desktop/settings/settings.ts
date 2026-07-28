@@ -109,21 +109,6 @@ interface CategoryDef {
                         <div class="mod-switch-thumb"></div>
                       </div>
                     </button>
-                    @if (m.id === 'pos' && isEnabled('pos')) {
-                      <div class="pos-mode-selector" style="padding: 16px 20px; background: rgba(108, 60, 233, 0.03); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px;">
-                        <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">¿Qué tipo de negocio tienes?</label>
-                        <div style="display: flex; gap: 12px;">
-                          <button type="button" [class.active]="editPosMode === 'retail'" (click)="setPosMode('retail')" 
-                                  class="toggle-btn">
-                            🛒 Comercio / Retail
-                          </button>
-                          <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="setPosMode('gastronomy')" 
-                                  class="toggle-btn">
-                            🍽️ Restaurante / Gastro
-                          </button>
-                        </div>
-                      </div>
-                    }
                   }
                 </div>
               </div>
@@ -180,6 +165,29 @@ interface CategoryDef {
         </div>
       </div>
 
+      <!-- POS Mode Modal -->
+      @if (showPosModal()) {
+        <div class="session-modal-backdrop" (click)="showPosModal.set(false)" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+          <div class="session-modal-card animate-fadeInUp" (click)="$event.stopPropagation()" style="background: var(--surface); padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h2 style="margin-bottom: 8px;">¿Qué tipo de negocio tienes?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">Selecciona el modo de Punto de Venta que mejor se adapte a tu operación.</p>
+            <div style="display: flex; gap: 16px; flex-direction: column;">
+              <button type="button" [class.active]="editPosMode === 'retail'" (click)="setPosMode('retail'); showPosModal.set(false)" 
+                      class="toggle-btn" style="padding: 20px; font-size: 16px;">
+                🛒 Comercio / Retail<br>
+                <span style="font-size: 12px; font-weight: normal; opacity: 0.8; display: block; margin-top: 4px;">Ideal para tiendas, minimarkets y ventas rápidas.</span>
+              </button>
+              <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="setPosMode('gastronomy'); showPosModal.set(false)" 
+                      class="toggle-btn" style="padding: 20px; font-size: 16px;">
+                🍽️ Restaurante / Gastro<br>
+                <span style="font-size: 12px; font-weight: normal; opacity: 0.8; display: block; margin-top: 4px;">Plano visual de mesas, cuentas abiertas y propinas.</span>
+              </button>
+            </div>
+            <button class="cancel-btn" (click)="showPosModal.set(false)" style="margin-top: 24px; width: 100%; padding: 12px; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); font-weight: 600;">Cerrar</button>
+          </div>
+        </div>
+      }
+
       <!-- Toast -->
       @if (toast()) {
         <div class="toast animate-fadeInUp">{{ toast() }}</div>
@@ -224,6 +232,7 @@ export class SettingsComponent {
   editPosMode = this.userService.profile()?.posMode || 'retail';
   showPasswordForm = signal(false);
   newPassword = signal('');
+  showPosModal = signal(false);
 
   isProfileDirty(): boolean {
     const current = this.userService.profile() || { name: '', email: '', posMode: 'retail' };
@@ -357,6 +366,10 @@ export class SettingsComponent {
       // Module was just enabled — check dependencies
       const depMsg = this.getActivationMessage(id, next);
       this.showToast(depMsg || `✅ ${this.getModuleName(id)} activado`);
+      
+      if (id === 'pos') {
+        this.showPosModal.set(true);
+      }
     } else {
       this.showToast(`❌ ${this.getModuleName(id)} desactivado`);
     }
@@ -379,6 +392,10 @@ export class SettingsComponent {
     this.enabledModules.set(next);
     this.saveModules(next);
     this.showToast(allOn ? `Categoría ${cat.title} desactivada` : `✅ Categoría ${cat.title} activada`);
+    
+    if (!allOn && cat.modules.some(m => m.id === 'pos')) {
+      this.showPosModal.set(true);
+    }
   }
 
   resetModules(): void {
