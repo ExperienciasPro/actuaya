@@ -51,59 +51,95 @@ import { Product } from '../../../core/models/product.model';
       <div class="pos-body">
         <!-- Left Panel: Products -->
         <div class="pos-products">
-          <div class="search-bar animate-fadeInUp stagger-1">
-            <um-icon name="search" [size]="20"></um-icon>
-            <input
-              type="text"
-              placeholder="Buscar producto por nombre o código..."
-              [ngModel]="searchQuery()"
-              (ngModelChange)="searchQuery.set($event)">
+          <!-- Source Selector -->
+          <div class="source-selector animate-fadeInUp">
+            <button [class.active]="uiSource() === 'menu'" (click)="setSource('menu')">
+              <span class="emoji">🍽️</span> Menú
+            </button>
+            <button [class.active]="uiSource() === 'catalog'" (click)="setSource('catalog')">
+              <span class="emoji">📦</span> Inventario
+            </button>
+            <button [class.active]="uiSource() === 'manual'" (click)="setSource('manual')">
+              <span class="emoji">✏️</span> Manual
+            </button>
           </div>
 
-          <div class="category-filters animate-fadeInUp stagger-2">
-            <button
-              class="pill"
-              [class.active]="selectedCategory() === 'all'"
-              (click)="selectedCategory.set('all')">
-              Todos
-            </button>
-            @for (cat of pos.productCategories(); track cat) {
+          @if (uiSource() !== 'manual') {
+            <div class="search-bar animate-fadeInUp stagger-1">
+              <um-icon name="search" [size]="20"></um-icon>
+              <input
+                type="text"
+                placeholder="Buscar producto por nombre o código..."
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)">
+            </div>
+
+            <div class="category-filters animate-fadeInUp stagger-2">
               <button
                 class="pill"
-                [class.active]="selectedCategory() === cat"
-                (click)="selectedCategory.set(cat)">
-                {{ cat }}
+                [class.active]="selectedCategory() === 'all'"
+                (click)="selectedCategory.set('all')">
+                Todos
               </button>
-            }
-          </div>
+              @for (cat of pos.productCategories(); track cat) {
+                <button
+                  class="pill"
+                  [class.active]="selectedCategory() === cat"
+                  (click)="selectedCategory.set(cat)">
+                  {{ cat }}
+                </button>
+              }
+            </div>
 
-          <div class="product-grid animate-fadeInUp stagger-3">
-            @for (product of filteredProducts(); track product.id) {
-              <div class="product-card" (click)="addToCart(product)">
-                <div class="product-info">
-                  <div class="product-name">{{ product.name }}</div>
-                  <div class="product-price">{{ fmt(product.salePrice) }}</div>
-                </div>
+            <div class="product-grid animate-fadeInUp stagger-3">
+              @for (product of filteredProducts(); track product.id) {
+                <div class="product-card" (click)="addToCart(product)">
+                  <div class="product-info">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">{{ fmt(product.salePrice) }}</div>
+                  </div>
 
-                <div class="product-meta">
-                  @if (product.trackInventory) {
-                    <div class="stock-badge" [class.low]="product.currentStock <= product.minStock" [class.out]="product.currentStock === 0">
-                      {{ product.currentStock }} {{ product.unit }}
-                    </div>
-                  } @else {
-                    <div class="stock-badge grey">∞</div>
-                  }
-                  <button class="btn-add">
-                    <um-icon name="plus" [size]="16"></um-icon>
-                  </button>
+                  <div class="product-meta">
+                    @if (product.trackInventory) {
+                      <div class="stock-badge" [class.low]="product.currentStock <= product.minStock" [class.out]="product.currentStock === 0">
+                        {{ product.currentStock }} {{ product.unit }}
+                      </div>
+                    } @else {
+                      <div class="stock-badge grey">∞</div>
+                    }
+                    <button class="btn-add">
+                      <um-icon name="plus" [size]="16"></um-icon>
+                    </button>
+                  </div>
                 </div>
+              } @empty {
+                <div class="empty-products">
+                  <p>No se encontraron productos.</p>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="manual-product-form animate-fadeInUp stagger-1">
+              <h3>Agregar Producto Manual</h3>
+              <p class="help-text">Usa esta opción para ventas esporádicas o servicios que no están en catálogo.</p>
+              
+              <div class="form-group">
+                <label>Nombre del producto o servicio</label>
+                <input type="text" [(ngModel)]="manualProductName" placeholder="Ej. Propina, Empaque, etc.">
               </div>
-            } @empty {
-              <div class="empty-products">
-                <p>No se encontraron productos.</p>
+              
+              <div class="form-group">
+                <label>Precio</label>
+                <input type="number" [(ngModel)]="manualProductPrice" placeholder="0" min="0">
               </div>
-            }
-          </div>
+              
+              <button class="btn-primary" 
+                      [disabled]="!manualProductName || !manualProductPrice"
+                      (click)="addManualProduct()">
+                Agregar al pedido
+              </button>
+            </div>
+          }
         </div>
 
         <!-- Right Panel: Cart -->
@@ -301,11 +337,16 @@ import { Product } from '../../../core/models/product.model';
 export class PosComponent {
   pos = inject(POSService);
 
+  uiSource = signal<'menu' | 'catalog' | 'manual'>(this.pos.productSource());
+
   searchQuery = signal('');
   selectedCategory = signal('all');
   cart = signal<POSCartItem[]>([]);
   paymentMethod = signal<PaymentMethod>('efectivo');
   errorMsg = signal('');
+
+  manualProductName = '';
+  manualProductPrice: number | null = null;
 
   cashReceived: number = 0;
   discount: number = 0;
@@ -351,6 +392,41 @@ export class PosComponent {
   changeAmount = computed(() =>
     Math.max(0, this.cashReceived - this.cartTotal())
   );
+
+  setSource(source: 'menu' | 'catalog' | 'manual') {
+    this.uiSource.set(source);
+    if (source === 'menu' || source === 'catalog') {
+      this.pos.setProductSource(source);
+    }
+  }
+
+  addManualProduct() {
+    if (!this.manualProductName || !this.manualProductPrice || this.manualProductPrice <= 0) {
+      return;
+    }
+    
+    const manualProduct: Product = {
+      id: 'manual-' + Date.now(),
+      name: this.manualProductName,
+      description: 'Producto ingresado manualmente',
+      sku: '',
+      salePrice: this.manualProductPrice,
+      costPrice: 0,
+      unit: 'unidad',
+      category: 'General',
+      currentStock: 9999,
+      minStock: 0,
+      active: true,
+      trackInventory: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    this.addToCart(manualProduct);
+    
+    // Reset form
+    this.manualProductName = '';
+    this.manualProductPrice = null;
+  }
 
   addToCart(product: Product) {
     this.cart.update(items => {

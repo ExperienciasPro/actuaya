@@ -109,6 +109,100 @@
   flex-direction: column;
   gap: 20px;
   
+  .source-selector {
+    display: flex;
+    gap: 8px;
+    background: var(--card-bg);
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    
+    button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      .emoji {
+        font-size: 18px;
+      }
+      
+      &:hover {
+        background: var(--bg-color);
+        color: var(--text-primary);
+      }
+      
+      &.active {
+        background: rgba(108, 60, 233, 0.1);
+        color: var(--accent);
+      }
+    }
+  }
+
+  .manual-product-form {
+    background: var(--card-bg);
+    border: 1px dashed var(--border-color);
+    border-radius: 14px;
+    padding: 32px;
+    
+    h3 {
+      margin: 0 0 8px 0;
+      color: var(--text-primary);
+    }
+    
+    .help-text {
+      color: var(--text-secondary);
+      margin: 0 0 24px 0;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+      }
+      
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        
+        &:focus {
+          outline: none;
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(108, 60, 233, 0.1);
+        }
+      }
+    }
+    
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      margin-top: 12px;
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
   .search-bar {
     position: relative;
     

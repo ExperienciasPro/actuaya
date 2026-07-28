@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
+import { MenuService } from './menu.service';
 import { CashflowService } from './cashflow.service';
 import { POSSale, POSSaleItem, POSSession, POSCartItem, PaymentMethod } from '../models/pos.model';
 import { Transaction } from '../models/cashflow.model';
@@ -12,16 +13,23 @@ const SESSIONS_KEY = 'um_pos_sessions';
 export class POSService {
   private storage = inject(StorageService);
   private productService = inject(ProductCatalogService);
+  private menuService = inject(MenuService);
   private cashflowService = inject(CashflowService);
 
   // ─── State ──────────────────────────────
   private _sales = signal<POSSale[]>(this.storage.get<POSSale[]>(SALES_KEY) || []);
   private _sessions = signal<POSSession[]>(this.storage.get<POSSession[]>(SESSIONS_KEY) || []);
+  
+  productSource = signal<'catalog' | 'menu'>(this.storage.get<'catalog' | 'menu'>('um_pos_source') || 'catalog');
 
   sales = this._sales.asReadonly();
   sessions = this._sessions.asReadonly();
 
   // ─── Computed ───────────────────────────
+  setProductSource(source: 'catalog' | 'menu') {
+    this.productSource.set(source);
+    this.storage.set('um_pos_source', source);
+  }
   currentSession = computed<POSSession | null>(() => {
     return this._sessions().find(s => s.status === 'open') ?? null;
   });
@@ -45,14 +53,34 @@ export class POSService {
   );
 
   /** All active products available for sale */
-  availableProducts = computed(() =>
-    this.productService.products().filter(p => p.active)
-  );
+  availableProducts = computed(() => {
+    if (this.productSource() === 'menu') {
+      return this.menuService.availableItems().map(item => ({
+        id: `menu-${item.id}`,
+        name: item.name,
+        description: item.description,
+        sku: '',
+        salePrice: item.price,
+        costPrice: 0,
+        unit: 'unidad',
+        category: item.category,
+        currentStock: 9999,
+        minStock: 0,
+        active: true,
+        trackInventory: false,
+        createdAt: new Date().toISOString(),
+      }));
+    }
+    return this.productService.products().filter(p => p.active);
+  });
 
   /** Product categories */
-  productCategories = computed(() =>
-    this.productService.categories()
-  );
+  productCategories = computed(() => {
+    if (this.productSource() === 'menu') {
+      return this.menuService.sortedCategories().map(c => c.name);
+    }
+    return this.productService.categories();
+  });
 
   // ─── Session Management ─────────────────
   openSession(openingCash: number): POSSession {
@@ -119,6 +147,9 @@ export class POSService {
 
     // Validate stock
     for (const item of items) {
+      if (item.productId.startsWith('menu-') || item.productId.startsWith('manual-')) {
+        continue; // Skip validation for menu and manual items
+      }
       const product = this.productService.getProductById(item.productId);
       if (!product) {
         return { success: false, error: `Producto "${item.name}" no encontrado.` };
@@ -166,6 +197,9 @@ export class POSService {
 
     // 2. Deduct inventory for each item
     for (const item of saleItems) {
+      if (item.productId.startsWith('menu-') || item.productId.startsWith('manual-')) {
+        continue;
+      }
       const product = this.productService.getProductById(item.productId);
       if (product && product.trackInventory) {
         this.productService.registerMovement(
@@ -219,6 +253,9 @@ export class POSService {
 
     // Restore inventory
     for (const item of sale.items) {
+      if (item.productId.startsWith('menu-') || item.productId.startsWith('manual-')) {
+        continue;
+      }
       const product = this.productService.getProductById(item.productId);
       if (product && product.trackInventory) {
         this.productService.registerMovement(
