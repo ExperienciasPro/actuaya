@@ -72,7 +72,7 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
         <nav class="cat-nav">
           @for (cat of sortedCategories(); track cat.id) {
             @if (hasCatItems(cat.id)) {
-              <a class="cat-pill" [href]="'#cat-' + cat.id">{{ cat.emoji }} {{ cat.name }}</a>
+              <button class="cat-pill" type="button" (click)="scrollToCat(cat.id)">{{ cat.emoji }} {{ cat.name }}</button>
             }
           }
         </nav>
@@ -96,7 +96,7 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
                 <div class="items-container" [class.with-images]="cfg().showImages">
                   @for (item of itemsForCat(cat.id); track item.id) {
                   <div class="menu-item-card">
-                    @if (cfg().showImages && item.imageDataUrl) {
+                    @if (item.imageDataUrl) {
                       <img class="item-photo" [src]="item.imageDataUrl" [alt]="item.name" loading="lazy" />
                     }
                     <div class="item-body">
@@ -344,6 +344,9 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
       font-size: 0.88rem;
       font-weight: 700;
       text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
       transition: all 0.18s;
       &:hover {
         background: var(--brand);
@@ -588,6 +591,13 @@ export class MenuPublicComponent implements OnInit {
 
   itemsForCat(catId: string) {
     return this.availableItems().filter(i => i.category === catId);
+  }
+
+  scrollToCat(catId: string): void {
+    const el = document.getElementById('cat-' + catId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   fmt(price: number): string {

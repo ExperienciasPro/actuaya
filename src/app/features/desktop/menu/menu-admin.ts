@@ -533,6 +533,7 @@ export class MenuAdminComponent {
       category: this.f.category,
       available: this.f.available,
       imageDataUrl: this.f.imageDataUrl,
+      tags,
     };
     const editing = this.editingItem();
     if (editing) {
