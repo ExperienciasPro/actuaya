@@ -10,14 +10,19 @@ const CFG_KEY   = 'um_menu_config';
 export class MenuService {
   private storage = inject(StorageService);
 
-  // ─── State ──────────────────────────────
-  items      = signal<MenuItem[]>(this.load<MenuItem[]>(ITEMS_KEY, []));
-  categories = signal<MenuCategory[]>(this.load<MenuCategory[]>(CATS_KEY, [
+  // Default categories that must always exist
+  private readonly DEFAULT_CATEGORIES: MenuCategory[] = [
     { id: 'entradas',  name: 'Entradas',  emoji: '🥗', order: 1 },
     { id: 'platos',    name: 'Platos',    emoji: '🍽️', order: 2 },
     { id: 'bebidas',   name: 'Bebidas',   emoji: '🥤', order: 3 },
     { id: 'postres',   name: 'Postres',   emoji: '🍰', order: 4 },
-  ]));
+  ];
+
+  // ─── State ──────────────────────────────
+  items      = signal<MenuItem[]>(this.load<MenuItem[]>(ITEMS_KEY, []));
+  categories = signal<MenuCategory[]>(this.ensureDefaultCategories(
+    this.load<MenuCategory[]>(CATS_KEY, this.DEFAULT_CATEGORIES)
+  ));
   config     = signal<MenuConfig>({ ...DEFAULT_MENU_CONFIG, ...this.load<MenuConfig>(CFG_KEY, DEFAULT_MENU_CONFIG) });
 
   // ─── Computed ───────────────────────────
@@ -102,6 +107,20 @@ export class MenuService {
     this.storage.set(key, value);
   }
 
-  // fix: addItem update pattern correction
-  private save(_key: string, _val: MenuItem[] | undefined): void { /* no-op shim */ }
+  /** Re-add any missing default categories (e.g. after sync issues) */
+  private ensureDefaultCategories(loaded: MenuCategory[]): MenuCategory[] {
+    const existingIds = new Set(loaded.map(c => c.id));
+    let changed = false;
+    const result = [...loaded];
+    for (const def of this.DEFAULT_CATEGORIES) {
+      if (!existingIds.has(def.id)) {
+        result.push(def);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.storage.set(CATS_KEY, result);
+    }
+    return result;
+  }
 }
