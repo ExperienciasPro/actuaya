@@ -28,6 +28,7 @@ export interface UserProfile {
   subscriptionActivatedByAdmin: boolean;
   isDeleted?: boolean;
   updatedAt?: string;
+  posMode?: 'retail' | 'gastronomy';
 }
 
 // Superadmin seed data

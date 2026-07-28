@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { POSService } from '../../../core/services/pos.service';
 import { ProductCatalogService } from '../../../core/services/product-catalog.service';
 import { InventoryService } from '../../../core/services/inventory.service';
@@ -7,7 +8,7 @@ import { InventoryService } from '../../../core/services/inventory.service';
 @Component({
   selector: 'um-operations-reports',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   styleUrl: './operations-reports.scss',
   template: `
     <div class="reports-page animate-fadeInUp">
@@ -150,7 +151,10 @@ import { InventoryService } from '../../../core/services/inventory.service';
       }
 
       <div class="sessions-section stagger-5">
-        <h2>Turnos de caja</h2>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h2>Turnos de caja</h2>
+          <a routerLink="/d/pos-audit" style="color: var(--accent); text-decoration: none; font-size: 14px; font-weight: 500;">Ver auditoría completa &rarr;</a>
+        </div>
         <div class="sessions-grid">
           @for (session of recentSessions(); track session.id) {
             <div class="session-card">

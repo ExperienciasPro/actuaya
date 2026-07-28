@@ -7,6 +7,7 @@ export interface UserProfile {
   weekStartDay: 'monday' | 'sunday';
   createdAt: Date;
   preferences: UserPreferences;
+  posMode?: 'retail' | 'gastronomy';
 }
 
 export interface UserPreferences {

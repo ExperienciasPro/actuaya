@@ -3,7 +3,8 @@ import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
 import { MenuService } from './menu.service';
 import { CashflowService } from './cashflow.service';
-import { POSSale, POSSaleItem, POSSession, POSCartItem, PaymentMethod } from '../models/pos.model';
+import { UserService } from './user.service';
+import { POSSale, POSSaleItem, POSSession, POSCartItem, PaymentMethod, CashAuditEntry } from '../models/pos.model';
 import { Transaction } from '../models/cashflow.model';
 
 const SALES_KEY    = 'um_pos_sales';
@@ -15,6 +16,7 @@ export class POSService {
   private productService = inject(ProductCatalogService);
   private menuService = inject(MenuService);
   private cashflowService = inject(CashflowService);
+  private userService = inject(UserService);
 
   // ─── State ──────────────────────────────
   private _sales = signal<POSSale[]>(this.storage.get<POSSale[]>(SALES_KEY) || []);
@@ -25,13 +27,43 @@ export class POSService {
   sales = this._sales.asReadonly();
   sessions = this._sessions.asReadonly();
 
+  constructor() {
+    this.migrateLegacyData();
+  }
+
+  private migrateLegacyData() {
+    const activeProfile = this.userService.profile();
+    if (!activeProfile) return;
+    
+    let needsUpdate = false;
+    this._sessions.update(sessions => sessions.map(s => {
+      if (!s.userId) {
+        needsUpdate = true;
+        return { ...s, userId: activeProfile.id, userName: activeProfile.name };
+      }
+      return s;
+    }));
+    if (needsUpdate) this.persistSessions();
+
+    needsUpdate = false;
+    this._sales.update(sales => sales.map(s => {
+      if (!s.userId) {
+        needsUpdate = true;
+        return { ...s, userId: activeProfile.id, userName: activeProfile.name };
+      }
+      return s;
+    }));
+    if (needsUpdate) this.persistSales();
+  }
+
   // ─── Computed ───────────────────────────
   setProductSource(source: 'catalog' | 'menu') {
     this.productSource.set(source);
     this.storage.set('um_pos_source', source);
   }
   currentSession = computed<POSSession | null>(() => {
-    return this._sessions().find(s => s.status === 'open') ?? null;
+    const activeUserId = this.userService.profile()?.id;
+    return this._sessions().find(s => s.status === 'open' && s.userId === activeUserId) ?? null;
   });
 
   todaySales = computed(() => {
@@ -84,7 +116,10 @@ export class POSService {
 
   // ─── Session Management ─────────────────
   openSession(openingCash: number): POSSession {
-    // Close any open session first
+    const activeProfile = this.userService.profile();
+    if (!activeProfile) throw new Error('No user profile active.');
+
+    // Close any open session for THIS user first
     const existing = this.currentSession();
     if (existing) {
       this.closeSession(existing.id, openingCash);
@@ -92,6 +127,8 @@ export class POSService {
 
     const session: POSSession = {
       id: 'ses-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+      userId: activeProfile.id,
+      userName: activeProfile.name,
       openedAt: new Date().toISOString(),
       openingCash,
       salesCount: 0,
@@ -104,7 +141,7 @@ export class POSService {
     return session;
   }
 
-  closeSession(sessionId: string, closingCash: number): void {
+  closeSession(sessionId: string, closingCash: number, notes?: string): void {
     this._sessions.update(list => list.map(s => {
       if (s.id !== sessionId) return s;
 
@@ -127,6 +164,7 @@ export class POSService {
         salesCount: sessionSales.length,
         totalSales: sessionSales.reduce((sum, sale) => sum + sale.total, 0),
         status: 'closed' as const,
+        notes
       };
     }));
     this.persistSessions();
@@ -141,8 +179,9 @@ export class POSService {
     notes?: string
   ): { success: boolean; sale?: POSSale; error?: string } {
     const session = this.currentSession();
-    if (!session) {
-      return { success: false, error: 'No hay un turno de caja abierto.' };
+    const activeProfile = this.userService.profile();
+    if (!session || !activeProfile) {
+      return { success: false, error: 'No hay un turno de caja abierto para el usuario actual.' };
     }
 
     // Validate stock
@@ -179,6 +218,8 @@ export class POSService {
     const sale: POSSale = {
       id: 'pos-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
       items: saleItems,
+      userId: activeProfile.id,
+      userName: activeProfile.name,
       subtotal,
       discount,
       total,
@@ -318,6 +359,42 @@ export class POSService {
     return [...dayMap.entries()]
       .map(([date, total]) => ({ date, total }))
       .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // ─── Audit ──────────────────────────────
+  sessionsByUser(userId: string, startDate: string, endDate: string): POSSession[] {
+    return this._sessions().filter(s => {
+      const date = s.openedAt.split('T')[0];
+      return s.userId === userId && date >= startDate && date <= endDate;
+    });
+  }
+
+  salesByUser(userId: string, startDate: string, endDate: string): POSSale[] {
+    return this._sales().filter(s =>
+      s.userId === userId && s.date >= startDate && s.date <= endDate
+    );
+  }
+
+  auditReport(startDate: string, endDate: string): CashAuditEntry[] {
+    const sessions = this._sessions().filter(s => {
+      const date = s.openedAt.split('T')[0];
+      return s.status === 'closed' && date >= startDate && date <= endDate;
+    });
+
+    return sessions.map(s => ({
+      sessionId: s.id,
+      userId: s.userId,
+      userName: s.userName,
+      openedAt: s.openedAt,
+      closedAt: s.closedAt!,
+      openingCash: s.openingCash,
+      closingCash: s.closingCash || 0,
+      expectedCash: s.expectedCash || 0,
+      difference: s.difference || 0,
+      salesCount: s.salesCount,
+      totalSales: s.totalSales,
+      notes: s.notes
+    }));
   }
 
   // ─── Persistence ────────────────────────

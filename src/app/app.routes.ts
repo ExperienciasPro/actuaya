@@ -282,7 +282,12 @@ export const routes: Routes = [
       {
         path: 'pos',
         loadComponent: () =>
-          import('./features/desktop/pos/pos').then((m) => m.PosComponent),
+          import('./features/desktop/pos-router/pos-router').then((m) => m.PosRouterComponent),
+      },
+      {
+        path: 'pos-audit',
+        loadComponent: () =>
+          import('./features/desktop/pos-audit/pos-audit').then((m) => m.PosAuditComponent),
       },
       // — Reportes de Operaciones —
       {

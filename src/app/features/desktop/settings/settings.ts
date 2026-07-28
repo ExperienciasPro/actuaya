@@ -44,7 +44,20 @@ interface CategoryDef {
               <label>Correo Electrónico</label>
               <input type="email" [(ngModel)]="editEmail" placeholder="tu@correo.com" />
             </div>
-            <button class="save-profile-btn" (click)="saveUserProfile()" [disabled]="!isProfileDirty()">
+            <div class="input-group full-width" style="margin-top: 16px;">
+              <label>Modo de Punto de Venta (POS)</label>
+              <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="button" [class.active]="editPosMode === 'retail'" (click)="editPosMode = 'retail'" 
+                        class="toggle-btn">
+                  🛒 Comercio / Retail
+                </button>
+                <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="editPosMode = 'gastronomy'" 
+                        class="toggle-btn">
+                  🍽️ Restaurante / Gastro
+                </button>
+              </div>
+            </div>
+            <button class="save-profile-btn" (click)="saveUserProfile()" [disabled]="!isProfileDirty()" style="margin-top: 24px;">
               Guardar Cambios
             </button>
           </div>
@@ -170,6 +183,28 @@ interface CategoryDef {
         <div class="toast animate-fadeInUp">{{ toast() }}</div>
       }
     </div>
+    
+    <style>
+      .toggle-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+        background: transparent;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+      }
+      .toggle-btn:hover {
+        border-color: var(--accent);
+      }
+      .toggle-btn.active {
+        border-color: var(--accent);
+        background: rgba(108, 60, 233, 0.05);
+        color: var(--accent);
+      }
+    </style>
   `,
   styleUrl: 'settings.scss',
 })
@@ -184,18 +219,22 @@ export class SettingsComponent {
   // ─── Profile & Security ───────────────────
   editName = this.userService.profile()?.name || '';
   editEmail = this.userService.profile()?.email || '';
+  editPosMode = this.userService.profile()?.posMode || 'retail';
   showPasswordForm = signal(false);
   newPassword = signal('');
 
   isProfileDirty(): boolean {
-    const current = this.userService.profile() || { name: '', email: '' };
-    return this.editName !== current.name || this.editEmail !== current.email;
+    const current = this.userService.profile() || { name: '', email: '', posMode: 'retail' };
+    return this.editName !== current.name || 
+           this.editEmail !== current.email || 
+           this.editPosMode !== (current.posMode || 'retail');
   }
 
   async saveUserProfile(): Promise<void> {
     await this.userService.saveProfile({ 
       name: this.editName, 
-      email: this.editEmail
+      email: this.editEmail,
+      posMode: this.editPosMode as any
     });
     this.showToast('✅ Perfil actualizado correctamente');
   }

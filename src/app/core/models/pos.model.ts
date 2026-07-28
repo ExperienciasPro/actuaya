@@ -16,6 +16,8 @@ export interface POSSaleItem {
 export interface POSSale {
   id: string;
   items: POSSaleItem[];
+  userId: string;
+  userName: string;
   subtotal: number;
   discount: number;      // Descuento total aplicado
   total: number;
@@ -32,6 +34,8 @@ export interface POSSale {
 
 export interface POSSession {
   id: string;
+  userId: string;
+  userName: string;
   openedAt: string;
   closedAt?: string;
   openingCash: number;    // Efectivo en caja al abrir
@@ -41,6 +45,22 @@ export interface POSSession {
   salesCount: number;
   totalSales: number;
   status: 'open' | 'closed';
+  notes?: string;
+}
+
+export interface CashAuditEntry {
+  sessionId: string;
+  userId: string;
+  userName: string;
+  openedAt: string;
+  closedAt: string;
+  openingCash: number;
+  closingCash: number;
+  expectedCash: number;
+  difference: number;
+  salesCount: number;
+  totalSales: number;
+  notes?: string;
 }
 
 export interface POSCartItem {

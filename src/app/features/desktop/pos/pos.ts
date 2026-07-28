@@ -16,9 +16,9 @@ import { Product } from '../../../core/models/product.model';
       <div class="pos-top-bar">
         <div class="session-info">
           @if (pos.currentSession()) {
-            <div class="status-badge open">
+            <div class="status-badge open" title="Caja abierta por {{ pos.currentSession()!.userName }}">
               <um-icon name="check-circle" [size]="16"></um-icon>
-              Sesión Abierta
+              Caja: {{ pos.currentSession()!.userName }}
             </div>
             <button class="btn-text" (click)="showCloseModal.set(true)">Cerrar Caja</button>
           } @else {
@@ -279,6 +279,10 @@ import { Product } from '../../../core/models/product.model';
               <label>Efectivo contado en caja</label>
               <input type="number" [(ngModel)]="closingCash" placeholder="0" min="0">
             </div>
+            <div class="form-group" style="margin-top: 16px;">
+              <label>Notas (opcional)</label>
+              <textarea [(ngModel)]="closingNotes" rows="2" placeholder="Ej. Faltante por..."></textarea>
+            </div>
             <div class="modal-actions">
               <button class="btn-cancel" (click)="showCloseModal.set(false)">Cancelar</button>
               <button class="btn-danger" (click)="closeSession()">Cerrar Caja</button>
@@ -352,6 +356,7 @@ export class PosComponent {
   discount: number = 0;
   openingCash: number = 0;
   closingCash: number = 0;
+  closingNotes: string = '';
 
   showOpenModal = signal(false);
   showCloseModal = signal(false);
@@ -505,10 +510,11 @@ export class PosComponent {
   closeSession() {
     const session = this.pos.currentSession();
     if (session) {
-      this.pos.closeSession(session.id, this.closingCash);
+      this.pos.closeSession(session.id, this.closingCash, this.closingNotes);
     }
     this.showCloseModal.set(false);
     this.closingCash = 0;
+    this.closingNotes = '';
   }
 
   formatTime(iso: string): string {
