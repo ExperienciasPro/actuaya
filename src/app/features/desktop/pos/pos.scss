@@ -162,8 +162,11 @@
       
       &.active {
         background: var(--accent) !important;
-        color: white !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         border-color: var(--accent) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
     }
     
