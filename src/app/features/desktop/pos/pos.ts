@@ -53,9 +53,6 @@ import { Product } from '../../../core/models/product.model';
         <div class="pos-products">
           <!-- Source Selector -->
           <div class="source-selector animate-fadeInUp">
-            <button [class.active]="uiSource() === 'menu'" (click)="setSource('menu')">
-              <span class="emoji">🍽️</span> Menú
-            </button>
             <button [class.active]="uiSource() === 'catalog'" (click)="setSource('catalog')">
               <span class="emoji">📦</span> Inventario
             </button>
@@ -341,7 +338,15 @@ import { Product } from '../../../core/models/product.model';
 export class PosComponent {
   pos = inject(POSService);
 
-  uiSource = signal<'menu' | 'catalog' | 'manual'>(this.pos.productSource());
+  uiSource = signal<'menu' | 'catalog' | 'manual'>(
+    this.pos.productSource() === 'menu' ? 'catalog' : this.pos.productSource()
+  );
+
+  constructor() {
+    if (this.pos.productSource() === 'menu') {
+      this.pos.setProductSource('catalog');
+    }
+  }
 
   searchQuery = signal('');
   selectedCategory = signal('all');
