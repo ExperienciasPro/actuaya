@@ -93,7 +93,7 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
             @if (hasCatItems(cat.id)) {
               <section class="menu-section" [id]="'cat-' + cat.id">
                 <h2 class="section-title">{{ cat.emoji }} {{ cat.name }}</h2>
-                <div class="items-container" [class.with-images]="cfg().showImages">
+                <div class="items-container" [class.has-photos]="catHasPhotos(cat.id)">
                   @for (item of itemsForCat(cat.id); track item.id) {
                   <div class="menu-item-card">
                     @if (item.imageDataUrl) {
@@ -376,12 +376,19 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     .items-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
 
-      &.with-images {
+      &.has-photos {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .items-container.has-photos {
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
     }
 
@@ -389,7 +396,7 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     .layout-grid .items-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
+      gap: 20px;
     }
 
     /* Compact layout */
@@ -409,20 +416,35 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     .menu-item-card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
       overflow: hidden;
-      transition: box-shadow 0.18s;
-      &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      &:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+        transform: translateY(-2px);
+      }
     }
 
     .item-photo {
       width: 100%;
-      height: 180px;
+      height: 200px;
       object-fit: cover;
+      display: block;
+    }
+
+    @media (max-width: 480px) {
+      .item-photo {
+        height: 160px;
+      }
     }
 
     .item-body {
-      padding: 14px 16px;
+      padding: 14px 18px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .item-top {
@@ -433,23 +455,25 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     }
 
     .item-name {
-      font-size: calc(var(--font-base) * 1.05);
+      font-size: calc(var(--font-base) * 1.08);
       font-weight: 800;
       color: var(--text);
+      line-height: 1.3;
     }
 
     .item-price {
-      font-size: var(--font-base);
+      font-size: calc(var(--font-base) * 1.05);
       font-weight: 800;
       color: var(--brand);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .item-desc {
-      margin: 4px 0 0;
-      font-size: calc(var(--font-base) * 0.85);
+      margin: 6px 0 0;
+      font-size: calc(var(--font-base) * 0.88);
       color: var(--text-sec);
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     .item-tags {
@@ -587,6 +611,10 @@ export class MenuPublicComponent implements OnInit {
 
   hasCatItems(catId: string): boolean {
     return this.availableItems().some(i => i.category === catId);
+  }
+
+  catHasPhotos(catId: string): boolean {
+    return this.itemsForCat(catId).some(i => !!i.imageDataUrl);
   }
 
   itemsForCat(catId: string) {
