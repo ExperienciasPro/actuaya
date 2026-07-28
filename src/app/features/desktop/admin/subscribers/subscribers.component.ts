@@ -250,7 +250,7 @@ export class SubscribersComponent {
 
   /** Advanced stats for superadmin dashboard */
   advancedUserStats = computed(() => {
-    const users = this.users();
+    const users = this.userService.allUsers();
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -514,7 +514,8 @@ export class SubscribersComponent {
   /** All people: users from UserService + subscribers from SubscriptionService
    *  that don't have a matching user account. */
   private allPeople = computed<UserProfile[]>(() => {
-    const users = this.users();
+    // Use reactive signal from UserService to always get fresh data after sync
+    const users = this.userService.allUsers();
     const userEmails = new Set(users.map(u => (u.email || '').toLowerCase()));
 
     // Convert formal subscriptions (without a user account) into UserProfile-like objects
