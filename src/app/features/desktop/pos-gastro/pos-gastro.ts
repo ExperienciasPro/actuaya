@@ -63,6 +63,11 @@ import { TableCardComponent } from './table-card';
               (positionChange)="onTablePositionChange($event)">
             </um-table-card>
           }
+          <!-- Add Table Button -->
+          <button class="add-table-card" (click)="showSettingsModal = true" title="Agregar mesa">
+            <um-icon name="plus" [size]="32"></um-icon>
+            <span>Nueva Mesa</span>
+          </button>
         </div>
 
         <!-- Order Detail Panel -->
