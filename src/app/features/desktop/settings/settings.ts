@@ -168,7 +168,7 @@ interface CategoryDef {
       <!-- POS Mode Modal -->
       @if (showPosModal()) {
         <div class="session-modal-backdrop" (click)="showPosModal.set(false)" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-          <div class="session-modal-card animate-fadeInUp" (click)="$event.stopPropagation()" style="background: var(--surface); padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+          <div class="session-modal-card animate-fadeInUp" (click)="$event.stopPropagation()" style="background: var(--bg-secondary); padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;">
             <h2 style="margin-bottom: 8px;">¿Qué tipo de negocio tienes?</h2>
             <p style="color: var(--text-secondary); margin-bottom: 24px;">Selecciona el modo de Punto de Venta que mejor se adapte a tu operación.</p>
             <div style="display: flex; gap: 16px; flex-direction: column;">
