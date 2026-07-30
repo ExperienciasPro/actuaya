@@ -105,6 +105,11 @@ export class GastroService {
     this.persistTables();
   }
 
+  removeTable(id: string) {
+    this._tables.update(list => list.filter(t => t.id !== id));
+    this.persistTables();
+  }
+
   // ─── Cuentas / Órdenes ───────────────────
   openTable(tableId: string, guestCount: number = 1): TableOrder {
     const activeProfile = this.userService.profile();

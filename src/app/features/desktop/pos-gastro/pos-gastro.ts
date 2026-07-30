@@ -78,6 +78,10 @@ import { TableCardComponent } from './table-card';
                 <h3>{{ selectedTable()!.label }}</h3>
                 @if (activeOrder()) {
                   <span class="status open">Abierta</span>
+                } @else {
+                  <button class="btn-text" (click)="deleteSelectedTable()" title="Borrar mesa" style="color: var(--gastro-danger); margin-left: 8px;">
+                    <um-icon name="trash-2" [size]="16"></um-icon>
+                  </button>
                 }
               </div>
               <div class="meta">
@@ -474,9 +478,20 @@ export class PosGastroComponent {
 
   addTable() {
     const zId = this.activeZoneId();
-    if (zId && this.newTableLabel) {
+    if (zId && this.newTableLabel.trim()) {
       this.gastro.addTable(zId, this.newTableLabel, this.newTableCap);
       this.newTableLabel = '';
+      this.newTableCap = 4;
+    }
+  }
+
+  deleteSelectedTable() {
+    const t = this.selectedTable();
+    if (t) {
+      if (confirm(`¿Estás seguro de que quieres borrar la mesa ${t.label}?`)) {
+        this.gastro.removeTable(t.id);
+        this.selectedTable.set(null);
+      }
     }
   }
 
