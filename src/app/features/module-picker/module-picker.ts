@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { StorageService } from '../../core/services/storage.service';
+import { DataSyncService } from '../../core/services/data-sync.service';
 import { UserService } from '../../core/services/user.service';
 
 interface AppModule {
@@ -174,6 +175,7 @@ interface ModuleCategory {
 export class ModulePickerComponent {
   private router = inject(Router);
   private storage = inject(StorageService);
+  private dataSync = inject(DataSyncService);
   private userService = inject(UserService);
 
   selected = signal<Set<string>>(new Set());
@@ -555,6 +557,8 @@ export class ModulePickerComponent {
     }
 
     this.storage.set('um_enabled_modules', enabledModules);
+    this.dataSync.trackLocalModification('um_enabled_modules');
+    this.dataSync.saveToServerDebounced();
     this.router.navigate(['/bienvenida']);
   }
 }

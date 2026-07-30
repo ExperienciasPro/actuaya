@@ -414,6 +414,7 @@ export class SettingsComponent {
 
   private saveModules(set: Set<string>): void {
     this.storage.set(this.MODULES_KEY, Array.from(set));
+    this.dataSync.trackLocalModification(this.MODULES_KEY);
     this.dataSync.saveToServer();
   }
 
