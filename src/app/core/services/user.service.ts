@@ -268,6 +268,7 @@ export class UserService {
       trialEndsAt: baseUser?.trialEndsAt ?? data.trialEndsAt ?? this.calculateTrialEnd(now),
       subscriptionActivatedByAdmin: baseUser?.subscriptionActivatedByAdmin ?? data.subscriptionActivatedByAdmin ?? false,
       updatedAt: now.toISOString(),
+      posMode: data.posMode ?? baseUser?.posMode,
     };
     this.saveUserToList(updated);
     this.storage.setActiveUser(updated.id);
