@@ -379,6 +379,9 @@ export class PosGastroComponent {
   });
 
   constructor() {
+    // Gastro POS always uses menu items, not catalog products
+    this.pos.setProductSource('menu');
+
     // If we have zones but no active one selected, select the first
     if (!this.activeZoneId() && this.gastro.zones().length > 0) {
       this.activeZoneId.set(this.gastro.zones()[0].id);
