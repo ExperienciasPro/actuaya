@@ -1,7 +1,7 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { MenuItem, MenuCategory, MenuConfig, DEFAULT_MENU_CONFIG } from '../models/menu.model';
-
+import { DataSyncService } from './data-sync.service';
 const ITEMS_KEY = 'um_menu_items';
 const CATS_KEY  = 'um_menu_categories';
 const CFG_KEY   = 'um_menu_config';
@@ -9,6 +9,15 @@ const CFG_KEY   = 'um_menu_config';
 @Injectable({ providedIn: 'root' })
 export class MenuService {
   private storage = inject(StorageService);
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   // Default categories that must always exist
   private readonly DEFAULT_CATEGORIES: MenuCategory[] = [
@@ -105,6 +114,8 @@ export class MenuService {
 
   private persist(key: string, value: unknown): void {
     this.storage.set(key, value);
+    this.dataSync.trackLocalModification(key);
+    this.dataSync.saveToServerDebounced();
   }
 
   /** Re-add any missing default categories (e.g. after sync issues) */

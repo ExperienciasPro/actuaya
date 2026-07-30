@@ -1,8 +1,8 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { GoalMode } from '../models/goal.model';
 import { TaskPriority } from '../models/task.model';
-
+import { DataSyncService } from './data-sync.service';
 export interface MicroTaskSuggestion {
   title: string;
   priority: TaskPriority;
@@ -27,6 +27,15 @@ interface StaticEntry {
 export class MicroTaskTemplateService {
   private storage = inject(StorageService);
   private readonly STORAGE_KEY = 'um_community_microtasks';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private communityTemplates = signal<CommunityTemplate[]>(this.loadFromStorage());
 
@@ -497,5 +506,7 @@ export class MicroTaskTemplateService {
 
   private persist(): void {
     this.storage.set(this.STORAGE_KEY, this.communityTemplates());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

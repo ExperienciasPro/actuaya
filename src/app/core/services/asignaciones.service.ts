@@ -1,11 +1,20 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import { Technician, Assignment, ASSIGNMENT_TYPES, STATUS_CONFIG } from '../models/asignaciones.model';
 import { StorageService } from './storage.service';
-
+import { DataSyncService } from './data-sync.service';
 @Injectable({ providedIn: 'root' })
 export class AsignacionesService {
   private readonly STORAGE_TECH_KEY = 'um_technicians_v1';
   private readonly STORAGE_ASS_KEY = 'um_assignments_v1';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private _technicians = signal<Technician[]>([]);
   private _assignments = signal<Assignment[]>([]);
@@ -100,10 +109,14 @@ export class AsignacionesService {
 
   private persistTechnicians(): void {
     this.storage.set(this.STORAGE_TECH_KEY, this._technicians());
+    this.dataSync.trackLocalModification(this.STORAGE_TECH_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistAssignments(): void {
     this.storage.set(this.STORAGE_ASS_KEY, this._assignments());
+    this.dataSync.trackLocalModification(this.STORAGE_ASS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   loadInitialData(): void {

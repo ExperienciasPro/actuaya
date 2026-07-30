@@ -1,11 +1,21 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, Injector, inject } from '@angular/core';
 import { TeamMember, Shift, MEMBER_COLORS } from '../models/shifts.model';
 import { StorageService } from './storage.service';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShiftsService {
   private readonly MEMBERS_KEY = 'um_team_members';
   private readonly SHIFTS_KEY = 'um_shifts';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private _members = signal<TeamMember[]>([]);
   members = this._members.asReadonly();
@@ -111,9 +121,13 @@ export class ShiftsService {
 
   private persistMembers(): void {
     this.storage.set(this.MEMBERS_KEY, this._members());
+    this.dataSync.trackLocalModification(this.MEMBERS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistShifts(): void {
     this.storage.set(this.SHIFTS_KEY, this._shifts());
+    this.dataSync.trackLocalModification(this.SHIFTS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

@@ -1,7 +1,8 @@
-import { Injectable, signal, inject, computed } from '@angular/core';
+import { Injectable, signal, inject, computed, Injector } from '@angular/core';
 import { CatalogItem, Quote } from '../models/catalog.model';
 import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -9,6 +10,15 @@ export class CatalogService {
   private productService = inject(ProductCatalogService);
 
   private readonly QUOTES_KEY = 'um_quotes';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   // Sincronizar catálogo desde ProductService
   items = computed<CatalogItem[]>(() => {
@@ -151,5 +161,7 @@ export class CatalogService {
 
   private persistQuotes(): void {
     this.storage.set(this.QUOTES_KEY, this._quotes());
+    this.dataSync.trackLocalModification(this.QUOTES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

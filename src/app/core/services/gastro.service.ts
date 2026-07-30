@@ -1,11 +1,11 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { POSService } from './pos.service';
 import { UserService } from './user.service';
 import { Zone, Table, TableOrder, TableOrderItem, TableStatusSummary } from '../models/gastro.model';
 import { PaymentMethod } from '../models/pos.model';
 import { Product } from '../models/product.model';
-
+import { DataSyncService } from './data-sync.service';
 const ZONES_KEY = 'um_gastro_zones';
 const TABLES_KEY = 'um_gastro_tables';
 const ORDERS_KEY = 'um_gastro_orders';
@@ -15,6 +15,15 @@ export class GastroService {
   private storage = inject(StorageService);
   private posService = inject(POSService);
   private userService = inject(UserService);
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private _zones = signal<Zone[]>(this.storage.get<Zone[]>(ZONES_KEY) || []);
   private _tables = signal<Table[]>(this.storage.get<Table[]>(TABLES_KEY) || []);
@@ -271,13 +280,19 @@ export class GastroService {
 
   private persistZones() {
     this.storage.set(ZONES_KEY, this._zones());
+    this.dataSync.trackLocalModification(ZONES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistTables() {
     this.storage.set(TABLES_KEY, this._tables());
+    this.dataSync.trackLocalModification(TABLES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistOrders() {
     this.storage.set(ORDERS_KEY, this._orders());
+    this.dataSync.trackLocalModification(ORDERS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

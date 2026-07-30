@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
 import { MenuService } from './menu.service';
@@ -6,6 +6,7 @@ import { CashflowService } from './cashflow.service';
 import { UserService } from './user.service';
 import { POSSale, POSSaleItem, POSSession, POSCartItem, PaymentMethod, CashAuditEntry } from '../models/pos.model';
 import { Transaction } from '../models/cashflow.model';
+import { DataSyncService } from './data-sync.service';
 
 const SALES_KEY    = 'um_pos_sales';
 const SESSIONS_KEY = 'um_pos_sessions';
@@ -17,6 +18,15 @@ export class POSService {
   private menuService = inject(MenuService);
   private cashflowService = inject(CashflowService);
   private userService = inject(UserService);
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   // ─── State ──────────────────────────────
   private _sales = signal<POSSale[]>(this.storage.get<POSSale[]>(SALES_KEY) || []);
@@ -400,9 +410,13 @@ export class POSService {
   // ─── Persistence ────────────────────────
   private persistSales(): void {
     this.storage.set(SALES_KEY, this._sales());
+    this.dataSync.trackLocalModification(SALES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistSessions(): void {
     this.storage.set(SESSIONS_KEY, this._sessions());
+    this.dataSync.trackLocalModification(SESSIONS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

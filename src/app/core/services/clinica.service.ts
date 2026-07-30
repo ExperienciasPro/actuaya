@@ -1,11 +1,11 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import {
   Patient, Appointment, ClinicalNote, ClinicalHistory, ClinicConfig,
   AppointmentStatus, AvailabilitySlot, DEFAULT_AVAILABILITY,
   RedFlag, RedFlagType, NoteTemplate, DEFAULT_NOTE_TEMPLATES
 } from '../models/clinica.model';
 import { StorageService } from './storage.service';
-
+import { DataSyncService } from './data-sync.service';
 @Injectable({ providedIn: 'root' })
 export class ClinicaService {
   private readonly PATIENTS_KEY    = 'um_clinica_patients';
@@ -13,6 +13,15 @@ export class ClinicaService {
   private readonly NOTES_KEY       = 'um_clinica_notes';
   private readonly HISTORY_KEY     = 'um_clinica_histories';
   private readonly CONFIG_KEY      = 'um_clinica_config';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   // ─── State Signals ─────────────────────
   private _patients     = signal<Patient[]>([]);
@@ -404,5 +413,7 @@ export class ClinicaService {
 
   private persist(key: string, data: any): void {
     this.storage.set(key, data);
+    this.dataSync.trackLocalModification(key);
+    this.dataSync.saveToServerDebounced();
   }
 }

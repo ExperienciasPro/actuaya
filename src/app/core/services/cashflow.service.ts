@@ -1,14 +1,24 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, Injector, inject } from '@angular/core';
 import {
   Transaction,
   TransactionType,
   CashflowSummary,
 } from '../models/cashflow.model';
 import { StorageService } from './storage.service';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class CashflowService {
   private readonly STORAGE_KEY = 'um_cashflow';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private _transactions = signal<Transaction[]>([]);
   transactions = this._transactions.asReadonly();
@@ -127,5 +137,7 @@ export class CashflowService {
 
   private persist(): void {
     this.storage.set(this.STORAGE_KEY, this._transactions());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

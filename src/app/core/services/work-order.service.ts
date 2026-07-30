@@ -387,17 +387,25 @@ export class WorkOrderService {
 
   private persistOrders(): void {
     this.storage.set(this.OT_KEY, this._orders());
+    this.dataSync.trackLocalModification(this.OT_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistEvidence(): void {
     this.storage.set(this.EVIDENCE_KEY, this._evidence());
+    this.dataSync.trackLocalModification(this.EVIDENCE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistParts(): void {
     this.storage.set(this.PARTS_KEY, this._spareParts());
+    this.dataSync.trackLocalModification(this.PARTS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   private persistCompletion(): void {
     this.storage.set(this.COMPLETION_KEY, this._completionData());
+    this.dataSync.trackLocalModification(this.COMPLETION_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

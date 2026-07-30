@@ -36,8 +36,18 @@ export class DataSyncService {
   private isSyncing = false; // Fix A1: mutex para evitar llamadas concurrentes
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingSave = false; // Track saves attempted before initial sync
-  /** Tracks keys modified locally (via storage.set) since last syncFromServer */
-  private locallyModifiedKeys = new Set<string>();
+  /** Tracks keys modified locally (via storage.set) since last successful saveToServer.
+   *  PERSISTED to localStorage so it survives page reloads. */
+  private locallyModifiedKeys: Set<string>;
+  private readonly PENDING_KEYS_STORAGE = '__um_pending_sync_keys__';
+
+  constructor() {
+    // Load persisted pending keys from previous session
+    this.locallyModifiedKeys = this.loadPendingKeys();
+    if (this.locallyModifiedKeys.size > 0) {
+      console.log(`[DataSync] Loaded ${this.locallyModifiedKeys.size} pending sync keys from previous session`);
+    }
+  }
 
   /**
    * Keys that are LOCAL to the current browser session and must NEVER be
@@ -507,6 +517,30 @@ export class DataSyncService {
   /** Mark a key as locally modified — prevents syncFromServer from overwriting it */
   trackLocalModification(key: string): void {
     this.locallyModifiedKeys.add(key);
+    this.persistPendingKeys();
+  }
+
+  /** Load pending sync keys from localStorage */
+  private loadPendingKeys(): Set<string> {
+    try {
+      const raw = localStorage.getItem(this.PENDING_KEYS_STORAGE);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return new Set(arr);
+      }
+    } catch {}
+    return new Set();
+  }
+
+  /** Persist pending sync keys to localStorage */
+  private persistPendingKeys(): void {
+    try {
+      if (this.locallyModifiedKeys.size === 0) {
+        localStorage.removeItem(this.PENDING_KEYS_STORAGE);
+      } else {
+        localStorage.setItem(this.PENDING_KEYS_STORAGE, JSON.stringify([...this.locallyModifiedKeys]));
+      }
+    } catch {}
   }
 
   saveToServerDebounced(): void {
@@ -584,6 +618,7 @@ export class DataSyncService {
             this.locallyModifiedKeys.delete(k);
           }
         }
+        this.persistPendingKeys();
         return; // Éxito
       } catch (e) {
         console.warn(`[DataSync] Error guardando (intento ${attempt}/3):`, e);

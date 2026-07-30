@@ -1,6 +1,7 @@
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
+import { Injectable, inject, signal, computed, effect, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ProductService, ProductCategory } from '../models/product-service.model';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,6 +9,15 @@ import { ProductService, ProductCategory } from '../models/product-service.model
 export class ProductDataService {
   private storage = inject(StorageService);
   private readonly STORAGE_KEY = 'um_sales_products';
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private _products = signal<ProductService[]>([]);
   products = this._products.asReadonly();
@@ -62,5 +72,7 @@ export class ProductDataService {
 
   private persist(): void {
     this.storage.set(this.STORAGE_KEY, this._products());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }
