@@ -9,4 +9,6 @@ export interface BudgetEntry {
 export interface AnnualBudget {
   year: number;
   entries: BudgetEntry[];
+  /** ISO timestamp of last local edit — used for conflict resolution */
+  updatedAt?: string;
 }

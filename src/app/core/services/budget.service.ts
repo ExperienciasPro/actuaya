@@ -35,7 +35,16 @@ export class BudgetService {
   }
 
   private persist(): void {
+    // Stamp updatedAt on all budgets before saving
+    const now = new Date().toISOString();
+    this.budgetsSignal.update(budgets =>
+      budgets.map(b => ({ ...b, updatedAt: now }))
+    );
     this.storage.set(this.STORAGE_KEY, this.budgetsSignal());
+    // Protect this key from being overwritten by stale server data
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    // Push changes to server
+    this.dataSync.saveToServerDebounced();
   }
 
   /**
@@ -67,35 +76,24 @@ export class BudgetService {
       const server = serverMap.get(year);
 
       if (!server) {
-        // Only exists locally (user created a new year) → keep local
+        // Only exists locally → keep local
         merged.push(local!);
         localWins = true;
       } else if (!local) {
         // Only exists on server → accept server
         merged.push(server);
       } else {
-        // Both exist: check if local has removed entries (deletions)
-        const serverIds = new Set(server.entries.map(e => e.id));
-        const localIds = new Set(local.entries.map(e => e.id));
-        const localDeletedSomething = [...serverIds].some(id => !localIds.has(id));
-        const localAddedSomething = [...localIds].some(id => !serverIds.has(id));
+        // Both exist: use updatedAt timestamps for conflict resolution
+        const localTime = new Date(local.updatedAt || 0).getTime();
+        const serverTime = new Date(server.updatedAt || 0).getTime();
 
-        if (localDeletedSomething || localAddedSomething) {
-          // Local has modifications (deletes or adds) → local wins
+        if (localTime >= serverTime) {
+          // Local is same age or newer → keep local
           merged.push(local);
           localWins = true;
         } else {
-          // Same set of IDs — check if local has edits (different amounts/names)
-          const localHasEdits = local.entries.some(le => {
-            const se = server.entries.find(e => e.id === le.id);
-            return se && (se.name !== le.name || se.amount !== le.amount);
-          });
-          if (localHasEdits) {
-            merged.push(local);
-            localWins = true;
-          } else {
-            merged.push(server);
-          }
+          // Server is strictly newer → accept server
+          merged.push(server);
         }
       }
     }
