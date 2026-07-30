@@ -278,11 +278,23 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/desktop/shifts/shifts').then((m) => m.ShiftsComponent),
       },
-      // — POS (Punto de Venta) —
+      // — POS Retail —
+      {
+        path: 'pos-retail',
+        loadComponent: () =>
+          import('./features/desktop/pos/pos').then((m) => m.PosComponent),
+      },
+      // — POS Restaurante —
+      {
+        path: 'pos-gastro',
+        loadComponent: () =>
+          import('./features/desktop/pos-gastro/pos-gastro').then((m) => m.PosGastroComponent),
+      },
+      // — Legacy POS route (backward compat) —
       {
         path: 'pos',
-        loadComponent: () =>
-          import('./features/desktop/pos-router/pos-router').then((m) => m.PosRouterComponent),
+        redirectTo: 'pos-retail',
+        pathMatch: 'full',
       },
       {
         path: 'pos-audit',

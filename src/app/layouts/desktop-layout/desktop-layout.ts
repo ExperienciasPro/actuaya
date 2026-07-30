@@ -446,7 +446,18 @@ export class DesktopLayoutComponent implements OnInit {
   private enabledModules = computed(() => {
     this.storage.updateToken();
     const saved = this.storage.get<string[]>('um_enabled_modules');
-    return saved ? new Set(saved) : null;
+    if (!saved) return null;
+    
+    // Migration: old 'pos' → split into 'pos_retail' + 'pos_gastro'
+    if (saved.includes('pos')) {
+      const migrated = saved.filter(m => m !== 'pos');
+      if (!migrated.includes('pos_retail')) migrated.push('pos_retail');
+      if (!migrated.includes('pos_gastro')) migrated.push('pos_gastro');
+      this.storage.set('um_enabled_modules', migrated);
+      return new Set(migrated);
+    }
+    
+    return new Set(saved);
   });
 
   private isModuleActive(moduleId: string | string[] | undefined): boolean {
@@ -531,8 +542,9 @@ export class DesktopLayoutComponent implements OnInit {
           { label: 'Inventario', icon: '📦', iconKey: 'inventory', route: '/d/inventory', moduleId: 'inventory' },
           { label: 'Menú Digital', icon: '🍽️', iconKey: 'menu', route: '/d/menu', moduleId: 'menu_digital' },
           { label: 'Turnos', icon: '🕐', iconKey: 'shifts', route: '/d/shifts', moduleId: 'shifts' },
-          { label: 'Punto de Venta', icon: '🛒', iconKey: 'inventory', route: '/d/pos', moduleId: 'pos' },
-          { label: 'Reportes Operaciones', icon: '📊', iconKey: 'analytics', route: '/d/operations-reports', moduleId: ['inventory', 'pos'] },
+          { label: 'POS Retail', icon: '🛒', iconKey: 'inventory', route: '/d/pos-retail', moduleId: 'pos_retail' },
+          { label: 'POS Restaurante', icon: '🍽️', iconKey: 'menu', route: '/d/pos-gastro', moduleId: 'pos_gastro' },
+          { label: 'Reportes Operaciones', icon: '📊', iconKey: 'analytics', route: '/d/operations-reports', moduleId: ['inventory', 'pos_retail', 'pos_gastro'] },
         ],
       },
     ];

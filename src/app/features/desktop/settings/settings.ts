@@ -165,28 +165,8 @@ interface CategoryDef {
         </div>
       </div>
 
-      <!-- POS Mode Modal -->
-      @if (showPosModal()) {
-        <div class="session-modal-backdrop" (click)="showPosModal.set(false)" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-          <div class="session-modal-card animate-fadeInUp" (click)="$event.stopPropagation()" style="background: var(--bg-secondary); padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;">
-            <h2 style="margin-bottom: 8px;">¿Qué tipo de negocio tienes?</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 24px;">Selecciona el modo de Punto de Venta que mejor se adapte a tu operación.</p>
-            <div style="display: flex; gap: 16px; flex-direction: column;">
-              <button type="button" [class.active]="editPosMode === 'retail'" (click)="setPosMode('retail'); showPosModal.set(false)" 
-                      class="toggle-btn" style="padding: 20px; font-size: 16px;">
-                🛒 Comercio / Retail<br>
-                <span style="font-size: 12px; font-weight: normal; opacity: 0.8; display: block; margin-top: 4px;">Ideal para tiendas, minimarkets y ventas rápidas.</span>
-              </button>
-              <button type="button" [class.active]="editPosMode === 'gastronomy'" (click)="setPosMode('gastronomy'); showPosModal.set(false)" 
-                      class="toggle-btn" style="padding: 20px; font-size: 16px;">
-                🍽️ Restaurante / Gastro<br>
-                <span style="font-size: 12px; font-weight: normal; opacity: 0.8; display: block; margin-top: 4px;">Plano visual de mesas, cuentas abiertas y propinas.</span>
-              </button>
-            </div>
-            <button class="cancel-btn" (click)="showPosModal.set(false)" style="margin-top: 24px; width: 100%; padding: 12px; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); font-weight: 600;">Cerrar</button>
-          </div>
-        </div>
-      }
+      
+
 
       <!-- Toast -->
       @if (toast()) {
@@ -232,7 +212,6 @@ export class SettingsComponent {
   editPosMode = this.userService.profile()?.posMode || 'retail';
   showPasswordForm = signal(false);
   newPassword = signal('');
-  showPosModal = signal(false);
 
   isProfileDirty(): boolean {
     const current = this.userService.profile() || { name: '', email: '', posMode: 'retail' };
@@ -249,15 +228,6 @@ export class SettingsComponent {
     this.showToast('✅ Perfil actualizado correctamente');
   }
 
-  async setPosMode(mode: 'retail' | 'gastronomy') {
-    this.editPosMode = mode;
-    await this.userService.saveProfile({ 
-      name: this.editName, 
-      email: this.editEmail,
-      posMode: mode
-    });
-    this.showToast('✅ Modo de Punto de Venta guardado');
-  }
 
   updatePassword(): void {
     const user = this.userService.profile();
@@ -318,7 +288,8 @@ export class SettingsComponent {
         { id: 'inventory', icon: '📦', name: 'Control de Inventario', desc: 'Existencias con alertas de stock mínimo' },
         { id: 'menu_digital', icon: '🍽️', name: 'Menú Digital', desc: 'Carta digital para bares, restaurantes y cafés' },
         { id: 'shifts', icon: '🕐', name: 'Gestión de Turnos', desc: 'Horarios del equipo por semanas o meses' },
-        { id: 'pos', icon: '🛒', name: 'Punto de Venta (POS)', desc: 'Caja registradora para ventas rápidas con descuento automático de inventario' },
+        { id: 'pos_retail', icon: '🛒', name: 'POS Retail', desc: 'Caja registradora para tiendas, minimarkets y ventas rápidas' },
+        { id: 'pos_gastro', icon: '🍽️', name: 'POS Restaurante', desc: 'Plano de mesas, cuentas abiertas y propinas para bares y restaurantes' },
       ],
     },
     {
@@ -366,10 +337,6 @@ export class SettingsComponent {
       // Module was just enabled — check dependencies
       const depMsg = this.getActivationMessage(id, next);
       this.showToast(depMsg || `✅ ${this.getModuleName(id)} activado`);
-      
-      if (id === 'pos') {
-        this.showPosModal.set(true);
-      }
     } else {
       this.showToast(`❌ ${this.getModuleName(id)} desactivado`);
     }
@@ -392,10 +359,6 @@ export class SettingsComponent {
     this.enabledModules.set(next);
     this.saveModules(next);
     this.showToast(allOn ? `Categoría ${cat.title} desactivada` : `✅ Categoría ${cat.title} activada`);
-    
-    if (!allOn && cat.modules.some(m => m.id === 'pos')) {
-      this.showPosModal.set(true);
-    }
   }
 
   resetModules(): void {

@@ -344,9 +344,8 @@ export class PosComponent {
   );
 
   constructor() {
-    if (this.pos.productSource() === 'menu') {
-      this.pos.setProductSource('catalog');
-    }
+    // Retail POS always uses catalog products
+    this.pos.setProductSource('catalog');
   }
 
   searchQuery = signal('');
