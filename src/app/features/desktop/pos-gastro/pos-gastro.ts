@@ -18,6 +18,7 @@ import { TableCardComponent } from './table-card';
       <!-- Top Bar -->
       <div class="gastro-top-bar">
         <div class="session-info">
+          <div class="gastro-mode-badge">🍽️ Gastro</div>
           @if (pos.currentSession()) {
             <div class="status-badge open">
               <um-icon name="check-circle" [size]="16"></um-icon>

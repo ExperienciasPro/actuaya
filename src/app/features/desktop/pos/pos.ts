@@ -15,6 +15,7 @@ import { Product } from '../../../core/models/product.model';
       <!-- Top Bar -->
       <div class="pos-top-bar">
         <div class="session-info">
+          <div class="retail-mode-badge">🛒 Retail</div>
           @if (pos.currentSession()) {
             <div class="status-badge open" title="Caja abierta por {{ pos.currentSession()!.userName }}">
               <um-icon name="check-circle" [size]="16"></um-icon>

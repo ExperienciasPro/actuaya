@@ -1,21 +1,25 @@
-:root {
-  --accent: #6c3ce9;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
+:host {
+  --gastro-accent: #d97706;
+  --gastro-accent-hover: #b45309;
+  --gastro-accent-light: rgba(217, 119, 6, 0.1);
+  --gastro-accent-glow: rgba(217, 119, 6, 0.15);
+  --gastro-success: #10b981;
+  --gastro-danger: #ef4444;
+  --gastro-warning: #f59e0b;
+  --gastro-bg: #fffbeb;
+  --gastro-card: #ffffff;
+  --gastro-text: #78350f;
+  --gastro-text-sec: #92400e;
+  --gastro-border: #fde68a;
+  --gastro-gradient: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
 }
 
 .gastro-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
+  background-color: var(--gastro-bg);
+  color: var(--gastro-text);
   font-family: system-ui, -apple-system, sans-serif;
   overflow: hidden;
 }
@@ -26,8 +30,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--gastro-card);
+  border-bottom: 1px solid var(--gastro-border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   z-index: 10;
   
@@ -47,12 +51,12 @@
       
       &.open {
         background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success);
+        color: var(--gastro-success);
       }
       
       &.closed {
         background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
+        color: var(--gastro-danger);
       }
     }
   }
@@ -63,22 +67,22 @@
     
     .zone-tab {
       padding: 8px 16px;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--gastro-border);
       border-radius: 8px;
-      background: var(--bg-color);
+      background: var(--gastro-bg);
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--gastro-text-sec);
       cursor: pointer;
       transition: all 0.2s;
       
       &:hover {
-        background: var(--card-bg);
+        background: var(--gastro-card);
       }
       
       &.active {
-        background: rgba(108, 60, 233, 0.1);
-        color: var(--accent);
-        border-color: var(--accent);
+        background: var(--gastro-accent-light);
+        color: var(--gastro-accent);
+        border-color: var(--gastro-accent);
       }
     }
   }
@@ -95,17 +99,17 @@
       border-radius: 20px;
       font-size: 13px;
       font-weight: 600;
-      background: var(--bg-color);
-      border: 1px solid var(--border-color);
+      background: var(--gastro-bg);
+      border: 1px solid var(--gastro-border);
       
       .dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         
-        &.available { background: var(--success); }
-        &.occupied { background: var(--warning); }
-        &.billing { background: var(--danger); }
+        &.available { background: var(--gastro-success); }
+        &.occupied { background: var(--gastro-warning); }
+        &.billing { background: var(--gastro-danger); }
       }
     }
   }
@@ -133,8 +137,8 @@
 /* Right Panel: Order Detail */
 .gastro-order {
   width: 400px;
-  background: var(--card-bg);
-  border-left: 1px solid var(--border-color);
+  background: var(--gastro-card);
+  border-left: 1px solid var(--gastro-border);
   display: flex;
   flex-direction: column;
   box-shadow: -4px 0 15px rgba(0,0,0,0.03);
@@ -146,7 +150,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: var(--text-secondary);
+    color: var(--gastro-text-sec);
     opacity: 0.7;
     
     p {
@@ -157,7 +161,7 @@
   
   .order-header {
     padding: 20px 24px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--gastro-border);
     
     .table-info {
       display: flex;
@@ -168,7 +172,7 @@
       h3 {
         margin: 0;
         font-size: 22px;
-        color: var(--text-primary);
+        color: var(--gastro-text);
       }
       
       .status {
@@ -178,14 +182,14 @@
         font-weight: 700;
         text-transform: uppercase;
         
-        &.open { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        &.open { background: rgba(16, 185, 129, 0.1); color: var(--gastro-success); }
       }
     }
     
     .meta {
       display: flex;
       gap: 16px;
-      color: var(--text-secondary);
+      color: var(--gastro-text-sec);
       font-size: 13px;
       
       span {
@@ -203,7 +207,7 @@
     
     .empty-order {
       text-align: center;
-      color: var(--text-secondary);
+      color: var(--gastro-text-sec);
       margin-top: 40px;
       font-size: 14px;
     }
@@ -212,13 +216,13 @@
       display: flex;
       align-items: flex-start;
       padding: 12px 0;
-      border-bottom: 1px dashed var(--border-color);
+      border-bottom: 1px dashed var(--gastro-border);
       gap: 12px;
       
       .qty {
         font-weight: 700;
-        color: var(--accent);
-        background: rgba(108, 60, 233, 0.1);
+        color: var(--gastro-accent);
+        background: var(--gastro-accent-light);
         padding: 4px 8px;
         border-radius: 6px;
         min-width: 32px;
@@ -230,12 +234,12 @@
         
         .name {
           font-weight: 600;
-          color: var(--text-primary);
+          color: var(--gastro-text);
         }
         
         .notes {
           font-size: 12px;
-          color: var(--warning);
+          color: var(--gastro-warning);
           margin-top: 4px;
           font-style: italic;
         }
@@ -248,10 +252,10 @@
       .btn-remove {
         background: transparent;
         border: none;
-        color: var(--text-secondary);
+        color: var(--gastro-text-sec);
         cursor: pointer;
         
-        &:hover { color: var(--danger); }
+        &:hover { color: var(--gastro-danger); }
       }
     }
     
@@ -259,10 +263,10 @@
       width: 100%;
       margin-top: 20px;
       padding: 12px;
-      border: 2px dashed var(--border-color);
+      border: 2px dashed var(--gastro-border);
       background: transparent;
       border-radius: 8px;
-      color: var(--accent);
+      color: var(--gastro-accent);
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -271,27 +275,27 @@
       gap: 8px;
       
       &:hover {
-        background: rgba(108, 60, 233, 0.05);
-        border-color: var(--accent);
+        background: var(--gastro-accent-glow);
+        border-color: var(--gastro-accent);
       }
     }
   }
   
   .order-summary {
     padding: 24px;
-    background: var(--bg-color);
-    border-top: 1px solid var(--border-color);
+    background: var(--gastro-bg);
+    border-top: 1px solid var(--gastro-border);
     
     .summary-row {
       display: flex;
       justify-content: space-between;
       margin-bottom: 12px;
-      color: var(--text-secondary);
+      color: var(--gastro-text-sec);
       
       &.tip-row input {
         width: 100px;
         text-align: right;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--gastro-border);
         padding: 4px 8px;
         border-radius: 4px;
       }
@@ -299,17 +303,17 @@
       &.total {
         margin-top: 16px;
         padding-top: 16px;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--gastro-border);
         font-size: 24px;
         font-weight: 800;
-        color: var(--text-primary);
+        color: var(--gastro-text);
       }
     }
     
     .btn-checkout {
       width: 100%;
       padding: 16px;
-      background: var(--success);
+      background: var(--gastro-success);
       color: white;
       border: none;
       border-radius: 12px;
@@ -319,7 +323,7 @@
       margin-top: 16px;
       
       &:disabled {
-        background: var(--border-color);
+        background: var(--gastro-border);
         cursor: not-allowed;
       }
     }
@@ -338,7 +342,7 @@
 }
 
 .modal-card {
-  background: var(--card-bg);
+  background: var(--gastro-card);
   border-radius: 16px;
   padding: 32px;
   width: 100%;
@@ -363,7 +367,7 @@
       background: transparent;
       border: none;
       cursor: pointer;
-      color: var(--text-secondary);
+      color: var(--gastro-text-sec);
     }
   }
   
@@ -379,7 +383,7 @@
     input, select {
       width: 100%;
       padding: 12px;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--gastro-border);
       border-radius: 8px;
     }
   }
@@ -399,15 +403,15 @@
       
       &.btn-cancel {
         background: transparent;
-        color: var(--text-secondary);
+        color: var(--gastro-text-sec);
       }
       
       &.btn-primary {
-        background: var(--accent);
+        background: var(--gastro-accent);
         color: white;
       }
       &.btn-success {
-        background: var(--success);
+        background: var(--gastro-success);
         color: white;
       }
     }
@@ -419,7 +423,7 @@
   .search-box {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--gastro-border);
     border-radius: 8px;
     margin-bottom: 16px;
     font-size: 16px;
@@ -435,15 +439,15 @@
     button {
       padding: 6px 12px;
       border-radius: 20px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-color);
+      border: 1px solid var(--gastro-border);
+      background: var(--gastro-bg);
       white-space: nowrap;
       cursor: pointer;
       
       &.active {
-        background: var(--accent);
+        background: var(--gastro-accent);
         color: white;
-        border-color: var(--accent);
+        border-color: var(--gastro-accent);
       }
     }
   }
@@ -460,14 +464,14 @@
       justify-content: space-between;
       align-items: center;
       padding: 12px;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--gastro-border);
       border-radius: 8px;
       cursor: pointer;
       
-      &:hover { border-color: var(--accent); }
+      &:hover { border-color: var(--gastro-accent); }
       
       .p-name { font-weight: 600; }
-      .p-price { color: var(--accent); }
+      .p-price { color: var(--gastro-accent); }
     }
   }
 }
@@ -480,16 +484,57 @@
   button {
     flex: 1;
     padding: 16px 8px;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--gastro-border);
     border-radius: 12px;
     background: transparent;
     cursor: pointer;
     font-weight: 600;
     
     &.active {
-      border-color: var(--accent);
-      background: rgba(108, 60, 233, 0.05);
-      color: var(--accent);
+      border-color: var(--gastro-accent);
+      background: var(--gastro-accent-glow);
+      color: var(--gastro-accent);
     }
   }
+}
+
+/* Gastro Mode Badge */
+.gastro-mode-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--gastro-accent-light);
+  color: var(--gastro-accent);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.btn-primary {
+  background: var(--gastro-gradient);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+  }
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--gastro-text-sec);
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
 }
