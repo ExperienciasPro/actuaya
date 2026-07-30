@@ -115,7 +115,7 @@ export class MenuService {
   private persist(key: string, value: unknown): void {
     this.storage.set(key, value);
     this.dataSync.trackLocalModification(key);
-    this.dataSync.saveToServerDebounced();
+    this.dataSync.saveToServerImmediate();
   }
 
   /** Re-add any missing default categories (e.g. after sync issues) */
@@ -131,6 +131,7 @@ export class MenuService {
     }
     if (changed) {
       this.storage.set(CATS_KEY, result);
+      this.dataSync.trackLocalModification(CATS_KEY);
     }
     return result;
   }
