@@ -97,6 +97,8 @@ export class POSService {
   /** All active products available for sale */
   availableProducts = computed(() => {
     if (this.productSource() === 'menu') {
+      // Build a map from category ID → category name for consistent filtering
+      const catMap = new Map(this.menuService.sortedCategories().map(c => [c.id, c.name]));
       return this.menuService.availableItems().map(item => ({
         id: `menu-${item.id}`,
         name: item.name,
@@ -105,7 +107,7 @@ export class POSService {
         salePrice: item.price,
         costPrice: 0,
         unit: 'unidad',
-        category: item.category,
+        category: catMap.get(item.category) || item.category,
         currentStock: 9999,
         minStock: 0,
         active: true,
