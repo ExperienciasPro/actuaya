@@ -40,8 +40,9 @@ import { TableCardComponent } from './table-card';
               {{ zone.name }}
             </button>
           }
-          <button class="btn-text" (click)="showSettingsModal = true">
-            <um-icon name="settings" [size]="16"></um-icon>
+          <button class="zone-tab" (click)="showSettingsModal = true" style="border-style: dashed; border-color: var(--gastro-accent); color: var(--gastro-accent); display: flex; align-items: center; gap: 6px;">
+            <um-icon name="settings" [size]="14"></um-icon>
+            Configuración
           </button>
         </div>
 
