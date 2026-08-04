@@ -1017,11 +1017,21 @@
 
         <div class="form-field">
           <label>Nueva contraseña</label>
-          <input type="password" [(ngModel)]="newPassword" placeholder="Mínimo 6 caracteres" />
+          <div class="input-with-toggle">
+            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="toggle-visibility" (click)="showNewPassword = !showNewPassword">
+              {{ showNewPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
         </div>
         <div class="form-field">
           <label>Confirmar contraseña</label>
-          <input type="password" [(ngModel)]="confirmPassword" placeholder="Repite la contraseña" />
+          <div class="input-with-toggle">
+            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="Repite la contraseña" />
+            <button type="button" class="toggle-visibility" (click)="showNewPassword = !showNewPassword">
+              {{ showNewPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
         </div>
 
         @if (passwordError) {

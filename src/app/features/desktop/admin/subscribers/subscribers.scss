@@ -948,6 +948,33 @@ $accent: $color-accent-primary;
   }
 }
 
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    flex: 1;
+    padding-right: 42px;
+  }
+
+  .toggle-visibility {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 200ms;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
 .error-msg {
   font-size: 0.82rem;
   color: #e84393;

@@ -89,6 +89,7 @@ export class SubscribersComponent {
   newPassword = '';
   confirmPassword = '';
   passwordError = '';
+  showNewPassword = false;
 
   // ─── New User Modal State ────────────────
   newUserModal = signal(false);
