@@ -631,7 +631,8 @@ export class DataSyncService {
 
   /**
    * Before saving um_users to server, fetch server version and preserve
-   * any fields that exist on the server but not locally (e.g. password set via backend reset).
+   * any fields that exist on the server but not locally (e.g. email/password set via admin or API).
+   * This prevents stale local data from wiping out admin-assigned credentials.
    */
   private async mergeUsersBeforeSave(payload: Record<string, unknown>): Promise<void> {
     const localUsers = payload['um_users'] as any[];
@@ -652,9 +653,15 @@ export class DataSyncService {
       if (u?.id) serverMap.set(u.id, u);
     }
 
-    // For each local user, preserve server-only fields
-    // Fields the frontend never manages but the backend might set
-    const SERVER_PROTECTED_FIELDS = ['password'];
+    // Build local user map by ID for quick lookup
+    const localMap = new Map<string, number>();
+    for (let i = 0; i < localUsers.length; i++) {
+      if (localUsers[i]?.id) localMap.set(localUsers[i].id, i);
+    }
+
+    // Fields the frontend may not have but the server does (set via admin panel or API scripts)
+    // If the server has a value and local does NOT, keep the server's value.
+    const SERVER_PROTECTED_FIELDS = ['password', 'email', 'phone', 'companyName', 'occupation'];
 
     for (let i = 0; i < localUsers.length; i++) {
       const localUser = localUsers[i];
@@ -666,6 +673,14 @@ export class DataSyncService {
         if (serverUser[field] && !localUser[field]) {
           localUsers[i][field] = serverUser[field];
         }
+      }
+    }
+
+    // Add server-only users that don't exist locally (created via admin on another device)
+    for (const serverUser of serverUsers) {
+      if (!serverUser?.id) continue;
+      if (!localMap.has(serverUser.id)) {
+        localUsers.push(serverUser);
       }
     }
 
