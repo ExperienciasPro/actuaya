@@ -205,6 +205,10 @@ export class SubscribersComponent {
       .filter(u =>
         u.subscriptionStatus === 'active' || u.subscriptionStatus === 'trial'
       )
+      // Excluir encuestados/test-takers: un suscriptor real que se registró en la plataforma
+      // debe tener al menos un rol de admin/superadmin, o tener datos como teléfono/empresa/contraseña.
+      // Los encuestados que solo dejan su email no deben aparecer aquí.
+      .filter(u => u.role === 'admin' || u.role === 'superadmin' || u.phone || u.companyName || u.password)
       .filter(u => !formalEmails.has((u.email || '').toLowerCase()))
       .map(u => ({
         id: 'user-' + u.id,
