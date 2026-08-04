@@ -86,10 +86,15 @@ import { environment } from '../../../environments/environment';
               <button
                 type="submit"
                 class="login-btn"
-                [disabled]="!username.trim() || !password.trim()"
+                [disabled]="isLoggingIn || (!username.trim() && !password.trim())"
               >
-                <um-icon name="bolt" [size]="20"></um-icon>
-                Ingresar
+                @if (isLoggingIn) {
+                  <span class="spinner"></span>
+                  Ingresando...
+                } @else {
+                  <um-icon name="bolt" [size]="20"></um-icon>
+                  Ingresar
+                }
               </button>
             </form>
 
@@ -212,8 +217,11 @@ export class LoginComponent implements OnInit {
   recoverEmail = '';
   successMsg = '';
   isLoading = false;
+  isLoggingIn = false;
 
   async login(): Promise<void> {
+    if (this.isLoggingIn) return; // prevent double-click
+
     // Safari autocomplete can fill fields without updating ngModel.
     // Read values directly from the DOM as a fallback.
     const rawUser = this.usernameInputRef?.nativeElement?.value ?? '';
@@ -226,6 +234,9 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    this.isLoggingIn = true;
+    this.errorMsg = '';
+
     try {
       // Force reload from localStorage before authenticating
       this.userService.reloadUsersFromStorage();
@@ -235,7 +246,11 @@ export class LoginComponent implements OnInit {
       // If auth failed, maybe localStorage is empty/stale — sync from server and retry
       if (!user) {
         try {
-          await this.dataSync.syncUserList();
+          // Timeout: don't let sync hang more than 10s
+          await Promise.race([
+            this.dataSync.syncUserList(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+          ]);
           this.userService.reloadUsersFromStorage();
           user = await this.userService.authenticate(finalUser, finalPass);
         } catch (syncErr) {
@@ -260,7 +275,10 @@ export class LoginComponent implements OnInit {
         this.errorMsg = 'Correo o contraseña incorrectos';
       }
     } catch (err: any) {
+      console.error('[Login] Error:', err);
       this.errorMsg = 'Error al iniciar sesión. Intenta de nuevo.';
+    } finally {
+      this.isLoggingIn = false;
     }
   }
 
