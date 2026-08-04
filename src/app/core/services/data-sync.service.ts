@@ -141,7 +141,7 @@ export class DataSyncService {
         try {
           console.log(`[DataSync] Sincronizando desde servidor (intento ${attempt}/3, user=${userId})...`);
           const response = await fetch(`${this.API_URL}?key=_bulk&_t=${Date.now()}`, {
-            headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+            headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
             cache: 'no-store',
           });
 
@@ -424,7 +424,7 @@ export class DataSyncService {
   async syncUserList(): Promise<void> {
     try {
       const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
-        headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+        headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
         cache: 'no-store',
       });
       if (!response.ok) return;
@@ -639,7 +639,7 @@ export class DataSyncService {
     if (!Array.isArray(localUsers) || localUsers.length === 0) return;
 
     const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
-      headers: { 'X-Auth-Token': this.AUTH_TOKEN },
+      headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
       cache: 'no-store',
     });
     if (!response.ok) return;
