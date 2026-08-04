@@ -660,7 +660,6 @@ export class DataSyncService {
     }
 
     // Fields the frontend may not have but the server does (set via admin panel or API scripts)
-    // If the server has a value and local does NOT, keep the server's value.
     const SERVER_PROTECTED_FIELDS = ['password', 'email', 'phone', 'companyName', 'occupation'];
 
     for (let i = 0; i < localUsers.length; i++) {
@@ -669,8 +668,14 @@ export class DataSyncService {
       const serverUser = serverMap.get(localUser.id);
       if (!serverUser) continue;
 
+      // If server version is MORE RECENT, prefer ALL its protected fields
+      const serverTime = new Date(serverUser.updatedAt || 0).getTime();
+      const localTime = new Date(localUser.updatedAt || 0).getTime();
+
       for (const field of SERVER_PROTECTED_FIELDS) {
-        if (serverUser[field] && !localUser[field]) {
+        // Case 1: server has value, local doesn't → use server
+        // Case 2: server is more recently updated → use server's value
+        if (serverUser[field] && (!localUser[field] || serverTime > localTime)) {
           localUsers[i][field] = serverUser[field];
         }
       }
