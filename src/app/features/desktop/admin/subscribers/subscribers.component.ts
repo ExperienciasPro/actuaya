@@ -149,6 +149,55 @@ export class SubscribersComponent {
     }
   }
 
+  // ─── Selection and Multi-Delete State (Subscriptions) ─────
+  selectedSubIds = signal<Set<string>>(new Set());
+
+  isAllSubsSelected = computed(() => {
+    const list = this.filteredSubscriptions();
+    if (list.length === 0) return false;
+    const currentSelected = this.selectedSubIds();
+    return list.every(s => s.sub && currentSelected.has(s.sub.id));
+  });
+
+  toggleSelectAllSubs(checked: boolean): void {
+    const nextSet = new Set(this.selectedSubIds());
+    const list = this.filteredSubscriptions();
+    if (checked) {
+      list.forEach(s => { if (s.sub) nextSet.add(s.sub.id); });
+    } else {
+      list.forEach(s => { if (s.sub) nextSet.delete(s.sub.id); });
+    }
+    this.selectedSubIds.set(nextSet);
+  }
+
+  toggleSelectSub(subId: string, event: Event): void {
+    event.stopPropagation();
+    const nextSet = new Set(this.selectedSubIds());
+    if (nextSet.has(subId)) {
+      nextSet.delete(subId);
+    } else {
+      nextSet.add(subId);
+    }
+    this.selectedSubIds.set(nextSet);
+  }
+
+  async deleteSelectedSubs(): Promise<void> {
+    const toDelete = Array.from(this.selectedSubIds());
+    if (toDelete.length === 0) return;
+
+    if (confirm(`¿Eliminar permanentemente los ${toDelete.length} suscriptores seleccionados?`)) {
+      toDelete.forEach(id => {
+        this.subService.delete(id);
+        if (this.selectedSub()?.id === id) {
+          this.selectedSub.set(null);
+        }
+      });
+      this.selectedSubIds.set(new Set());
+      await this.dataSyncService.saveToServer();
+      this.showToast(`🗑️ ${toDelete.length} suscriptores eliminados`);
+    }
+  }
+
   // ─── Import State ──────────────────────
   importResults = signal<{ created: number; skipped: number; errors: number } | null>(null);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;

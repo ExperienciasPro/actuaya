@@ -85,15 +85,29 @@
     <button class="filter-chip" [class.active]="statusFilter() === 'SUSPENDED'"
             (click)="statusFilter.set('SUSPENDED')">Suspendidos</button>
   </div>
+  @if (activeTab() === 'subscribers') {
+    <!-- Bulk Actions Bar -->
+    @if (selectedSubIds().size > 0) {
+      <div class="bulk-actions-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(232, 67, 147, 0.08); border: 1.5px dashed rgba(232, 67, 147, 0.3); border-radius: 12px; margin-bottom: 1.25rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: #e84393;">
+          Selected: {{ selectedSubIds().size }} suscriptor(es)
+        </span>
+        <button class="btn-bulk-delete" (click)="deleteSelectedSubs()" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 10px; background: #e84393; color: #fff; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s;">
+          <um-icon name="trash" [size]="16"></um-icon> Borrar Seleccionados
+        </button>
+      </div>
+    }
 
-  <!-- Table -->
-  <div class="table-section">
-    <table class="data-table">
+    <div class="table-section">
+      <table class="data-table">
       <thead>
         <tr>
-          <th>Empresa</th>
+          <th style="width: 80px; text-align: center;">
+            <input type="checkbox" [checked]="isAllSubsSelected()" (change)="toggleSelectAllSubs($any($event.target).checked)" />
+          </th>
+          <th>Suscriptor</th>
           <th>Tipo</th>
-          <th>App</th>
+          <th>Solución</th>
           <th>Estado</th>
           <th>Contacto</th>
           <th>Almacenamiento</th>
@@ -107,6 +121,14 @@
         @for (sub of filteredSubscriptions(); track sub.id) {
           @let health = getRenewalHealth(sub.sub ? sub.sub.nextRenewalDate : '');
           <tr (click)="sub.sub ? openSubDetail(sub.sub) : null" [style.cursor]="sub.sub ? 'pointer' : 'default'">
+            <td style="width: 80px; text-align: center;" (click)="$event.stopPropagation()">
+              @if (sub.sub) {
+                <div class="actions-cell-left" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <input type="checkbox" [checked]="selectedSubIds().has(sub.sub.id)" (change)="toggleSelectSub(sub.sub.id, $event)" />
+                  <button class="btn-delete-left" title="Eliminar suscriptor" (click)="$event.stopPropagation(); deleteSub(sub.sub)" style="border: none; background: transparent; cursor: pointer; color: #e84393; font-size: 0.95rem; padding: 2px;"><um-icon name="trash" [size]="16"></um-icon></button>
+                </div>
+              }
+            </td>
             <td>
               <div class="user-cell">
                 <div class="user-avatar" [style.background]="getAvatarColor(sub.name)">
@@ -176,7 +198,6 @@
               <div class="action-btns">
                 @if (sub.sub) {
                   <button class="btn-icon" title="Editar" (click)="$event.stopPropagation(); openEdit(sub.sub)">✏️</button>
-                  <button class="btn-icon danger" title="Eliminar" (click)="$event.stopPropagation(); deleteSub(sub.sub)"><um-icon name="trash" [size]="16"></um-icon></button>
                 }
               </div>
             </td>
@@ -194,6 +215,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   <!-- Subscriber Detail Panel -->
   @if (selectedSub(); as sub) {
