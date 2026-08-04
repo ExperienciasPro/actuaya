@@ -46,13 +46,12 @@ import { environment } from '../../../environments/environment';
                   #usernameInput
                   id="login-user"
                   class="form-input"
-                  type="email"
+                  type="text"
                   [(ngModel)]="username"
                   name="username"
                   autocomplete="email"
                   placeholder="Tu correo electrónico"
                   autofocus
-                  required
                 />
               </div>
 
@@ -71,7 +70,6 @@ import { environment } from '../../../environments/environment';
                     name="password"
                     autocomplete="current-password"
                     placeholder="Tu contraseña"
-                    required
                   />
                   <button type="button" class="toggle-pass" (click)="showPassword = !showPassword" tabindex="-1">
                     {{ showPassword ? '🙈' : '👁️' }}
@@ -86,7 +84,7 @@ import { environment } from '../../../environments/environment';
               <button
                 type="submit"
                 class="login-btn"
-                [disabled]="isLoggingIn || (!username.trim() && !password.trim())"
+                [disabled]="isLoggingIn"
               >
                 @if (isLoggingIn) {
                   <span class="spinner"></span>
