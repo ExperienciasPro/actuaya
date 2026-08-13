@@ -114,7 +114,7 @@ import { StorageService } from '../../core/services/storage.service';
             </div>
             <div class="builder-actions">
               <button class="btn-cancelar" (click)="vistaActual = 'galeria'">Cancelar</button>
-              <button class="btn-primary">
+              <button class="btn-primary" (click)="guardarFormulario()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 Guardar Formulario
               </button>
@@ -1050,6 +1050,36 @@ export class AdminFormulariosComponent implements OnInit {
 
   eliminarCampo(index: number) {
     this.camposLienzo.splice(index, 1);
+  }
+
+  guardarFormulario() {
+    if (this.camposLienzo.length === 0) {
+      alert('El formulario debe tener al menos un campo.');
+      return;
+    }
+
+    const formName = prompt('Ingrese el nombre del formulario:', 'Nuevo Formulario');
+    if (!formName) return; // Cancelado
+
+    const formDesc = prompt('Ingrese una breve descripción para el formulario:') || 'Formulario personalizado';
+    
+    const nuevoFormulario = {
+      id: Date.now(),
+      nombre: formName,
+      descripcion: formDesc,
+      campos: this.camposLienzo.map(c => c.etiqueta),
+      isDeleted: false,
+      deletedAt: null
+    };
+
+    this.formulariosMock.push(nuevoFormulario);
+    this.persist();
+    
+    alert('Formulario guardado exitosamente.');
+    this.camposLienzo = [];
+    if (!this.wizardMode) {
+      this.vistaActual = 'galeria';
+    }
   }
 
 }
