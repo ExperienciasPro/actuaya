@@ -36,7 +36,7 @@ app.use(cors({
     return callback(new Error(`CORS: Origin ${origin} no permitido`));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Token', 'ngsw-bypass'],
   credentials: true,
   optionsSuccessStatus: 200,
 }));
