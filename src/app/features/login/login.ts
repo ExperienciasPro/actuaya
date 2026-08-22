@@ -193,9 +193,18 @@ export class LoginComponent implements OnInit {
   private http = inject(HttpClient);
 
   async ngOnInit(): Promise<void> {
-    // Sincronizar lista de usuarios ANTES de login/registro
-    // para evitar que un navegador con lista incompleta sobreescriba la del servidor
-    await this.dataSync.syncUserList();
+    // Sincronizar lista de usuarios ANTES de login/registro.
+    // Timeout de 8s: si el servidor no responde, el login sigue funcionando
+    // con los datos en caché (evita que la pantalla se quede congelada en
+    // Chrome / Opera cuando la red es lenta o la API tarda).
+    try {
+      await Promise.race([
+        this.dataSync.syncUserList(),
+        new Promise<void>(resolve => setTimeout(resolve, 8000)),
+      ]);
+    } catch {
+      // Si falla la sincronización inicial, continuamos igual.
+    }
   }
 
   // DOM references — needed because Safari autocomplete can desync ngModel
@@ -244,10 +253,10 @@ export class LoginComponent implements OnInit {
       // If auth failed, maybe localStorage is empty/stale — sync from server and retry
       if (!user) {
         try {
-          // Timeout: don't let sync hang more than 10s
+          // Timeout: no más de 8s para no dejar el botón congelado
           await Promise.race([
             this.dataSync.syncUserList(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+            new Promise<void>(resolve => setTimeout(resolve, 8000)),
           ]);
           this.userService.reloadUsersFromStorage();
           user = await this.userService.authenticate(finalUser, finalPass);
