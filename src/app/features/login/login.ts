@@ -244,6 +244,15 @@ export class LoginComponent implements OnInit {
     this.isLoggingIn = true;
     this.errorMsg = '';
 
+    // Master timeout: si CUALQUIER cosa se cuelga, el botón se desbloquea en 15s
+    const masterTimeout = setTimeout(() => {
+      if (this.isLoggingIn) {
+        console.warn('[Login] Master timeout reached (15s) — resetting login state');
+        this.isLoggingIn = false;
+        this.errorMsg = 'La conexión tardó demasiado. Intenta de nuevo.';
+      }
+    }, 15000);
+
     try {
       // Force reload from localStorage before authenticating
       this.userService.reloadUsersFromStorage();
@@ -287,6 +296,7 @@ export class LoginComponent implements OnInit {
       console.error('[Login] Error:', err);
       this.errorMsg = 'Error al iniciar sesión. Intenta de nuevo.';
     } finally {
+      clearTimeout(masterTimeout);
       this.isLoggingIn = false;
     }
   }
