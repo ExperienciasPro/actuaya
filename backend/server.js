@@ -17,29 +17,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── Security Middleware ─────────────────────
-app.use(helmet());
-app.set('trust proxy', 1); // Trust first proxy (Nginx) — required for express-rate-limit behind reverse proxy
-
-// ─── Rate Limiting ───────────────────────────
-const globalLimiter = rateLimit({
-  windowMs: 60 * 1000,   // 1 minute
-  max: 200,               // 200 requests per minute per IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas peticiones. Intenta de nuevo en un minuto.' },
-});
-app.use(globalLimiter);
-
-const writeLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 30,                // 30 writes per minute per IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas escrituras. Intenta de nuevo en un minuto.' },
-});
-
-// ─── CORS ────────────────────────────────────
+// ─── CORS (MUST be before Helmet) ────────────
 const ALLOWED_ORIGINS = [
   process.env.CORS_ORIGIN || 'https://www.actuaya.co',
   'https://actuaya.co',            // Sin www
@@ -62,6 +40,35 @@ app.use(cors({
   credentials: true,
   optionsSuccessStatus: 200,
 }));
+
+// ─── Security Middleware ─────────────────────
+// crossOriginResourcePolicy: 'cross-origin' allows the frontend (actuaya.co)
+// to fetch from the API (api.actuaya.co) without being blocked by CORP headers.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
+app.set('trust proxy', 1); // Trust first proxy (Nginx) — required for express-rate-limit behind reverse proxy
+
+// ─── Rate Limiting ───────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,   // 1 minute
+  max: 200,               // 200 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones. Intenta de nuevo en un minuto.' },
+});
+app.use(globalLimiter);
+
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,                // 30 writes per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas escrituras. Intenta de nuevo en un minuto.' },
+});
+
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
