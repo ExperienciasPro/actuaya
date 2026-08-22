@@ -265,6 +265,8 @@ export class LoginComponent implements OnInit {
         // Redirigir de inmediato al dashboard
         if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
           this.router.navigate(['/subscription-required']);
+        } else if (!this.userService.isOnboarded()) {
+          this.router.navigate(['/completar-perfil']);
         } else {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/d/dashboard';
           this.router.navigateByUrl(returnUrl);

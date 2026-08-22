@@ -41,7 +41,12 @@ export const authGuard: CanActivateFn = async (route: ActivatedRouteSnapshot, st
     return true;
   }
 
-  // Si no está autenticado, redirigimos al login con el returnUrl para que tras ingresar sus claves vuelva directamente al Coach Móvil
-  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+  // Si no está autenticado, redirigimos al login
+  // Si está autenticado pero no onboarded, redirigimos a completar-perfil
+  if (userService.profile()) {
+    router.navigate(['/completar-perfil']);
+  } else {
+    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+  }
   return false;
 };
