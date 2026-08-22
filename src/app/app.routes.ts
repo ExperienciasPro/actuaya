@@ -236,6 +236,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/tests/tests.component').then((m) => m.TestsComponent),
       },
+      {
+        path: 'tests/wizard',
+        loadComponent: () =>
+          import('./features/tests/test-wizard/test-wizard.component').then((m) => m.TestWizardComponent),
+      },
       // — Base de Datos (Exportación / Resultados de encuestas y tests) —
       {
         path: 'datos',

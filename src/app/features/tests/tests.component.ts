@@ -43,7 +43,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
          Volver a evaluaciones
       </button>
 
-      <button *ngIf="!mostrandoPapelera" routerLink="/admin-home/tests/wizard" style="padding: 11px 24px; background: var(--accent); color: white; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(108, 60, 233, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(108, 60, 233, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(108, 60, 233, 0.25)'">
+      <button *ngIf="!mostrandoPapelera" routerLink="/d/tests/wizard" style="padding: 11px 24px; background: var(--accent); color: white; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(108, 60, 233, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(108, 60, 233, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(108, 60, 233, 0.25)'">
         + Crear Evaluación
       </button>
     </div>
@@ -1280,7 +1280,7 @@ export class TestsComponent implements OnInit {
   // --- MÉTODOS DE EDICIÓN Y CREACIÓN ---
 
   abrirModalEdicion(test: any) {
-    this.router.navigate(['/admin-home/tests/wizard', { id: test.id }]);
+    this.router.navigate(['/d/tests/wizard', { id: test.id }]);
   }
 
   abrirPrevisualizacion(id: string, ev?: Event) {

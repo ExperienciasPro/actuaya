@@ -1086,7 +1086,7 @@ export class TestWizardComponent implements OnInit {
 
   cerrarShareModal() {
     this.showShareModal = false;
-    this.router.navigate(['/admin-home/tests']);
+    this.router.navigate(['/d/tests']);
   }
 
   copiarEnlaceModal() {
