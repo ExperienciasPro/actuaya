@@ -122,13 +122,6 @@ export class UserService {
       u => u.email?.toLowerCase() === identifier.toLowerCase() &&
            u.isActive
     );
-    // Fallback: buscar por nombre (legacy)
-    if (!user) {
-      user = users.find(
-        u => u.name.toLowerCase() === identifier.toLowerCase() &&
-             u.isActive
-      );
-    }
     
     // DEFENSIVE: If user not found in signal, reload from localStorage and retry
     if (!user) {
@@ -138,12 +131,6 @@ export class UserService {
         u => u.email?.toLowerCase() === identifier.toLowerCase() &&
              u.isActive
       );
-      if (!user) {
-        user = users.find(
-          u => u.name.toLowerCase() === identifier.toLowerCase() &&
-               u.isActive
-        );
-      }
     }
     
     if (user) {
