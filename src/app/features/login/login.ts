@@ -40,7 +40,7 @@ import { environment } from '../../../environments/environment';
               <div class="form-group">
                 <label for="login-user">
                   <um-icon name="user" [size]="16"></um-icon>
-                  Correo o usuario
+                  Correo electrónico
                 </label>
                 <input
                   #usernameInput
