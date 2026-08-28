@@ -91,6 +91,12 @@ export class SubscribersComponent {
   passwordError = '';
   showNewPassword = false;
 
+  // ─── Email Edit Modal State ──────────────
+  emailModal = signal(false);
+  emailEditUser = signal<UserProfile | null>(null);
+  newEmail = '';
+  emailError = '';
+
   // ─── New User Modal State ────────────────
   newUserModal = signal(false);
   newUserError = '';
@@ -905,7 +911,7 @@ export class SubscribersComponent {
     this.editingUser.set(null);
   }
 
-  changePassword(): void {
+  async changePassword(): Promise<void> {
     const user = this.editingUser();
     if (!user) return;
 
@@ -918,11 +924,68 @@ export class SubscribersComponent {
       return;
     }
 
-    this.userService.updateUserPassword(user.id, this.newPassword);
+    // Hash the password before saving — authenticate() compares against SHA-256 hashes,
+    // so storing a raw password here would lock out the user.
+    const hashedPassword = await this.userService.hashPassword(this.newPassword);
+    this.userService.updateUserPassword(user.id, hashedPassword);
     this.closePasswordModal();
     this.refreshUsers();
     this.dataSyncService.saveToServer();
     this.showToast('🔑 Contraseña actualizada');
+  }
+
+  // ─── Email Edit Modal Methods ──────────────
+
+  openEmailModal(user: UserProfile): void {
+    this.emailEditUser.set(user);
+    this.newEmail = user.email || '';
+    this.emailError = '';
+    this.emailModal.set(true);
+  }
+
+  closeEmailModal(): void {
+    this.emailModal.set(false);
+    this.emailEditUser.set(null);
+  }
+
+  async saveEmail(): Promise<void> {
+    const user = this.emailEditUser();
+    if (!user) return;
+
+    const trimmedEmail = this.newEmail.trim().toLowerCase();
+    if (!trimmedEmail) {
+      this.emailError = 'El correo no puede estar vacío';
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      this.emailError = 'Formato de correo no válido';
+      return;
+    }
+
+    // Check for duplicate email (excluding current user)
+    const existing = this.userService.getAllUsers().find(
+      u => (u.email || '').toLowerCase() === trimmedEmail && u.id !== user.id
+    );
+    if (existing) {
+      this.emailError = `Ya existe un usuario con el correo ${trimmedEmail}`;
+      return;
+    }
+
+    this.userService.updateUser(user.id, { email: trimmedEmail });
+    this.closeEmailModal();
+    this.refreshUsers();
+
+    // Refresh detail panel with updated user data
+    const updatedUser = this.userService.getUserById(user.id);
+    if (updatedUser) {
+      this.selectedUser.set(updatedUser);
+    }
+
+    await this.dataSyncService.saveToServer();
+    this.showToast('📧 Correo actualizado exitosamente');
   }
 
   // ─── Shared Helpers ──────────────────────

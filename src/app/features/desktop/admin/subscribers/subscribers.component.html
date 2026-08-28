@@ -908,11 +908,18 @@
           <div class="detail-grid">
             <div class="detail-field">
               <span class="detail-label">Correo Electrónico</span>
-              @if (user.email) {
-                <a class="detail-value detail-link" [href]="'mailto:' + user.email">📧 {{ user.email }}</a>
-              } @else {
-                <span class="detail-value muted">No registrado</span>
-              }
+              <div style="display: flex; align-items: center; gap: 8px;">
+                @if (user.email) {
+                  <a class="detail-value detail-link" [href]="'mailto:' + user.email">📧 {{ user.email }}</a>
+                } @else {
+                  <span class="detail-value muted">No registrado</span>
+                }
+                <button class="btn-edit-email" (click)="$event.stopPropagation(); openEmailModal(user)"
+                        title="Editar correo electrónico"
+                        style="border: none; background: rgba(9,132,227,0.1); color: #0984e3; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: background 0.2s;">
+                  ✏️ Editar
+                </button>
+              </div>
             </div>
             <div class="detail-field">
               <span class="detail-label">Teléfono / WhatsApp</span>
@@ -1002,6 +1009,10 @@
             <button class="action-card" (click)="openPasswordModal(user)">
               <span class="action-icon">🔑</span>
               <span class="action-text">Cambiar Contraseña</span>
+            </button>
+            <button class="action-card" (click)="openEmailModal(user)">
+              <span class="action-icon">📧</span>
+              <span class="action-text">Editar Correo</span>
             </button>
             @if (user.role !== 'superadmin') {
               @if (user.subscriptionStatus !== 'active') {
@@ -1106,6 +1117,36 @@
       </div>
     </div>
   }
+}
+
+<!-- Email Edit Modal -->
+@if (emailModal()) {
+  <div class="modal-backdrop" (click)="closeEmailModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <h3>📧 Editar Correo Electrónico</h3>
+      <p class="modal-subtitle">Usuario: <strong>{{ emailEditUser()?.name }}</strong></p>
+      <p class="modal-subtitle" style="font-size: 0.8rem; color: #888;">
+        Correo actual: <strong>{{ emailEditUser()?.email || 'Sin correo' }}</strong>
+      </p>
+
+      <div class="form-field">
+        <label>Nuevo correo electrónico</label>
+        <input type="email" [(ngModel)]="newEmail" placeholder="correo&#64;ejemplo.com" />
+      </div>
+
+      @if (emailError) {
+        <p class="error-msg">{{ emailError }}</p>
+      }
+
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeEmailModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveEmail()"
+          [disabled]="!newEmail.trim()">
+          Guardar Correo
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- New User Modal -->
