@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewInit, OnInit } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewInit, OnInit, NgZone } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -191,6 +191,10 @@ export class LoginComponent implements OnInit {
   private mockSubService = inject(MockSubscriptionService);
   private dataSync = inject(DataSyncService);
   private http = inject(HttpClient);
+  private ngZone = inject(NgZone);
+
+  /** Promise cacheada del syncUserList de ngOnInit para no llamarlo dos veces */
+  private syncInitPromise: Promise<void> | null = null;
 
   async ngOnInit(): Promise<void> {
     // Sincronizar lista de usuarios ANTES de login/registro.
@@ -198,8 +202,9 @@ export class LoginComponent implements OnInit {
     // con los datos en caché (evita que la pantalla se quede congelada en
     // Chrome / Opera cuando la red es lenta o la API tarda).
     try {
+      this.syncInitPromise = this.dataSync.syncUserList();
       await Promise.race([
-        this.dataSync.syncUserList(),
+        this.syncInitPromise,
         new Promise<void>(resolve => setTimeout(resolve, 8000)),
       ]);
     } catch {
@@ -246,11 +251,13 @@ export class LoginComponent implements OnInit {
 
     // Master timeout: si CUALQUIER cosa se cuelga, el botón se desbloquea en 15s
     const masterTimeout = setTimeout(() => {
-      if (this.isLoggingIn) {
-        console.warn('[Login] Master timeout reached (15s) — resetting login state');
-        this.isLoggingIn = false;
-        this.errorMsg = 'La conexión tardó demasiado. Intenta de nuevo.';
-      }
+      this.ngZone.run(() => {
+        if (this.isLoggingIn) {
+          console.warn('[Login] Master timeout reached (15s) — resetting login state');
+          this.isLoggingIn = false;
+          this.errorMsg = 'La conexión tardó demasiado. Intenta de nuevo.';
+        }
+      });
     }, 15000);
 
     try {
@@ -262,11 +269,16 @@ export class LoginComponent implements OnInit {
       // If auth failed, maybe localStorage is empty/stale — sync from server and retry
       if (!user) {
         try {
-          // Timeout: no más de 8s para no dejar el botón congelado
-          await Promise.race([
-            this.dataSync.syncUserList(),
-            new Promise<void>(resolve => setTimeout(resolve, 8000)),
-          ]);
+          if (this.syncInitPromise) {
+            await this.syncInitPromise;
+            this.syncInitPromise = null; // solo usarlo una vez
+          } else {
+            // Timeout: no más de 8s para no dejar el botón congelado
+            await Promise.race([
+              this.dataSync.syncUserList(),
+              new Promise<void>(resolve => setTimeout(resolve, 8000)),
+            ]);
+          }
           this.userService.reloadUsersFromStorage();
           user = await this.userService.authenticate(finalUser, finalPass);
         } catch (syncErr) {

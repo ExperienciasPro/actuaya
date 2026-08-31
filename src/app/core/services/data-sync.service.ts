@@ -138,12 +138,17 @@ export class DataSyncService {
       // Fix C6: retry con backoff exponencial (3 intentos)
       let lastError = '';
       for (let attempt = 1; attempt <= 3; attempt++) {
+        const controller = new AbortController();
+        const fetchTimeout = setTimeout(() => controller.abort(), 15000);
+
         try {
           console.log(`[DataSync] Sincronizando desde servidor (intento ${attempt}/3, user=${userId})...`);
           const response = await fetch(`${this.API_URL}?key=_bulk&_t=${Date.now()}`, {
             headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
             cache: 'no-store',
+            signal: controller.signal,
           });
+          clearTimeout(fetchTimeout);
 
           if (!response.ok) {
             lastError = `HTTP ${response.status}`;
@@ -288,7 +293,8 @@ export class DataSyncService {
             radar: radarArr.length,
           };
         } catch (e: any) {
-          lastError = e.message || 'Error de red';
+          clearTimeout(fetchTimeout);
+          lastError = e?.name === 'AbortError' ? 'Timeout (15s)' : (e.message || 'Error de red');
           console.warn(`[DataSync] Intento ${attempt}/3 falló:`, lastError);
           if (attempt < 3) {
             await new Promise(r => setTimeout(r, 1000 * attempt));
@@ -422,11 +428,18 @@ export class DataSyncService {
    * asegurar que la lista local de um_users esté al día.
    */
   async syncUserList(): Promise<void> {
+    // AbortController: cancela el fetch real si el servidor no responde en 10s.
+    // Sin esto, el fetch queda colgado indefinidamente consumiendo conexiones.
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+
     try {
       const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
         headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
         cache: 'no-store',
+        signal: controller.signal,
       });
+      clearTimeout(fetchTimeout);
       if (!response.ok) return;
       const serverUsers = await response.json();
       if (Array.isArray(serverUsers) && serverUsers.length > 0) {
@@ -481,8 +494,13 @@ export class DataSyncService {
         this.userService.reloadUsersFromStorage();
         console.log(`[DataSync] Lista de usuarios sincronizada: ${finalList.length} usuarios (de ${mergedMap.size} pre-dedup)`);
       }
-    } catch (e) {
-      console.warn('[DataSync] Error sincronizando lista de usuarios:', e);
+    } catch (e: any) {
+      clearTimeout(fetchTimeout);
+      if (e?.name === 'AbortError') {
+        console.warn('[DataSync] syncUserList abortado por timeout (10s)');
+      } else {
+        console.warn('[DataSync] Error sincronizando lista de usuarios:', e);
+      }
     }
   }
 
@@ -582,10 +600,16 @@ export class DataSyncService {
 
     // Fix A5: retry con backoff (3 intentos)
     for (let attempt = 1; attempt <= 3; attempt++) {
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 15000);
+
       try {
         const payload = this.collectLocalData();
         const keyCount = Object.keys(payload).length;
-        if (keyCount === 0) return;
+        if (keyCount === 0) {
+          clearTimeout(fetchTimeout);
+          return;
+        }
 
         // Merge um_users with server data to preserve server-only fields (e.g. password)
         if (payload['um_users']) {
@@ -604,7 +628,9 @@ export class DataSyncService {
             'X-Auth-Token': this.AUTH_TOKEN,
           },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         });
+        clearTimeout(fetchTimeout);
 
         const result = await response.json();
         console.log('[DataSync] Respuesta:', result);
@@ -620,8 +646,10 @@ export class DataSyncService {
         }
         this.persistPendingKeys();
         return; // Éxito
-      } catch (e) {
-        console.warn(`[DataSync] Error guardando (intento ${attempt}/3):`, e);
+      } catch (e: any) {
+        clearTimeout(fetchTimeout);
+        const errName = e?.name === 'AbortError' ? 'Timeout (15s)' : e;
+        console.warn(`[DataSync] Error guardando (intento ${attempt}/3):`, errName);
         if (attempt < 3) {
           await new Promise(r => setTimeout(r, 500 * attempt));
         }
@@ -638,13 +666,19 @@ export class DataSyncService {
     const localUsers = payload['um_users'] as any[];
     if (!Array.isArray(localUsers) || localUsers.length === 0) return;
 
-    const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
-      headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
-      cache: 'no-store',
-    });
-    if (!response.ok) return;
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 10000);
 
-    const serverUsers = await response.json();
+    try {
+      const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
+        headers: { 'X-Auth-Token': this.AUTH_TOKEN, 'ngsw-bypass': 'true' },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(fetchTimeout);
+      if (!response.ok) return;
+
+      const serverUsers = await response.json();
     if (!Array.isArray(serverUsers) || serverUsers.length === 0) return;
 
     // Build server user map by ID
@@ -690,6 +724,10 @@ export class DataSyncService {
     }
 
     payload['um_users'] = localUsers;
+    } catch (e) {
+      clearTimeout(fetchTimeout);
+      console.warn('[DataSync] mergeUsersBeforeSave network error:', e);
+    }
   }
 
   /**
