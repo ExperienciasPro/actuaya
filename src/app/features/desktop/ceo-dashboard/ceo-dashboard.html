@@ -89,11 +89,11 @@
 
           <!-- SLA Summary & Messages -->
           <div class="sla-summary">
-            <button class="messages-btn" routerLink="/d/mensajes" style="flex: 1.5; background: #bfdbfe; color: #1e3a8a; text-align: center; height: auto; display: flex; flex-direction: column; justify-content: center; border: 2px solid #ef4444; border-radius: 8px; cursor: pointer;">
-              <span style="font-size: 1.15rem; font-weight: 600;">Mensajes y</span>
-              <span style="font-size: 1.15rem; font-weight: 600;">requerimientos</span>
+            <button class="messages-btn" routerLink="/d/mensajes">
+              <span>Mensajes y</span>
+              <span>requerimientos</span>
             </button>
-            <div class="sla-box pending" style="flex: 1;">
+            <div class="sla-box pending">
               <span class="sla-box-value">{{ slaPending().length }}</span>
               <span class="sla-box-label">Pendientes</span>
             </div>

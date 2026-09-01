@@ -187,28 +187,32 @@
   }
 
   .qa-btn {
-    background: #a3e635; /* Green like in the mockup */
-    color: #1f2937;
-    border: 2px solid #84cc16;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 1.1rem;
+    background: rgba(46, 204, 113, 0.06); // Soft green matching KPI active
+    color: $color-text-primary;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 18px 16px;
+    border-radius: $radius-lg;
+    font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all $transition-fast;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 
     &:nth-child(2) {
-      background: #ffffff;
-      border: 2px solid #84cc16;
+      background: $color-bg-secondary; // White
+      border: 1px solid $color-border-subtle;
     }
 
     &:hover {
-      background: #84cc16;
-      color: #fff;
+      background: rgba(46, 204, 113, 0.12);
+      border-color: rgba(46, 204, 113, 0.5);
       transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: $shadow-sm;
+    }
+
+    &:nth-child(2):hover {
+      background: $color-bg-hover;
+      border-color: $color-border-default;
     }
   }
 }
@@ -392,6 +396,33 @@
   display: flex;
   gap: $spacing-sm;
   margin-bottom: $spacing-lg;
+}
+
+.messages-btn {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  border-radius: $radius-md;
+  cursor: pointer;
+  background: rgba(52, 152, 219, 0.06); // Soft blue like pending
+  border: 1px solid rgba(231, 76, 60, 0.4); // Subtle red border
+  color: $color-text-primary;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: rgba(52, 152, 219, 0.12);
+    border-color: rgba(231, 76, 60, 0.6);
+    box-shadow: $shadow-sm;
+    transform: translateY(-2px);
+  }
+
+  span {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
 }
 
 .sla-box {
