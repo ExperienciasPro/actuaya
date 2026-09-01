@@ -166,6 +166,18 @@ interface NavItem {
             <h2 class="page-title">Consola de Mando</h2>
           </div>
           <div class="topbar-right">
+            <div class="company-brand" (click)="logoInput.click()" title="Haz clic para cambiar el logo de la empresa">
+              @if (companyName()) {
+                <span class="company-name-top">{{ companyName() }}</span>
+              }
+              @if (companyLogo()) {
+                <img class="company-logo-top" [src]="companyLogo()" alt="Logo Empresa" />
+              } @else {
+                <span class="company-logo-placeholder">LOGO DE LA EMPRESA</span>
+              }
+            </div>
+            <input type="file" #logoInput hidden accept="image/*" (change)="onLogoSelected($event)" />
+
             <button class="topbar-btn" title="Buscar" (click)="toggleSearch()"><span>🔍</span></button>
             <button class="btn-logout-topbar" (click)="logout()" title="Cerrar sesión">Cerrar sesión</button>
             <button class="topbar-btn" title="Notificaciones" (click)="toggleNotifications()">
@@ -301,6 +313,9 @@ export class DesktopLayoutComponent implements OnInit {
   private salesService = inject(SalesService);
   private mockSubService = inject(MockSubscriptionService);
   private dataSync = inject(DataSyncService);
+
+  companyName = computed(() => this.userService.profile()?.companyName || '');
+  companyLogo = computed(() => this.userService.profile()?.companyLogo || '');
 
   collapsed = signal(true);
   isHovered = signal(false);
@@ -601,6 +616,22 @@ export class DesktopLayoutComponent implements OnInit {
   toggleSidebar(): void {
     this.collapsed.update((v) => !v);
     this.isHovered.set(false);
+  }
+
+  async onLogoSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('❌ El logo debe ser menor a 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const logoData = e.target?.result as string;
+        await this.userService.saveProfile({ companyLogo: logoData });
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   toggleSearch(): void {

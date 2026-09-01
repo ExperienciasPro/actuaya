@@ -249,16 +249,16 @@ export class LoginComponent implements OnInit {
     this.isLoggingIn = true;
     this.errorMsg = '';
 
-    // Master timeout: si CUALQUIER cosa se cuelga, el botón se desbloquea en 15s
+    // Master timeout: si CUALQUIER cosa se cuelga, el botón se desbloquea en 30s
     const masterTimeout = setTimeout(() => {
       this.ngZone.run(() => {
         if (this.isLoggingIn) {
-          console.warn('[Login] Master timeout reached (15s) — resetting login state');
+          console.warn('[Login] Master timeout reached (30s) — resetting login state');
           this.isLoggingIn = false;
           this.errorMsg = 'La conexión tardó demasiado. Intenta de nuevo.';
         }
       });
-    }, 15000);
+    }, 30000);
 
     try {
       // Force reload from localStorage before authenticating
@@ -273,10 +273,10 @@ export class LoginComponent implements OnInit {
             await this.syncInitPromise;
             this.syncInitPromise = null; // solo usarlo una vez
           } else {
-            // Timeout: no más de 8s para no dejar el botón congelado
+            // Timeout: no más de 25s para no dejar el botón congelado
             await Promise.race([
               this.dataSync.syncUserList(),
-              new Promise<void>(resolve => setTimeout(resolve, 8000)),
+              new Promise<void>(resolve => setTimeout(resolve, 25000)),
             ]);
           }
           this.userService.reloadUsersFromStorage();

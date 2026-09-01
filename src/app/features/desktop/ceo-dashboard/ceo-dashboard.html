@@ -3,7 +3,7 @@
   <!-- ═══ Page Header ═══ -->
   <header class="page-header animate-fadeInUp">
     <div class="header-left">
-      <h1>🛠️ Gestión de Mantenimientos</h1>
+      <h1>Soy administrador</h1>
       <p class="header-subtitle">
         Monitoreo operativo en tiempo real · {{ orders().length }} órdenes de trabajo
       </p>
@@ -61,60 +61,15 @@
     <!-- ─── LEFT COLUMN ─── -->
     <div class="col-left">
 
-      <!-- 💰 Live Cost Card -->
-      <div class="dash-card cost-card animate-fadeInUp stagger-2">
-        <div class="card-header">
-          <h2>💰 Costo Operativo en Vivo</h2>
-          <span class="total-cost">{{ formatCOP(totalLiveCost()) }}</span>
-        </div>
+      <!-- Quick Actions (Replaces Costo Operativo) -->
+      <div class="dash-card quick-actions-card animate-fadeInUp stagger-2">
         <div class="card-body">
-          <div class="cost-breakdown">
-            <div class="cost-row header-row">
-              <span class="cost-col wide">OT / Técnico</span>
-              <span class="cost-col">Horas</span>
-              <span class="cost-col">Mano de Obra</span>
-              <span class="cost-col">Repuestos</span>
-              <span class="cost-col accent">Total</span>
-            </div>
-            @for (ot of executingOrders(); track ot.id) {
-              <div class="cost-row">
-                <div class="cost-col wide">
-                  <strong class="cost-ot-title">{{ ot.title }}</strong>
-                  <span class="cost-tech">👤 {{ ot.tech_name || '—' }} · {{ formatCOP(ot.tech_hourly_rate || 0) }}/h</span>
-                </div>
-                <span class="cost-col timer-value">
-                  {{ formatHours(getElapsedHours(ot)) }}
-                </span>
-                <span class="cost-col">
-                  {{ formatCOP(getElapsedHours(ot) * (ot.tech_hourly_rate || 0)) }}
-                </span>
-                <span class="cost-col">
-                  {{ formatCOP(ot.parts_cost || 0) }}
-                </span>
-                <span class="cost-col accent">
-                  {{ formatCOP(getLiveCost(ot)) }}
-                </span>
-              </div>
-            } @empty {
-              <div class="cost-empty">
-                <p>No hay OTs en ejecución actualmente.</p>
-              </div>
-            }
+          <div class="qa-grid">
+            <button class="qa-btn" routerLink="/d/admin/clientes">Mis clientes</button>
+            <button class="qa-btn" routerLink="/d/asignaciones">ASIGNACIONES</button>
+            <button class="qa-btn" routerLink="/d/admin/tecnicos">Mis Tecnicos</button>
+            <button class="qa-btn" routerLink="/d/admin/equipos">Equipos</button>
           </div>
-
-          <!-- Cost Totals -->
-          @if (executingOrders().length) {
-            <div class="cost-totals">
-              <div class="cost-total-item">
-                <span>Repuestos Acumulados:</span>
-                <strong>{{ formatCOP(totalPartsCost()) }}</strong>
-              </div>
-              <div class="cost-total-item primary">
-                <span>Costo Operativo Total:</span>
-                <strong class="big-total">{{ formatCOP(totalLiveCost()) }}</strong>
-              </div>
-            </div>
-          }
         </div>
       </div>
 
@@ -132,17 +87,13 @@
             <span class="priority-badge critica">CRÍTICA</span>
           </p>
 
-          <!-- SLA Summary -->
+          <!-- SLA Summary & Messages -->
           <div class="sla-summary">
-            <div class="sla-box ok">
-              <span class="sla-box-value">{{ slaCompliant().length }}</span>
-              <span class="sla-box-label">Cumplidas</span>
-            </div>
-            <div class="sla-box violation">
-              <span class="sla-box-value">{{ slaViolations().length }}</span>
-              <span class="sla-box-label">Violaciones</span>
-            </div>
-            <div class="sla-box pending">
+            <button class="messages-btn" routerLink="/d/mensajes" style="flex: 1.5; background: #bfdbfe; color: #1e3a8a; text-align: center; height: auto; display: flex; flex-direction: column; justify-content: center; border: 2px solid #ef4444; border-radius: 8px; cursor: pointer;">
+              <span style="font-size: 1.15rem; font-weight: 600;">Mensajes y</span>
+              <span style="font-size: 1.15rem; font-weight: 600;">requerimientos</span>
+            </button>
+            <div class="sla-box pending" style="flex: 1;">
               <span class="sla-box-value">{{ slaPending().length }}</span>
               <span class="sla-box-label">Pendientes</span>
             </div>
@@ -163,12 +114,12 @@
                   <div class="sla-item-info">
                     <strong>{{ ot.title }}</strong>
                     <span class="sla-item-meta">
-                      {{ getStatusLabel(ot.status) }} · 📍 {{ ot.location_name || '—' }}
+                      {{ ot.tech_name }} · Asignada: {{ ot.created_at | date:'shortTime' }}
                     </span>
                   </div>
                 </div>
                 <div class="sla-item-right">
-                  @if (getSlaResponseHours(ot) !== null) {
+                  @if (getSlaStatus(ot) !== 'pending') {
                     <span
                       class="sla-delta"
                       [class.ok]="getSlaStatus(ot) === 'ok' || getSlaStatus(ot) === 'warning'"
@@ -204,7 +155,7 @@
       <!-- 🗺️ Logistic Heat Map -->
       <div class="dash-card map-card animate-fadeInUp stagger-2">
         <div class="card-header">
-          <h2>🗺️ Mapa Logístico en Vivo</h2>
+          <h2>📍 Ubicación de técnicos</h2>
           <span class="field-count">{{ fieldOrders().length }} técnicos en campo</span>
         </div>
         <div class="card-body map-body">

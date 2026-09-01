@@ -148,9 +148,9 @@ export class DataSyncService {
             cache: 'no-store',
             signal: controller.signal,
           });
-          clearTimeout(fetchTimeout);
 
           if (!response.ok) {
+            clearTimeout(fetchTimeout);
             lastError = `HTTP ${response.status}`;
             if (attempt < 3) {
               await new Promise(r => setTimeout(r, 1000 * attempt));
@@ -160,6 +160,7 @@ export class DataSyncService {
           }
 
           const serverData: Record<string, unknown> = await response.json();
+          clearTimeout(fetchTimeout);
           const serverKeys = Object.keys(serverData);
 
           if (serverKeys.length === 0) {
@@ -431,7 +432,7 @@ export class DataSyncService {
     // AbortController: cancela el fetch real si el servidor no responde en 10s.
     // Sin esto, el fetch queda colgado indefinidamente consumiendo conexiones.
     const controller = new AbortController();
-    const fetchTimeout = setTimeout(() => controller.abort(), 10000);
+    const fetchTimeout = setTimeout(() => controller.abort(), 25000);
 
     try {
       const response = await fetch(`${this.API_URL}?key=um_users&_t=${Date.now()}`, {
@@ -439,9 +440,12 @@ export class DataSyncService {
         cache: 'no-store',
         signal: controller.signal,
       });
-      clearTimeout(fetchTimeout);
-      if (!response.ok) return;
+      if (!response.ok) {
+        clearTimeout(fetchTimeout);
+        return;
+      }
       const serverUsers = await response.json();
+      clearTimeout(fetchTimeout);
       if (Array.isArray(serverUsers) && serverUsers.length > 0) {
         // Merge con la lista local — LOCAL wins for isDeleted flags
         const localUsers = this.storage.getUnscoped<any[]>('um_users') || [];
@@ -626,13 +630,19 @@ export class DataSyncService {
           headers: {
             'Content-Type': 'application/json',
             'X-Auth-Token': this.AUTH_TOKEN,
+            'ngsw-bypass': 'true'
           },
           body: JSON.stringify(payload),
           signal: controller.signal,
         });
-        clearTimeout(fetchTimeout);
+
+        if (!response.ok) {
+          clearTimeout(fetchTimeout);
+          throw new Error(`HTTP ${response.status}`);
+        }
 
         const result = await response.json();
+        clearTimeout(fetchTimeout);
         console.log('[DataSync] Respuesta:', result);
         // Server now has our latest data — safe to clear local modification tracking
         for (const k of Object.keys(payload)) {
