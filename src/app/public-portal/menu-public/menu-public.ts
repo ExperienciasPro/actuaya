@@ -283,11 +283,11 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     }
 
     .menu-logo {
-      max-height: 70px;
-      max-width: 160px;
+      max-height: 110px;
+      max-width: 240px;
       object-fit: contain;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      border-radius: 12px;
+      margin-bottom: 16px;
       display: block;
       margin-inline: auto;
     }
