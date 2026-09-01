@@ -349,6 +349,11 @@ export const routes: Routes = [
           import('./features/desktop/admin/clientes/clientes-list/clientes-list.component').then((m) => m.ClientesListComponent),
       },
       {
+        path: 'admin/equipos',
+        loadComponent: () =>
+          import('./features/desktop/admin/equipos/equipos-list/equipos-list.component').then((m) => m.EquiposListComponent),
+      },
+      {
         path: 'admin/subscriptions',
         canActivate: [superAdminGuard],
         loadComponent: () =>

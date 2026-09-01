@@ -93,10 +93,10 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
             @if (hasCatItems(cat.id)) {
               <section class="menu-section" [id]="'cat-' + cat.id">
                 <h2 class="section-title">{{ cat.emoji }} {{ cat.name }}</h2>
-                <div class="items-container" [class.has-photos]="catHasPhotos(cat.id)">
+                <div class="items-container" [class.has-photos]="cfg().showImages && catHasPhotos(cat.id)">
                   @for (item of itemsForCat(cat.id); track item.id) {
                   <div class="menu-item-card">
-                    @if (item.imageDataUrl) {
+                    @if (cfg().showImages && item.imageDataUrl) {
                       <img class="item-photo" [src]="item.imageDataUrl" [alt]="item.name" loading="lazy" />
                     }
                     <div class="item-body">
@@ -142,6 +142,18 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
           Menú digital por <strong>ActuaYa</strong>
         </div>
       }
+
+      <!-- Share FAB -->
+      <button class="fab-share" (click)="shareMenu()" aria-label="Compartir menú">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        <span>Compartir</span>
+      </button>
     </div>
   `,
   styles: [`
@@ -409,14 +421,31 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
     .layout-compact .items-container {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 0;
     }
 
     .layout-compact .menu-item-card {
+      flex-direction: row;
+      align-items: center;
       border-radius: 0;
       box-shadow: none;
       border-bottom: 1px solid var(--border);
-      .item-photo { display: none; }
+      padding: 16px 0;
+      background: transparent;
+    }
+    
+    .layout-compact .item-photo {
+      width: 84px;
+      height: 84px;
+      border-radius: 8px;
+      margin-left: 16px;
+      order: 2;
+    }
+
+    .layout-compact .item-body {
+      padding: 0;
+      flex: 1;
+      order: 1;
     }
 
     .menu-item-card {
@@ -529,6 +558,41 @@ import { MenuConfig, MenuItem, MenuCategory, DEFAULT_MENU_CONFIG } from '../../c
       font-size: 1.1rem;
       color: var(--text-sec);
     }
+    
+    /* ── Floating Action Button (Share) ── */
+    .fab-share {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--brand);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .fab-share:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 600px) {
+      .fab-share {
+        bottom: 16px;
+        right: 16px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+      }
+    }
   `],
 })
 export class MenuPublicComponent implements OnInit {
@@ -640,6 +704,24 @@ export class MenuPublicComponent implements OnInit {
       return new Intl.NumberFormat('es-CO', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(price);
     } catch {
       return `${cur} ${price.toLocaleString()}`;
+    }
+  }
+
+  shareMenu(): void {
+    const url = window.location.href;
+    const title = this.cfg().businessName;
+    const text = `Te invito a ver el menú de ${title}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text,
+        url
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(() => alert('¡Enlace copiado al portapapeles!'))
+        .catch(() => alert('No se pudo copiar el enlace.'));
     }
   }
 }
