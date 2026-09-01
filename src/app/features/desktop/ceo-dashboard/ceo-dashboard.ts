@@ -10,6 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { UpperCasePipe, DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { WorkOrderService } from '../../../core/services/work-order.service';
 import {
   WorkOrder,
@@ -26,7 +27,7 @@ declare const L: any;
 @Component({
   selector: 'um-ceo-dashboard',
   standalone: true,
-  imports: [UpperCasePipe, DatePipe, UmIconComponent],
+  imports: [UpperCasePipe, DatePipe, UmIconComponent, RouterModule],
   templateUrl: './ceo-dashboard.html',
   styleUrl: './ceo-dashboard.scss',
 })
