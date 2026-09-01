@@ -1,0 +1,110 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-panel animate-scaleIn" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ client() ? 'Editar Cliente' : 'Crear Cliente' }}</h2>
+      <button class="close-btn" (click)="onClose()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Sección Básica -->
+      <div class="form-section">
+        <h3>Información Básica</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Nombre Comercial *</label>
+            <input type="text" [(ngModel)]="formData.commercialName" placeholder="Ej. Hotel Bari">
+          </div>
+          <div class="form-group">
+            <label>Razón Social</label>
+            <input type="text" [(ngModel)]="formData.legalName" placeholder="Ej. OXO Hotel SAS">
+          </div>
+          <div class="form-group">
+            <label>NIT *</label>
+            <input type="text" [(ngModel)]="formData.nit" placeholder="NIT o Documento">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="formData.status">
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="form-section">
+        <h3>Datos de Contacto</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Persona de Contacto</label>
+            <input type="text" [(ngModel)]="formData.contactName" placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" [(ngModel)]="formData.phone" placeholder="Celular o fijo">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Correo Electrónico</label>
+            <input type="email" [(ngModel)]="formData.email" placeholder="correo@empresa.com">
+          </div>
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="form-section">
+        <h3>Identificación (QR / SOLINER)</h3>
+        <div class="form-group qr-group">
+          <input type="text" [(ngModel)]="formData.qrCode" placeholder="Código de 6 dígitos">
+          <button class="btn btn-secondary" (click)="regenerateQr()">Generar Aleatorio</button>
+        </div>
+        <small>Este código se usa para el QR que permite escanear la hoja de vida de equipos.</small>
+      </div>
+
+      <!-- Sedes -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3>Sedes y Ubicaciones</h3>
+          <button class="btn btn-outline-green btn-sm" (click)="addLocation()">+ Añadir Sede</button>
+        </div>
+        
+        <div class="locations-list">
+          @for (loc of locations(); track loc.id; let i = $index) {
+            <div class="location-card">
+              <div class="loc-header">
+                <h4>Sede {{ i + 1 }}</h4>
+                <button *ngIf="locations().length > 1" class="btn-icon text-danger" (click)="removeLocation(i)">🗑️</button>
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Nombre Sede</label>
+                  <input type="text" [(ngModel)]="loc.name">
+                </div>
+                <div class="form-group">
+                  <label>Ciudad</label>
+                  <input type="text" [(ngModel)]="loc.city">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label>Dirección</label>
+                  <input type="text" [(ngModel)]="loc.address" placeholder="Ej. Calle 41 15-75">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label>Ubicación Mapa (Próximamente Leaflet)</label>
+                  <div class="map-placeholder">
+                    📍 Haz clic aquí para seleccionar coordenadas
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="onClose()">Cancelar</button>
+      <button class="btn btn-primary" (click)="onSave()">Guardar Cliente</button>
+    </div>
+  </div>
+</div>

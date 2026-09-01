@@ -1,0 +1,79 @@
+<div class="clientes-layout animate-fadeIn">
+  <div class="top-bar">
+    <h1 class="page-title">Gestionar clientes</h1>
+    <div class="actions">
+      <button class="btn btn-purple">Filtros</button>
+      <button class="btn btn-blue">Más acciones ▾</button>
+      <button class="btn btn-green" (click)="openForm()">+ Adicionar cliente</button>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="search-bar">
+      <label for="search">Buscar:</label>
+      <input 
+        id="search" 
+        type="text" 
+        class="search-input" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-check"><input type="checkbox"></th>
+            <th>Cliente ↕</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Responsable</th>
+            <th>Email</th>
+            <th>Última visita ↕</th>
+            <th>Estatus</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (client of clients(); track client.id) {
+            <tr>
+              <td class="col-check"><input type="checkbox"></td>
+              <td>
+                <div class="client-name">{{ client.commercialName }}</div>
+                <div class="client-sub">{{ client.legalName }}</div>
+              </td>
+              <td class="client-address">{{ getMainAddress(client) }}</td>
+              <td>{{ client.phone }}</td>
+              <td class="client-contact">{{ client.contactName }}</td>
+              <td>{{ client.email }}</td>
+              <td>{{ client.lastVisitAt || '-' }}</td>
+              <td>
+                <span class="status-badge" [class.active]="client.status === 'Activo'">
+                  {{ client.status }}
+                </span>
+              </td>
+              <td class="col-actions">
+                <button class="btn-icon" (click)="openForm(client)">✏️</button>
+                <button class="btn-icon text-danger" (click)="deleteClient(client.id)">🗑️</button>
+              </td>
+            </tr>
+          }
+          @if (clients().length === 0) {
+            <tr>
+              <td colspan="9" class="empty-state">No se encontraron clientes.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showForm()) {
+  <um-cliente-form 
+    [client]="editingClient()" 
+    (save)="saveClient($event)" 
+    (close)="closeForm()">
+  </um-cliente-form>
+}
