@@ -4,6 +4,8 @@ export interface BudgetEntry {
   amount: number;
   category: 'income' | 'investment';
   order: number;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export interface AnnualBudget {

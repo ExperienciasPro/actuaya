@@ -49,8 +49,6 @@ export class BudgetService {
 
   /**
    * Called by DataSyncService to merge server data with local data.
-   * Local deletions are preserved: if a local year has fewer entries
-   * (IDs removed), the local version wins for that year.
    */
   hydrateDirectly(serverData: any): void {
     if (!Array.isArray(serverData)) return;
@@ -58,7 +56,6 @@ export class BudgetService {
     const serverBudgets = serverData as AnnualBudget[];
     const localBudgets = this.loadFromStorage();
 
-    // If no local data, just accept server data
     if (!localBudgets.length) {
       this.budgetsSignal.set(serverBudgets);
       return;
@@ -76,31 +73,49 @@ export class BudgetService {
       const server = serverMap.get(year);
 
       if (!server) {
-        // Only exists locally → keep local
         merged.push(local!);
         localWins = true;
       } else if (!local) {
-        // Only exists on server → accept server
         merged.push(server);
       } else {
-        // Both exist: use updatedAt timestamps for conflict resolution
-        const localTime = new Date(local.updatedAt || 0).getTime();
-        const serverTime = new Date(server.updatedAt || 0).getTime();
-
-        if (localTime >= serverTime) {
-          // Local is same age or newer → keep local
-          merged.push(local);
+        // Merge entries per-ID instead of just taking the whole year array
+        const entryMap = new Map<string, BudgetEntry>();
+        for (const e of server.entries || []) {
+          entryMap.set(e.id, e);
+        }
+        
+        let yearLocalWins = false;
+        
+        for (const localEntry of local.entries || []) {
+          const serverEntry = entryMap.get(localEntry.id);
+          if (!serverEntry) {
+            entryMap.set(localEntry.id, localEntry);
+            yearLocalWins = true;
+          } else {
+            const tLocal = new Date(localEntry.updatedAt || 0).getTime();
+            const tServer = new Date(serverEntry.updatedAt || 0).getTime();
+            if (tLocal >= tServer) {
+              entryMap.set(localEntry.id, localEntry);
+              yearLocalWins = true;
+            }
+          }
+        }
+        
+        const mergedEntries = Array.from(entryMap.values());
+        
+        if (yearLocalWins) {
           localWins = true;
+          // Keep local timestamp for the year since we kept some local data
+          merged.push({ ...local, entries: mergedEntries });
         } else {
-          // Server is strictly newer → accept server
-          merged.push(server);
+          // If server won all entries, just take server's year
+          merged.push({ ...server, entries: mergedEntries });
         }
       }
     }
 
     this.budgetsSignal.set(merged);
 
-    // If local had changes, persist to ensure server gets updated on next save
     if (localWins) {
       this.persist();
     }
@@ -128,15 +143,14 @@ export class BudgetService {
       amount,
       category,
       order: 0,
+      updatedAt: new Date().toISOString()
     };
     this.budgetsSignal.update(budgets =>
       budgets.map(b => {
         if (b.year !== year) return b;
         
-        // Colocamos el nuevo registro al inicio
         const updatedEntries = [entry, ...b.entries];
         
-        // Re-mapeamos los índices 'order' según su nueva posición en la lista por categoría
         let incIdx = 0;
         let invIdx = 0;
         const reordered = updatedEntries.map(e => {
@@ -157,7 +171,12 @@ export class BudgetService {
     this.budgetsSignal.update(budgets =>
       budgets.map(b => {
         if (b.year !== year) return b;
-        return { ...b, entries: b.entries.map(e => e.id === entryId ? { ...e, ...changes } : e) };
+        return { 
+          ...b, 
+          entries: b.entries.map(e => 
+            e.id === entryId ? { ...e, ...changes, updatedAt: new Date().toISOString() } : e
+          ) 
+        };
       })
     );
     this.persist();
@@ -167,23 +186,27 @@ export class BudgetService {
     this.budgetsSignal.update(budgets =>
       budgets.map(b => {
         if (b.year !== year) return b;
-        return { ...b, entries: b.entries.filter(e => e.id !== entryId) };
+        return { 
+          ...b, 
+          entries: b.entries.map(e => 
+            e.id === entryId ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e
+          )
+        };
       })
     );
     this.persist();
-    // Force immediate server save so deletions aren't lost to sync race conditions
     try { this.dataSync.saveToServerImmediate(); } catch (e) { console.warn('[BudgetService] Error forzando guardado inmediato:', e); }
   }
 
   getIncomeEntries(year: number): BudgetEntry[] {
     return (this.getByYear(year)?.entries || [])
-      .filter(e => e.category === 'income')
+      .filter(e => e.category === 'income' && !e.isDeleted)
       .sort((a, b) => a.order - b.order);
   }
 
   getInvestmentEntries(year: number): BudgetEntry[] {
     return (this.getByYear(year)?.entries || [])
-      .filter(e => e.category === 'investment')
+      .filter(e => e.category === 'investment' && !e.isDeleted)
       .sort((a, b) => a.order - b.order);
   }
 
@@ -213,6 +236,7 @@ export class BudgetService {
 
     let importedIncomes = 0;
     let importedInvestments = 0;
+    const now = new Date().toISOString();
 
     this.budgetsSignal.update(budgets => budgets.map(b => {
       if (b.year !== year) return b;
@@ -220,31 +244,33 @@ export class BudgetService {
       const newEntries = [...b.entries];
 
       // Import incomes
-      let incomeOrder = newEntries.filter(e => e.category === 'income').length;
+      let incomeOrder = newEntries.filter(e => e.category === 'income' && !e.isDeleted).length;
       groupedIncomes.forEach((amount, name) => {
-        if (!newEntries.some(e => e.category === 'income' && e.name === name)) {
+        if (!newEntries.some(e => e.category === 'income' && e.name === name && !e.isDeleted)) {
           newEntries.push({
             id: crypto.randomUUID(),
             name,
             amount,
             category: 'income',
-            order: incomeOrder++
+            order: incomeOrder++,
+            updatedAt: now
           });
           importedIncomes++;
         }
       });
 
       // Import investments
-      let investOrder = newEntries.filter(e => e.category === 'investment').length;
+      let investOrder = newEntries.filter(e => e.category === 'investment' && !e.isDeleted).length;
       for (const inv of yearInvestments) {
         const name = inv.name;
-        if (!newEntries.some(e => e.category === 'investment' && e.name === name)) {
+        if (!newEntries.some(e => e.category === 'investment' && e.name === name && !e.isDeleted)) {
           newEntries.push({
             id: crypto.randomUUID(),
             name,
             amount: inv.amount || inv.currentValue || 0,
             category: 'investment',
-            order: investOrder++
+            order: investOrder++,
+            updatedAt: now
           });
           importedInvestments++;
         }
