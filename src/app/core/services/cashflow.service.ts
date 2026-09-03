@@ -29,7 +29,7 @@ export class CashflowService {
   /** Filtered transactions for the active month */
   monthTransactions = computed(() => {
     const month = this.activeMonth();
-    return this._transactions().filter(t => t.date.startsWith(month));
+    return this._transactions().filter(t => !t.isDeleted && t.date.startsWith(month));
   });
 
   /** Summary for active month — only COP transactions (primary currency) */
@@ -84,19 +84,23 @@ export class CashflowService {
       ...tx,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     this._transactions.update(list => [newTx, ...list]);
     this.persist();
   }
 
   remove(id: string): void {
-    this._transactions.update(list => list.filter(t => t.id !== id));
+    this._transactions.update(list => 
+      list.map(t => t.id === id ? { ...t, isDeleted: true, updatedAt: new Date().toISOString() } : t)
+    );
     this.persist();
+    this.dataSync.saveToServerImmediate(); // Prioridad para borrados
   }
 
   update(id: string, changes: Partial<Transaction>): void {
     this._transactions.update(list =>
-      list.map(t => (t.id === id ? { ...t, ...changes } : t))
+      list.map(t => (t.id === id ? { ...t, ...changes, updatedAt: new Date().toISOString() } : t))
     );
     this.persist();
   }

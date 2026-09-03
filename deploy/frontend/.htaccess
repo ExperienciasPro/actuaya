@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Forzar uso siempre de HTTPS para PWA
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # --- Excluir carpeta api/ del routing de Angular ---
+  RewriteRule ^api/ - [L]
+
+  # --- Regla vital para Angular y Aplicaciones de Una Sola Página (SPA) ---
+  # Si la petición es para un archivo real (como imagenes, css, o el manifest), lo entregamos
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
+  RewriteRule ^ - [L]
+
+  # Si la ruta no existe fisicamente (como /m o /d/dashboard), forzamos a cargar el index.html
+  # Esto delega el ruteo interno al Javascript de Angular.
+  RewriteRule ^ index.html [L]
+</IfModule>

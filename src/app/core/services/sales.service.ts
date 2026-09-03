@@ -21,12 +21,12 @@ export class SalesService {
   private funnelsSignal = signal<SalesFunnel[]>([]);
   private dealsSignal = signal<Deal[]>([]);
 
-  readonly funnels = this.funnelsSignal.asReadonly();
-  readonly deals = this.dealsSignal.asReadonly();
+  readonly funnels = computed(() => this.funnelsSignal().filter(f => !f.isDeleted));
+  readonly deals = computed(() => this.dealsSignal().filter(d => !d.isDeleted));
 
-  readonly openDeals = computed(() => this.dealsSignal().filter(d => d.status === 'open'));
-  readonly wonDeals = computed(() => this.dealsSignal().filter(d => d.status === 'won'));
-  readonly lostDeals = computed(() => this.dealsSignal().filter(d => d.status === 'lost'));
+  readonly openDeals = computed(() => this.deals().filter(d => d.status === 'open'));
+  readonly wonDeals = computed(() => this.deals().filter(d => d.status === 'won'));
+  readonly lostDeals = computed(() => this.deals().filter(d => d.status === 'lost'));
 
   readonly totalPipelineValue = computed(() =>
     this.openDeals()
@@ -160,8 +160,8 @@ export class SalesService {
   }
 
   deleteFunnel(id: string): void {
-    this.funnelsSignal.update(fs => fs.filter(f => f.id !== id));
-    this.dealsSignal.update(ds => ds.filter(d => d.funnelId !== id));
+    this.funnelsSignal.update(fs => fs.map(f => f.id === id ? { ...f, isDeleted: true, updatedAt: new Date() } : f));
+    this.dealsSignal.update(ds => ds.map(d => d.funnelId === id ? { ...d, isDeleted: true, updatedAt: new Date() } : d));
     this.saveFunnels();
     this.saveDeals();
     // Prevent syncFromServer from resurrecting deleted data
@@ -171,7 +171,7 @@ export class SalesService {
   }
 
   getFunnelById(id: string): SalesFunnel | undefined {
-    return this.funnelsSignal().find(f => f.id === id);
+    return this.funnels().find(f => f.id === id);
   }
 
   // — Deals —
@@ -180,6 +180,7 @@ export class SalesService {
       ...deal,
       id: crypto.randomUUID(),
       createdAt: new Date(),
+      updatedAt: new Date(),
       notes: [],
     };
     this.dealsSignal.update(ds => [...ds, newDeal]);
@@ -189,7 +190,7 @@ export class SalesService {
 
   updateDeal(id: string, changes: Partial<Deal>): void {
     this.dealsSignal.update(ds =>
-      ds.map(d => (d.id === id ? { ...d, ...changes } : d))
+      ds.map(d => (d.id === id ? { ...d, ...changes, updatedAt: new Date() } : d))
     );
     this.saveDeals();
   }
@@ -203,7 +204,7 @@ export class SalesService {
   }
 
   deleteDeal(id: string): void {
-    this.dealsSignal.update(ds => ds.filter(d => d.id !== id));
+    this.dealsSignal.update(ds => ds.map(d => d.id === id ? { ...d, isDeleted: true, updatedAt: new Date() } : d));
     this.saveDeals();
     // Prevent syncFromServer from resurrecting deleted data
     this.dataSync.trackLocalModification(this.DEALS_KEY);
@@ -211,15 +212,15 @@ export class SalesService {
   }
 
   getByFunnel(funnelId: string): Deal[] {
-    return this.dealsSignal().filter(d => d.funnelId === funnelId);
+    return this.deals().filter(d => d.funnelId === funnelId);
   }
 
   getByStage(stageId: string): Deal[] {
-    return this.dealsSignal().filter(d => d.stageId === stageId && d.status === 'open');
+    return this.deals().filter(d => d.stageId === stageId && d.status === 'open');
   }
 
   getDealById(id: string): Deal | undefined {
-    return this.dealsSignal().find(d => d.id === id);
+    return this.deals().find(d => d.id === id);
   }
 
   private loadFromStorage(): void {

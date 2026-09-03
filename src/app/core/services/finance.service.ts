@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { StorageService } from './storage.service';
+import { DataSyncService } from './data-sync.service';
 
 // ═══════════════════════════════════════════
 //  MODELS
@@ -12,6 +13,8 @@ export interface IncomeRecord {
   date: string;       // YYYY-MM-DD
   amount: number;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export interface ExpenseRecord {
@@ -21,12 +24,16 @@ export interface ExpenseRecord {
   date: string;
   amount: number;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export interface HistoricalYear {
   year: number;
   grossIncome: number;
   grossExpenses: number;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export type InvestmentType = 'stocks' | 'fixed_income' | 'real_estate' | 'other' | 'custom' | string;
@@ -42,6 +49,8 @@ export interface InvestmentRecord {
   description?: string;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 // ═══════════════════════════════════════════
@@ -84,6 +93,7 @@ export const INVESTMENT_TYPES: { value: InvestmentType; label: string }[] = [
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
   private storage = inject(StorageService);
+  private dataSync = inject(DataSyncService);
 
   private readonly INCOME_KEY = 'um_admin_income';
   private readonly EXPENSE_KEY = 'um_admin_expenses';
@@ -91,11 +101,18 @@ export class FinanceService {
   private readonly HISTORICAL_KEY = 'um_admin_historical';
 
   // — Signals —
-  incomes = signal<IncomeRecord[]>([]);
-  expenses = signal<ExpenseRecord[]>([]);
-  investments = signal<InvestmentRecord[]>([]);
-  historicalYears = signal<HistoricalYear[]>([]);
+  private _incomes = signal<IncomeRecord[]>([]);
+  private _expenses = signal<ExpenseRecord[]>([]);
+  private _investments = signal<InvestmentRecord[]>([]);
+  private _historicalYears = signal<HistoricalYear[]>([]);
+  
   dollarRate = signal<number>(4000);
+
+  // — Public Computeds (filtered for soft deletes) —
+  incomes = computed(() => this._incomes().filter(i => !i.isDeleted));
+  expenses = computed(() => this._expenses().filter(e => !e.isDeleted));
+  investments = computed(() => this._investments().filter(i => !i.isDeleted));
+  historicalYears = computed(() => this._historicalYears().filter(h => !h.isDeleted));
 
   constructor() {
     this.loadFromStorage();
@@ -107,17 +124,13 @@ export class FinanceService {
   }
 
   private loadFromStorage(): void {
-    this.incomes.set(this.storage.get<IncomeRecord[]>(this.INCOME_KEY) || []);
-    this.expenses.set(this.storage.get<ExpenseRecord[]>(this.EXPENSE_KEY) || []);
-    this.investments.set(this.storage.get<InvestmentRecord[]>(this.INVESTMENT_KEY) || []);
-    this.historicalYears.set(this.loadHistorical());
+    this._incomes.set(this.storage.get<IncomeRecord[]>(this.INCOME_KEY) || []);
+    this._expenses.set(this.storage.get<ExpenseRecord[]>(this.EXPENSE_KEY) || []);
+    this._investments.set(this.storage.get<InvestmentRecord[]>(this.INVESTMENT_KEY) || []);
+    this._historicalYears.set(this.storage.get<HistoricalYear[]>(this.HISTORICAL_KEY) || []);
   }
 
-  private loadHistorical(): HistoricalYear[] {
-    return this.storage.get<HistoricalYear[]>(this.HISTORICAL_KEY) || [];
-  }
-
-  // — Computed —
+  // — Computed Metrics —
   totalIncome = computed(() => {
     const fromRecords = this.incomes().reduce((s, i) => s + i.amount, 0);
     const recordYears = new Set(this.incomes().map(i => Number(i.date.substring(0, 4))));
@@ -137,6 +150,7 @@ export class FinanceService {
   });
 
   netIncome = computed(() => this.totalIncome() - this.totalExpenses());
+  
   totalInvested = computed(() => this.investments().reduce((s, i) => {
     const amount = i.currency === 'USD' ? i.amount * this.dollarRate() : i.amount;
     return s + amount;
@@ -173,28 +187,56 @@ export class FinanceService {
     return map;
   });
 
+  // — Persistence Helpers —
+  private persistIncomes(): void {
+    this.storage.set(this.INCOME_KEY, this._incomes());
+    this.dataSync.trackLocalModification(this.INCOME_KEY);
+    this.dataSync.saveToServerDebounced();
+  }
+
+  private persistExpenses(): void {
+    this.storage.set(this.EXPENSE_KEY, this._expenses());
+    this.dataSync.trackLocalModification(this.EXPENSE_KEY);
+    this.dataSync.saveToServerDebounced();
+  }
+
+  private persistInvestments(): void {
+    this.storage.set(this.INVESTMENT_KEY, this._investments());
+    this.dataSync.trackLocalModification(this.INVESTMENT_KEY);
+    this.dataSync.saveToServerDebounced();
+  }
+
+  private persistHistorical(): void {
+    this.storage.set(this.HISTORICAL_KEY, this._historicalYears());
+    this.dataSync.trackLocalModification(this.HISTORICAL_KEY);
+    this.dataSync.saveToServerDebounced();
+  }
+
   // — Income CRUD —
   addIncome(data: Omit<IncomeRecord, 'id' | 'createdAt'>): void {
     const record: IncomeRecord = {
       ...data,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    const updated = [record, ...this.incomes()];
-    this.incomes.set(updated);
-    this.storage.set(this.INCOME_KEY, updated);
-  }
-
-  deleteIncome(id: string): void {
-    const updated = this.incomes().filter(i => i.id !== id);
-    this.incomes.set(updated);
-    this.storage.set(this.INCOME_KEY, updated);
+    this._incomes.update(list => [record, ...list]);
+    this.persistIncomes();
   }
 
   updateIncome(id: string, data: Partial<Omit<IncomeRecord, 'id' | 'createdAt'>>): void {
-    const updated = this.incomes().map(inc => inc.id === id ? { ...inc, ...data } : inc);
-    this.incomes.set(updated);
-    this.storage.set(this.INCOME_KEY, updated);
+    this._incomes.update(list => list.map(inc => 
+      inc.id === id ? { ...inc, ...data, updatedAt: new Date().toISOString() } : inc
+    ));
+    this.persistIncomes();
+  }
+
+  deleteIncome(id: string): void {
+    this._incomes.update(list => list.map(inc => 
+      inc.id === id ? { ...inc, isDeleted: true, updatedAt: new Date().toISOString() } : inc
+    ));
+    this.persistIncomes();
+    this.dataSync.saveToServerImmediate(); // Priority sync for deletions
   }
 
   // — Expense CRUD —
@@ -203,16 +245,18 @@ export class FinanceService {
       ...data,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    const updated = [record, ...this.expenses()];
-    this.expenses.set(updated);
-    this.storage.set(this.EXPENSE_KEY, updated);
+    this._expenses.update(list => [record, ...list]);
+    this.persistExpenses();
   }
 
   deleteExpense(id: string): void {
-    const updated = this.expenses().filter(e => e.id !== id);
-    this.expenses.set(updated);
-    this.storage.set(this.EXPENSE_KEY, updated);
+    this._expenses.update(list => list.map(e => 
+      e.id === id ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e
+    ));
+    this.persistExpenses();
+    this.dataSync.saveToServerImmediate();
   }
 
   // — Investment CRUD —
@@ -221,35 +265,41 @@ export class FinanceService {
       ...data,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    const updated = [record, ...this.investments()];
-    this.investments.set(updated);
-    this.storage.set(this.INVESTMENT_KEY, updated);
+    this._investments.update(list => [record, ...list]);
+    this.persistInvestments();
   }
 
   updateInvestment(id: string, data: Partial<InvestmentRecord>): void {
-    const updated = this.investments().map(i => i.id === id ? { ...i, ...data } : i);
-    this.investments.set(updated);
-    this.storage.set(this.INVESTMENT_KEY, updated);
+    this._investments.update(list => list.map(i => 
+      i.id === id ? { ...i, ...data, updatedAt: new Date().toISOString() } : i
+    ));
+    this.persistInvestments();
   }
 
   deleteInvestment(id: string): void {
-    const updated = this.investments().filter(i => i.id !== id);
-    this.investments.set(updated);
-    this.storage.set(this.INVESTMENT_KEY, updated);
+    this._investments.update(list => list.map(i => 
+      i.id === id ? { ...i, isDeleted: true, updatedAt: new Date().toISOString() } : i
+    ));
+    this.persistInvestments();
+    this.dataSync.saveToServerImmediate();
   }
 
   // — Historical Years —
   saveHistoricalYear(data: HistoricalYear): void {
-    const years = this.historicalYears().filter(y => y.year !== data.year);
-    const updated = [...years, data].sort((a, b) => a.year - b.year);
-    this.historicalYears.set(updated);
-    this.storage.set(this.HISTORICAL_KEY, updated);
+    this._historicalYears.update(years => {
+      const filtered = years.filter(y => y.year !== data.year);
+      return [...filtered, { ...data, updatedAt: new Date().toISOString() }].sort((a, b) => a.year - b.year);
+    });
+    this.persistHistorical();
   }
 
   deleteHistoricalYear(year: number): void {
-    const updated = this.historicalYears().filter(y => y.year !== year);
-    this.historicalYears.set(updated);
-    this.storage.set(this.HISTORICAL_KEY, updated);
+    this._historicalYears.update(years => years.map(y => 
+      y.year === year ? { ...y, isDeleted: true, updatedAt: new Date().toISOString() } : y
+    ));
+    this.persistHistorical();
+    this.dataSync.saveToServerImmediate();
   }
 }

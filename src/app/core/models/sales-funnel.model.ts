@@ -6,6 +6,7 @@ export interface SalesFunnel {
   productId?: string;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
 }
 
 export interface FunnelStage {
@@ -32,7 +33,9 @@ export interface Deal {
   lastContactDate?: Date;
   nextFollowUp?: Date;
   createdAt: Date;
+  updatedAt?: Date;
   closedAt?: Date;
+  isDeleted?: boolean;
 }
 
 export type DealStatus = 'open' | 'won' | 'lost' | 'stalled';

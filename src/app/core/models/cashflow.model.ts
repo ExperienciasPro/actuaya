@@ -28,6 +28,8 @@ export interface Transaction {
   currency?: string;           // 'COP' | 'USD' — defaults to 'COP'
   date: string;                // ISO date YYYY-MM-DD
   createdAt: string;           // ISO datetime
+  updatedAt?: string;
+  isDeleted?: boolean;
   notes?: string;
   linkedProductId?: string;    // ID del producto en inventario
   linkedQuantity?: number;     // Cantidad de unidades
