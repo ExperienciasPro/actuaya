@@ -269,15 +269,15 @@ export class LoginComponent implements OnInit {
       // If auth failed, maybe localStorage is empty/stale — sync from server and retry
       if (!user) {
         try {
+          // Timeout mucho más corto (3s) para no dejar al usuario congelado
+          // si escribió mal su contraseña y el servidor está lento.
+          const fallbackTimeout = new Promise<void>(resolve => setTimeout(resolve, 3000));
+          
           if (this.syncInitPromise) {
-            await this.syncInitPromise;
+            await Promise.race([this.syncInitPromise, fallbackTimeout]);
             this.syncInitPromise = null; // solo usarlo una vez
           } else {
-            // Timeout: no más de 25s para no dejar el botón congelado
-            await Promise.race([
-              this.dataSync.syncUserList(),
-              new Promise<void>(resolve => setTimeout(resolve, 25000)),
-            ]);
+            await Promise.race([this.dataSync.syncUserList(), fallbackTimeout]);
           }
           this.userService.reloadUsersFromStorage();
           user = await this.userService.authenticate(finalUser, finalPass);
