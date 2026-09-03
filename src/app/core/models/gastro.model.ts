@@ -5,6 +5,8 @@ export interface Zone {
   name: string;
   order: number;
   color: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Table {
@@ -17,6 +19,8 @@ export interface Table {
   order: number;
   x?: number; // Position X for visual plane
   y?: number; // Position Y for visual plane
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface TableOrderItem {
@@ -30,6 +34,8 @@ export interface TableOrderItem {
   addedAt: string;
   addedBy: string;
   notes?: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface TableOrder {
@@ -51,6 +57,8 @@ export interface TableOrder {
   paymentMethod?: PaymentMethod;
   notes?: string;
   guestCount?: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface TableStatusSummary {

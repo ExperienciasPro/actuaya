@@ -87,6 +87,8 @@ export interface OtEvidence {
   dataUrl: string;          // base64 or objectURL
   filename: string;
   timestamp: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface OtSparePart {
@@ -96,6 +98,8 @@ export interface OtSparePart {
   quantity: number;
   unitCost: number;
   totalCost: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface OtCompletionData {

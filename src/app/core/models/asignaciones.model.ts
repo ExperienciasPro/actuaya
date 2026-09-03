@@ -12,6 +12,8 @@ export interface Technician {
   active: boolean;
   notes: string;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Assignment {
@@ -29,6 +31,8 @@ export interface Assignment {
   description: string;
   clientName: string;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type AssignmentType =

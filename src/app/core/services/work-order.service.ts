@@ -48,7 +48,7 @@ export class WorkOrderService {
 
   // ─── Signals ───
   private _orders = signal<WorkOrder[]>([]);
-  orders = this._orders.asReadonly();
+  orders = computed(() => this._orders().filter(o => !o.isDeleted));
 
   private _activeOt = signal<WorkOrder | null>(null);
   activeOt = this._activeOt.asReadonly();
@@ -59,15 +59,15 @@ export class WorkOrderService {
 
   // ─── Computed ───
   assignedOrders = computed(() =>
-    this._orders().filter(o => o.status === 'asignada' || o.status === 'en_camino')
+    this.orders().filter(o => o.status === 'asignada' || o.status === 'en_camino')
   );
 
   activeOrders = computed(() =>
-    this._orders().filter(o => o.status === 'en_ejecucion' || o.status === 'en_pausa')
+    this.orders().filter(o => o.status === 'en_ejecucion' || o.status === 'en_pausa')
   );
 
   completedOrders = computed(() =>
-    this._orders().filter(o => o.status === 'completada' || o.status === 'cerrada')
+    this.orders().filter(o => o.status === 'completada' || o.status === 'cerrada')
   );
 
   constructor(private storage: StorageService) {
@@ -183,7 +183,7 @@ export class WorkOrderService {
   // ─── Evidence Management ────────────────────
 
   getEvidence(otId: string): OtEvidence[] {
-    return this._evidence()[otId] || [];
+    return (this._evidence()[otId] || []).filter(e => !e.isDeleted);
   }
 
   addEvidence(otId: string, evidence: OtEvidence): void {
@@ -198,7 +198,7 @@ export class WorkOrderService {
   removeEvidence(otId: string, evidenceId: string): void {
     this._evidence.update(map => ({
       ...map,
-      [otId]: (map[otId] || []).filter(e => e.id !== evidenceId),
+      [otId]: (map[otId] || []).map(e => e.id === evidenceId ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e),
     }));
     this.persistEvidence();
     this.syncToServer();
@@ -224,7 +224,7 @@ export class WorkOrderService {
   // ─── Spare Parts ───────────────────────────
 
   getSpareParts(otId: string): OtSparePart[] {
-    return this._spareParts()[otId] || [];
+    return (this._spareParts()[otId] || []).filter(p => !p.isDeleted);
   }
 
   addSparePart(otId: string, part: OtSparePart): void {
@@ -239,7 +239,7 @@ export class WorkOrderService {
   removeSparePart(otId: string, partId: string): void {
     this._spareParts.update(map => ({
       ...map,
-      [otId]: (map[otId] || []).filter(p => p.id !== partId),
+      [otId]: (map[otId] || []).map(p => p.id === partId ? { ...p, isDeleted: true, updatedAt: new Date().toISOString() } : p),
     }));
     this.persistParts();
     this.syncToServer();
@@ -280,7 +280,7 @@ export class WorkOrderService {
   }
 
   getById(id: string): WorkOrder | undefined {
-    return this._orders().find(o => o.id === id);
+    return this.orders().find(o => o.id === id);
   }
 
   // ─── Sync to Server via DataSync ───────────

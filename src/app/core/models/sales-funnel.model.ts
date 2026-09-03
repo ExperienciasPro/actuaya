@@ -16,6 +16,8 @@ export interface FunnelStage {
   color: string;
   deals: Deal[];
   conversionRate?: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Deal {

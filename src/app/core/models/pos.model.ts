@@ -30,6 +30,8 @@ export interface POSSale {
   voided?: boolean;       // Anulada
   voidedAt?: string;
   notes?: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface POSSession {
@@ -46,6 +48,8 @@ export interface POSSession {
   totalSales: number;
   status: 'open' | 'closed';
   notes?: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface CashAuditEntry {

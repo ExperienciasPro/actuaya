@@ -17,6 +17,8 @@ export interface DataVisual {
     showLabels?: boolean;
     prefix?: string;
     suffix?: string;
+    isDeleted?: boolean;
+    updatedAt?: string;
   };
   layout: {
     x: number;
@@ -33,6 +35,7 @@ export interface DataSource {
   data: any[];           // Los datos en bruto (array de objetos)
   columns: string[];     // Nombres de las columnas detectadas
   updatedAt: string;
+  isDeleted?: boolean;
 }
 
 export interface Storyboard {
@@ -44,4 +47,5 @@ export interface Storyboard {
   updatedAt: string;
   isPublic: boolean;
   shareId?: string;      // ID único para compartir el link
+  isDeleted?: boolean;
 }

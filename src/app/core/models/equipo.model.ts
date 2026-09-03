@@ -11,6 +11,7 @@ export interface Equipo {
   fotoUrl?: string;
   createdAt: string;
   updatedAt: string;
+  isDeleted?: boolean;
 }
 
 export interface EquipoFilter {

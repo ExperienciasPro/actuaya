@@ -10,6 +10,8 @@ export interface TeamMember {
   color: string;         // color badge for visual ID
   active: boolean;
   createdAt: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export interface Shift {
@@ -20,6 +22,8 @@ export interface Shift {
   startTime: string;     // HH:mm
   endTime: string;       // HH:mm
   note: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export const SHIFT_PRESETS = [

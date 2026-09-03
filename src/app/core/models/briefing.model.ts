@@ -5,6 +5,8 @@ export interface DailyBriefing {
   primaryGoal: {
     goalId: string;
     goalTitle: string;
+    isDeleted?: boolean;
+    updatedAt?: string;
   };
   priorityTask: {
     taskId: string;
@@ -27,4 +29,6 @@ export interface WeeklyCelebration {
   totalMinutesInvested: number;
   highlights: string[];
   streakDays: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }

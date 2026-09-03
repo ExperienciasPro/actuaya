@@ -11,6 +11,8 @@ export interface CatalogItem {
   category: string;
   active: boolean;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface QuoteLineItem {

@@ -12,6 +12,8 @@ export interface InventoryProduct {
   unit: string;              // 'unidades', 'kg', 'litros', 'cajas', 'metros'
   costPerUnit: number;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type MovementType = 'entrada' | 'salida';
@@ -25,6 +27,8 @@ export interface StockMovement {
   reason: string;
   date: string;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export const INVENTORY_UNITS = [

@@ -6,6 +6,7 @@ export interface TeamMember {
   color: string;
   avatar?: string; // emoji or initials
   isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Project {
@@ -35,6 +36,7 @@ export interface ProjectSection {
   order: number;
   color: string;
   isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface ProjectTask {
@@ -50,6 +52,7 @@ export interface ProjectTask {
   order: number;
   createdAt: string;
   isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high';
@@ -65,6 +68,8 @@ export interface ProjectStage {
   taskIds: string[];
   startDate?: Date;
   endDate?: Date;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';

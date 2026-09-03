@@ -6,4 +6,5 @@ export interface Tecnico {
   estatus: 'Activo' | 'Inactivo';
   createdAt: string;
   updatedAt: string;
+  isDeleted?: boolean;
 }

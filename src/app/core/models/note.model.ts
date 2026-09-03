@@ -7,6 +7,8 @@ export interface QuickNote {
   type: NoteType;
   createdAt: Date;
   source: 'desktop' | 'mobile';
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type NoteType = 'general' | 'call_result' | 'meeting_update' | 'status_update' | 'idea';

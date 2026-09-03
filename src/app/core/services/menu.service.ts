@@ -28,14 +28,16 @@ export class MenuService {
   ];
 
   // ─── State ──────────────────────────────
-  items      = signal<MenuItem[]>(this.load<MenuItem[]>(ITEMS_KEY, []));
-  categories = signal<MenuCategory[]>(this.ensureDefaultCategories(
+  private itemsSignal = signal<MenuItem[]>(this.load<MenuItem[]>(ITEMS_KEY, []));
+  private categoriesSignal = signal<MenuCategory[]>(this.ensureDefaultCategories(
     this.load<MenuCategory[]>(CATS_KEY, this.DEFAULT_CATEGORIES)
   ));
+  items = computed(() => this.itemsSignal().filter(i => !i.isDeleted));
+  categories = computed(() => this.categoriesSignal().filter(c => !c.isDeleted));
   config     = signal<MenuConfig>({ ...DEFAULT_MENU_CONFIG, ...this.load<MenuConfig>(CFG_KEY, DEFAULT_MENU_CONFIG) });
 
   // ─── Computed ───────────────────────────
-  availableItems = computed(() => this.items().filter(i => i.available));
+  availableItems = computed(() => this.itemsSignal().filter(i => i.available));
 
   itemsByCategory = computed(() => {
     const map = new Map<string, MenuItem[]>();
@@ -48,7 +50,7 @@ export class MenuService {
   });
 
   sortedCategories = computed(() =>
-    [...this.categories()].sort((a, b) => a.order - b.order)
+    [...this.categoriesSignal()].sort((a, b) => a.order - b.order)
   );
 
   private generateId(): string {
@@ -58,40 +60,47 @@ export class MenuService {
   // ─── Items CRUD ─────────────────────────
   addItem(data: Omit<MenuItem, 'id'>): void {
     const item: MenuItem = { ...data, id: this.generateId() };
-    this.items.update(list => [item, ...list]);
-    this.persist(ITEMS_KEY, this.items());
+    this.itemsSignal.update(list => [item, ...list]);
+    this.persist(ITEMS_KEY, this.itemsSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   updateItem(id: string, data: Partial<MenuItem>): void {
-    this.items.update(list => list.map(i => i.id === id ? { ...i, ...data } : i));
-    this.persist(ITEMS_KEY, this.items());
+    this.itemsSignal.update(list => list.map(i => i.id === id ? { ...i, ...data } : i));
+    this.persist(ITEMS_KEY, this.itemsSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   deleteItem(id: string): void {
-    this.items.update(list => list.filter(i => i.id !== id));
-    this.persist(ITEMS_KEY, this.items());
+    this.itemsSignal.update(list => list.map(i => i.id === id ? { ...i, isDeleted: true, updatedAt: new Date().toISOString() } : i));
+    this.persist(ITEMS_KEY, this.itemsSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   toggleAvailable(id: string): void {
-    this.items.update(list => list.map(i => i.id === id ? { ...i, available: !i.available } : i));
-    this.persist(ITEMS_KEY, this.items());
+    this.itemsSignal.update(list => list.map(i => i.id === id ? { ...i, available: !i.available } : i));
+    this.persist(ITEMS_KEY, this.itemsSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Categories CRUD ────────────────────
   addCategory(data: Omit<MenuCategory, 'id'>): void {
     const cat: MenuCategory = { ...data, id: this.generateId() };
-    this.categories.update(list => [...list, cat]);
-    this.persist(CATS_KEY, this.categories());
+    this.categoriesSignal.update(list => [...list, cat]);
+    this.persist(CATS_KEY, this.categoriesSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   updateCategory(id: string, data: Partial<MenuCategory>): void {
-    this.categories.update(list => list.map(c => c.id === id ? { ...c, ...data } : c));
-    this.persist(CATS_KEY, this.categories());
+    this.categoriesSignal.update(list => list.map(c => c.id === id ? { ...c, ...data } : c));
+    this.persist(CATS_KEY, this.categoriesSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   deleteCategory(id: string): void {
-    this.categories.update(list => list.filter(c => c.id !== id));
-    this.persist(CATS_KEY, this.categories());
+    this.categoriesSignal.update(list => list.map(c => c.id === id ? { ...c, isDeleted: true, updatedAt: new Date().toISOString() } : c));
+    this.persist(CATS_KEY, this.categoriesSignal());
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Config ─────────────────────────────
@@ -115,7 +124,7 @@ export class MenuService {
   private persist(key: string, value: unknown): void {
     this.storage.set(key, value);
     this.dataSync.trackLocalModification(key);
-    this.dataSync.saveToServerImmediate();
+    this.dataSync.saveToServerDebounced();
   }
 
   /** Re-add any missing default categories (e.g. after sync issues) */

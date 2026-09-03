@@ -30,9 +30,9 @@ export class ClinicaService {
   private _histories    = signal<ClinicalHistory[]>([]);
   private _config       = signal<ClinicConfig>(this.defaultConfig());
 
-  patients     = this._patients.asReadonly();
-  appointments = this._appointments.asReadonly();
-  notes        = this._notes.asReadonly();
+  patients = computed(() => this._patients().filter(p => !p.isDeleted));
+  appointments = computed(() => this._appointments().filter(a => !a.isDeleted));
+  notes = computed(() => this._notes().filter(n => !n.isDeleted));
   config       = this._config.asReadonly();
 
   // ─── Computed Queries ──────────────────
@@ -107,7 +107,8 @@ export class ClinicaService {
   }
 
   removePatient(id: string): void {
-    this.updatePatient(id, { active: false });
+    this.updatePatient(id, { active: false, isDeleted: true });
+    this.dataSync.saveToServerImmediate();
   }
 
   getPatient(id: string): Patient | undefined {
@@ -196,8 +197,9 @@ export class ClinicaService {
   }
 
   removeNote(id: string): void {
-    this._notes.update(list => list.filter(n => n.id !== id));
+    this._notes.update(list => list.map(n => n.id === id ? { ...n, isDeleted: true, updatedAt: new Date().toISOString() } : n));
     this.persist(this.NOTES_KEY, this._notes());
+    this.dataSync.saveToServerImmediate();
   }
 
   getPatientNotes(patientId: string): ClinicalNote[] {

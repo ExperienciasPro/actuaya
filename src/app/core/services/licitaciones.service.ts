@@ -34,27 +34,30 @@ export class LicitacionesService {
   private readonly backendUrl = '/api/licitaciones';
 
   // — Signals —
-  batches = signal<LicitacionBatch[]>(
+  private batchesSignal = signal<LicitacionBatch[]>(
     this.storage.get<LicitacionBatch[]>(this.STORAGE_KEY) || []
   );
+  batches = computed(() => this.batchesSignal().filter(b => !b.isDeleted));
+
+  
 
   // — Computed —
   /** Batch más reciente */
   latestBatch = computed(() => {
-    const all = this.batches();
+    const all = this.batchesSignal();
     return all.length > 0 ? all[0] : null;
   });
 
   /** Total de licitaciones activas (no descartadas) */
   totalActivas = computed(() =>
-    this.batches()
+    this.batchesSignal()
       .flatMap(b => b.resultados)
       .filter(l => l.estado !== 'descartada').length
   );
 
   /** Licitaciones de alta relevancia */
   altaRelevancia = computed(() =>
-    this.batches()
+    this.batchesSignal()
       .flatMap(b => b.resultados)
       .filter(l => l.relevancia === 'alta' && l.estado !== 'descartada')
   );
@@ -62,7 +65,7 @@ export class LicitacionesService {
   /** Licitaciones por sector */
   porSector = computed(() => {
     const map = new Map<string, number>();
-    for (const lic of this.batches().flatMap(b => b.resultados)) {
+    for (const lic of this.batchesSignal().flatMap(b => b.resultados)) {
       if (lic.estado !== 'descartada') {
         map.set(lic.sector, (map.get(lic.sector) || 0) + 1);
       }
@@ -95,12 +98,12 @@ export class LicitacionesService {
       }
 
       // Merge: agregar batches remotos que no existan localmente
-      const localIds = new Set(this.batches().map(b => b.id));
+      const localIds = new Set(this.batchesSignal().map(b => b.id));
       const newBatches = remoteBatches.filter(b => !localIds.has(b.id));
 
       if (newBatches.length > 0) {
-        const merged = [...newBatches, ...this.batches()];
-        this.batches.set(merged);
+        const merged = [...newBatches, ...this.batchesSignal()];
+        this.batchesSignal.set(merged);
         this.persist();
         return { success: true, message: `${newBatches.length} nuevos resultados sincronizados del servidor.` };
       }
@@ -115,9 +118,10 @@ export class LicitacionesService {
 
   /** Agrega un batch completo (viene del webhook n8n) */
   addBatch(batch: LicitacionBatch): void {
-    const updated = [batch, ...this.batches()];
-    this.batches.set(updated);
+    const updated = [batch, ...this.batchesSignal()];
+    this.batchesSignal.set(updated);
     this.persist();
+    this.dataSync.saveToServerImmediate();
   }
 
   /** Importa resultados JSON (pegado manual o fetch) */
@@ -178,7 +182,7 @@ export class LicitacionesService {
 
   /** Actualiza estado de una licitación */
   updateEstado(batchId: string, licId: string, estado: Licitacion['estado']): void {
-    const updated = this.batches().map(b => {
+    const updated = this.batchesSignal().map(b => {
       if (b.id !== batchId) return b;
       return {
         ...b,
@@ -187,13 +191,14 @@ export class LicitacionesService {
         ),
       };
     });
-    this.batches.set(updated);
+    this.batchesSignal.set(updated);
     this.persist();
+    this.dataSync.saveToServerImmediate();
   }
 
   /** Actualiza notas de una licitación */
   updateNotas(batchId: string, licId: string, notas: string): void {
-    const updated = this.batches().map(b => {
+    const updated = this.batchesSignal().map(b => {
       if (b.id !== batchId) return b;
       return {
         ...b,
@@ -202,23 +207,25 @@ export class LicitacionesService {
         ),
       };
     });
-    this.batches.set(updated);
+    this.batchesSignal.set(updated);
     this.persist();
+    this.dataSync.saveToServerImmediate();
   }
 
   /** Elimina un batch completo */
   deleteBatch(id: string): void {
-    const updated = this.batches().filter(b => b.id !== id);
-    this.batches.set(updated);
+    const updated = this.batchesSignal().map(b => b.id === id ? { ...b, isDeleted: true, updatedAt: new Date().toISOString() } : b);
+    this.batchesSignal.set(updated);
     this.persist();
+    this.dataSync.saveToServerImmediate();
   }
 
   // — Helpers —
   private persist(): void {
-    this.storage.set(this.STORAGE_KEY, this.batches());
+    this.storage.set(this.STORAGE_KEY, this.batchesSignal());
     // Push changes to server immediately (bidirectional sync)
     this.dataSync.trackLocalModification(this.STORAGE_KEY);
-    this.dataSync.saveToServerImmediate();
+    this.dataSync.saveToServerDebounced();
   }
 
   private getCurrentWeekLabel(): string {

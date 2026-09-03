@@ -16,17 +16,17 @@ export class AsignacionesService {
     return this._dataSync;
   }
 
-  private _technicians = signal<Technician[]>([]);
-  private _assignments = signal<Assignment[]>([]);
+  private _techniciansSignal = signal<Technician[]>([]);
+  private _assignmentsSignal = signal<Assignment[]>([]);
 
-  technicians = this._technicians.asReadonly();
-  assignments = this._assignments.asReadonly();
+  technicians = computed(() => this._techniciansSignal().filter(t => !t.isDeleted));
+  assignments = computed(() => this._assignmentsSignal().filter(a => !a.isDeleted));
 
   // Active technicians (not archived or inactive)
-  activeTechnicians = computed(() => this._technicians().filter(t => t.active));
+  activeTechnicians = computed(() => this._techniciansSignal().filter(t => t.active));
 
   estadisticas = computed(() => {
-    const asgs = this._assignments();
+    const asgs = this._assignmentsSignal();
     const today = new Date().toISOString().split('T')[0];
     const hoy = asgs.filter(a => a.date === today);
     const completadas = asgs.filter(a => a.status === 'completada' && a.date === today).length;
@@ -41,7 +41,7 @@ export class AsignacionesService {
 
   proximaAsignacion = computed(() => {
     const today = new Date().toISOString().split('T')[0];
-    const upcoming = this._assignments()
+    const upcoming = this._assignmentsSignal()
       .filter(a => a.date === today && (a.status === 'pendiente' || a.status === 'confirmada'))
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
     return upcoming.length > 0 ? upcoming[0] : null;
@@ -59,23 +59,25 @@ export class AsignacionesService {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    this._technicians.update(t => [newTech, ...t]);
+    this._techniciansSignal.update(t => [newTech, ...t]);
     this.persistTechnicians();
     return newTech;
   }
 
   updateTechnician(id: string, updates: Partial<Technician>): void {
-    this._technicians.update(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t));
+    this._techniciansSignal.update(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t));
     this.persistTechnicians();
+    this.dataSync.saveToServerImmediate();
   }
 
   getTechnician(id: string): Technician | undefined {
-    return this._technicians().find(t => t.id === id);
+    return this._techniciansSignal().find(t => t.id === id);
   }
 
   deleteTechnician(id: string): void {
-    this._technicians.update(ts => ts.filter(t => t.id !== id));
+    this._techniciansSignal.update(ts => ts.map(t => t.id === id ? { ...t, isDeleted: true, updatedAt: new Date().toISOString() } : t));
     this.persistTechnicians();
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Assignments ────────────
@@ -86,35 +88,37 @@ export class AsignacionesService {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    this._assignments.update(a => [...a, newAss]);
+    this._assignmentsSignal.update(a => [...a, newAss]);
     this.persistAssignments();
     return newAss;
   }
 
   updateAssignment(id: string, updates: Partial<Assignment>): void {
-    this._assignments.update(as => as.map(a => a.id === id ? { ...a, ...updates } : a));
+    this._assignmentsSignal.update(as => as.map(a => a.id === id ? { ...a, ...updates } : a));
     this.persistAssignments();
+    this.dataSync.saveToServerImmediate();
   }
 
   deleteAssignment(id: string): void {
-    this._assignments.update(as => as.filter(a => a.id !== id));
+    this._assignmentsSignal.update(as => as.map(a => a.id === id ? { ...a, isDeleted: true, updatedAt: new Date().toISOString() } : a));
     this.persistAssignments();
+    this.dataSync.saveToServerImmediate();
   }
 
   getAppointmentsForDate(dateStr: string): Assignment[] {
-    return this._assignments().filter(a => a.date === dateStr);
+    return this._assignmentsSignal().filter(a => a.date === dateStr);
   }
 
   // ─── Persistence ──────────
 
   private persistTechnicians(): void {
-    this.storage.set(this.STORAGE_TECH_KEY, this._technicians());
+    this.storage.set(this.STORAGE_TECH_KEY, this._techniciansSignal());
     this.dataSync.trackLocalModification(this.STORAGE_TECH_KEY);
     this.dataSync.saveToServerDebounced();
   }
 
   private persistAssignments(): void {
-    this.storage.set(this.STORAGE_ASS_KEY, this._assignments());
+    this.storage.set(this.STORAGE_ASS_KEY, this._assignmentsSignal());
     this.dataSync.trackLocalModification(this.STORAGE_ASS_KEY);
     this.dataSync.saveToServerDebounced();
   }
@@ -123,8 +127,8 @@ export class AsignacionesService {
     const storedTechs = this.storage.get<Technician[]>(this.STORAGE_TECH_KEY);
     const storedAss = this.storage.get<Assignment[]>(this.STORAGE_ASS_KEY);
     
-    this._technicians.set(storedTechs && storedTechs.length > 0 ? storedTechs : []);
-    this._assignments.set(storedAss && storedAss.length > 0 ? storedAss : []);
+    this._techniciansSignal.set(storedTechs && storedTechs.length > 0 ? storedTechs : []);
+    this._assignmentsSignal.set(storedAss && storedAss.length > 0 ? storedAss : []);
   }
 
   private getMockTechnicians(): Technician[] {

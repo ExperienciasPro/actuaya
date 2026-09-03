@@ -20,6 +20,8 @@ export interface Patient {
   notes: string;
   active: boolean;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Appointment {
@@ -38,6 +40,8 @@ export interface Appointment {
   paid: boolean;
   notes: string;
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type AppointmentType =
@@ -64,6 +68,7 @@ export interface ClinicalNote {
   attachments?: NoteAttachment[];
   createdAt: string;
   updatedAt: string;
+  isDeleted?: boolean;
 }
 
 export interface NoteAttachment {
@@ -72,6 +77,8 @@ export interface NoteAttachment {
   type: string;                // MIME type
   dataUrl: string;             // Base64 data URL
   createdAt: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type NoteType =
@@ -150,6 +157,8 @@ export interface RedFlag {
   severity: 'alta' | 'critica';
   createdAt: string;
   active: boolean;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export const RED_FLAG_TYPES: { value: RedFlagType; label: string; icon: string; color: string }[] = [
@@ -168,6 +177,8 @@ export interface NoteTemplate {
   icon: string;
   description: string;
   content: string;  // HTML template
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export const DEFAULT_NOTE_TEMPLATES: NoteTemplate[] = [
@@ -223,6 +234,8 @@ export interface ClinicConfig {
   remindersEnabled: boolean;
   reminderHoursBefore: number;  // e.g. 24
   customTemplates: NoteTemplate[];
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 // ─── Constantes ───────────────────────────

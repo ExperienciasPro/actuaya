@@ -20,9 +20,9 @@ export class ProductDataService {
   }
 
   private _products = signal<ProductService[]>([]);
-  products = this._products.asReadonly();
+  products = computed(() => this._products().filter(p => !p.isDeleted));
 
-  activeProducts = computed(() => this._products().filter(p => p.isActive));
+  activeProducts = computed(() => this.products().filter(p => p.isActive));
 
   constructor() {
     this.load();
@@ -56,8 +56,9 @@ export class ProductDataService {
   }
 
   delete(id: string): void {
-    this._products.update(list => list.filter(p => p.id !== id));
+    this._products.update(list => list.map(p => p.id === id ? { ...p, isDeleted: true, updatedAt: new Date().toISOString() } : p));
     this.persist();
+    this.dataSync.saveToServerImmediate();
   }
 
   private load(): void {

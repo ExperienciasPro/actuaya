@@ -10,6 +10,7 @@ export interface ProductService {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export type ProductCategory =

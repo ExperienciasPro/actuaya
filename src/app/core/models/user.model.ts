@@ -8,6 +8,8 @@ export interface UserProfile {
   createdAt: Date;
   preferences: UserPreferences;
   posMode?: 'retail' | 'gastronomy';
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface UserPreferences {

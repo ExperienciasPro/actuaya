@@ -17,13 +17,13 @@ export class ShiftsService {
     return this._dataSync;
   }
 
-  private _members = signal<TeamMember[]>([]);
-  members = this._members.asReadonly();
+  private _membersSignal = signal<TeamMember[]>([]);
+  members = computed(() => this._membersSignal().filter(m => !m.isDeleted));
 
-  private _shifts = signal<Shift[]>([]);
-  shifts = this._shifts.asReadonly();
+  private _shiftsSignal = signal<Shift[]>([]);
+  shifts = computed(() => this._shiftsSignal().filter(s => !s.isDeleted));
 
-  activeMembers = computed(() => this._members().filter(m => m.active));
+  activeMembers = computed(() => this.members().filter(m => m.active));
 
   constructor(private storage: StorageService) {
     this.load();
@@ -31,8 +31,8 @@ export class ShiftsService {
 
   // ─── Members CRUD ───────────────────────
 
-  addMember(member: Omit<TeamMember, 'id' | 'createdAt' | 'active' | 'color'>): void {
-    const usedColors = this._members().map(m => m.color);
+  addMember(member: Omit<TeamMember, 'id' | 'createdAt' | 'active' | 'color' | 'updatedAt'>): void {
+    const usedColors = this._membersSignal().map(m => m.color);
     const color = MEMBER_COLORS.find(c => !usedColors.includes(c)) || MEMBER_COLORS[0];
     const newMember: TeamMember = {
       ...member,
@@ -40,40 +40,47 @@ export class ShiftsService {
       color,
       active: true,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    this._members.update(list => [newMember, ...list]);
+    this._membersSignal.update(list => [newMember, ...list]);
     this.persistMembers();
   }
 
   updateMember(id: string, changes: Partial<TeamMember>): void {
-    this._members.update(list =>
-      list.map(m => (m.id === id ? { ...m, ...changes } : m))
+    this._membersSignal.update(list =>
+      list.map(m => (m.id === id ? { ...m, ...changes, updatedAt: new Date().toISOString() } : m))
     );
     this.persistMembers();
   }
 
   removeMember(id: string): void {
-    this._members.update(list => list.filter(m => m.id !== id));
-    this._shifts.update(list => list.filter(s => s.memberId !== id));
-    this.persistMembers();
-    this.persistShifts();
+    this._membersSignal.update(list => list.map(m => m.id === id ? { ...m, isDeleted: true, updatedAt: new Date().toISOString() } : m));
+    this._shiftsSignal.update(list => list.map(s => s.memberId === id ? { ...s, isDeleted: true, updatedAt: new Date().toISOString() } : s));
+    
+    this.storage.set(this.MEMBERS_KEY, this._membersSignal());
+    this.storage.set(this.SHIFTS_KEY, this._shiftsSignal());
+    this.dataSync.trackLocalModification(this.MEMBERS_KEY);
+    this.dataSync.trackLocalModification(this.SHIFTS_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   getMember(id: string): TeamMember | undefined {
-    return this._members().find(m => m.id === id);
+    return this.members().find(m => m.id === id);
   }
 
   // ─── Shifts CRUD ────────────────────────
 
-  addShift(shift: Omit<Shift, 'id'>): void {
-    const newShift: Shift = { ...shift, id: crypto.randomUUID() };
-    this._shifts.update(list => [...list, newShift]);
+  addShift(shift: Omit<Shift, 'id' | 'updatedAt'>): void {
+    const newShift: Shift = { ...shift, id: crypto.randomUUID(), updatedAt: new Date().toISOString() };
+    this._shiftsSignal.update(list => [...list, newShift]);
     this.persistShifts();
   }
 
   removeShift(id: string): void {
-    this._shifts.update(list => list.filter(s => s.id !== id));
-    this.persistShifts();
+    this._shiftsSignal.update(list => list.map(s => s.id === id ? { ...s, isDeleted: true, updatedAt: new Date().toISOString() } : s));
+    this.storage.set(this.SHIFTS_KEY, this._shiftsSignal());
+    this.dataSync.trackLocalModification(this.SHIFTS_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Queries ────────────────────────────
@@ -84,11 +91,11 @@ export class ShiftsService {
     end.setDate(end.getDate() + 7);
     const startStr = start.toISOString().split('T')[0];
     const endStr = end.toISOString().split('T')[0];
-    return this._shifts().filter(s => s.date >= startStr && s.date < endStr);
+    return this.shifts().filter(s => s.date >= startStr && s.date < endStr);
   }
 
   getShiftsForDay(date: string): Shift[] {
-    return this._shifts().filter(s => s.date === date);
+    return this.shifts().filter(s => s.date === date);
   }
 
   getMemberShiftsForWeek(memberId: string, weekStart: string): Shift[] {
@@ -114,19 +121,19 @@ export class ShiftsService {
 
   private load(): void {
     const members = this.storage.get<TeamMember[]>(this.MEMBERS_KEY);
-    if (members) this._members.set(members);
+    if (members) this._membersSignal.set(members);
     const shifts = this.storage.get<Shift[]>(this.SHIFTS_KEY);
-    if (shifts) this._shifts.set(shifts);
+    if (shifts) this._shiftsSignal.set(shifts);
   }
 
   private persistMembers(): void {
-    this.storage.set(this.MEMBERS_KEY, this._members());
+    this.storage.set(this.MEMBERS_KEY, this._membersSignal());
     this.dataSync.trackLocalModification(this.MEMBERS_KEY);
     this.dataSync.saveToServerDebounced();
   }
 
   private persistShifts(): void {
-    this.storage.set(this.SHIFTS_KEY, this._shifts());
+    this.storage.set(this.SHIFTS_KEY, this._shiftsSignal());
     this.dataSync.trackLocalModification(this.SHIFTS_KEY);
     this.dataSync.saveToServerDebounced();
   }

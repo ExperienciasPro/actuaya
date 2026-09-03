@@ -15,6 +15,8 @@ export interface Licitacion {
   relevancia: 'alta' | 'media' | 'baja';
   estado: 'nueva' | 'revisada' | 'aplicada' | 'descartada';
   notas?: string;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface LicitacionBatch {
@@ -24,6 +26,8 @@ export interface LicitacionBatch {
   query: string;             // Prompt/query usado en Gemini
   resultados: Licitacion[];
   totalResultados: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export const SECTORES_LICITACION = [

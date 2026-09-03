@@ -11,6 +11,8 @@ export interface MenuItem {
   available: boolean;
   imageDataUrl?: string; // base64 — optional photo
   tags?: string[];       // 'vegano', 'sin gluten', 'picante', etc.
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface MenuCategory {
@@ -18,6 +20,8 @@ export interface MenuCategory {
   name: string;
   emoji: string;
   order: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export type MenuFontFamily = 'Inter' | 'Roboto' | 'Playfair Display' | 'Poppins' | 'Outfit' | 'Lora' | 'DM Sans';

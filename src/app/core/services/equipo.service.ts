@@ -18,7 +18,8 @@ export class EquipoService {
     return this._dataSync;
   }
 
-  equipos = signal<Equipo[]>(this.loadEquipos());
+  private equiposSignal = signal<Equipo[]>(this.loadEquipos());
+  equipos = computed(() => this.equiposSignal().filter(e => !e.isDeleted));
 
   categorias = computed(() => {
     const cats = new Set(this.equipos().map(e => e.categoria).filter(Boolean));
@@ -36,7 +37,7 @@ export class EquipoService {
   }
 
   private saveEquipos(list: Equipo[]) {
-    this.equipos.set(list);
+    this.equiposSignal.set(list);
     this.storage.set(EQUIPOS_KEY, list);
     this.dataSync.trackLocalModification(EQUIPOS_KEY);
     this.dataSync.saveToServerImmediate();
@@ -49,11 +50,11 @@ export class EquipoService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    this.saveEquipos([newEquipo, ...this.equipos()]);
+    this.saveEquipos([newEquipo, ...this.equiposSignal()]);
   }
 
   updateEquipo(id: string, data: Partial<Equipo>) {
-    const list = this.equipos().map(e => {
+    const list = this.equiposSignal().map(e => {
       if (e.id === id) {
         return { ...e, ...data, updatedAt: new Date().toISOString() };
       }
@@ -63,6 +64,6 @@ export class EquipoService {
   }
 
   deleteEquipo(id: string) {
-    this.saveEquipos(this.equipos().filter(e => e.id !== id));
+    this.saveEquipos(this.equiposSignal().map(e => e.id === id ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e));
   }
 }

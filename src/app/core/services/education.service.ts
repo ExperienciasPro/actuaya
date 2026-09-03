@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, Injector } from '@angular/core';
+import { DataSyncService } from './data-sync.service';
 import { StorageService } from './storage.service';
 
 // ═══════════════════════════════════════════
@@ -68,9 +69,21 @@ export class EducationService {
   private readonly INCOMES_KEY = 'um_admin_edu_incomes';
   private readonly EXPENSES_KEY = 'um_admin_edu_expenses';
 
-  programs = signal<EducationalProgram[]>([]);
-  incomes = signal<ProgramIncome[]>([]);
-  expenses = signal<ProgramExpense[]>([]);
+  private _programsSignal = signal<EducationalProgram[]>([]);
+  private _incomesSignal = signal<ProgramIncome[]>([]);
+  private _expensesSignal = signal<ProgramExpense[]>([]);
+  programs = computed(() => this._programsSignal().filter(p => !p.isDeleted));
+  incomes = computed(() => this._incomesSignal().filter(i => !i.isDeleted));
+  expenses = computed(() => this._expensesSignal().filter(e => !e.isDeleted));
+
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   constructor() {
     this.loadFromStorage();
@@ -82,24 +95,24 @@ export class EducationService {
   }
 
   private loadFromStorage(): void {
-    this.programs.set(this.storage.get<EducationalProgram[]>(this.PROGRAMS_KEY) || []);
-    this.incomes.set(this.storage.get<ProgramIncome[]>(this.INCOMES_KEY) || []);
-    this.expenses.set(this.storage.get<ProgramExpense[]>(this.EXPENSES_KEY) || []);
+    this._programsSignal.set(this.storage.get<EducationalProgram[]>(this.PROGRAMS_KEY) || []);
+    this._incomesSignal.set(this.storage.get<ProgramIncome[]>(this.INCOMES_KEY) || []);
+    this._expensesSignal.set(this.storage.get<ProgramExpense[]>(this.EXPENSES_KEY) || []);
   }
 
   // — Computed —
-  totalIncome = computed(() => this.incomes().reduce((sum, inc) => sum + inc.amount, 0));
-  totalExpenses = computed(() => this.expenses().reduce((sum, exp) => sum + exp.amount, 0));
+  totalIncome = computed(() => this._incomesSignal().reduce((sum, inc) => sum + inc.amount, 0));
+  totalExpenses = computed(() => this._expensesSignal().reduce((sum, exp) => sum + exp.amount, 0));
   netProfit = computed(() => this.totalIncome() - this.totalExpenses());
 
   programStats = computed(() => {
     const statsMap = new Map<string, { income: number; expense: number; attendees: number }>();
     
-    for (const prog of this.programs()) {
+    for (const prog of this._programsSignal()) {
       statsMap.set(prog.id, { income: 0, expense: 0, attendees: 0 });
     }
 
-    for (const inc of this.incomes()) {
+    for (const inc of this._incomesSignal()) {
       const st = statsMap.get(inc.programId);
       if (st) {
         st.income += inc.amount;
@@ -109,7 +122,7 @@ export class EducationService {
       }
     }
 
-    for (const exp of this.expenses()) {
+    for (const exp of this._expensesSignal()) {
       const st = statsMap.get(exp.programId);
       if (st) {
         st.expense += exp.amount;
@@ -126,30 +139,40 @@ export class EducationService {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    const updated = [record, ...this.programs()];
-    this.programs.set(updated);
+    const updated = [record, ...this._programsSignal()];
+    this._programsSignal.set(updated);
     this.storage.set(this.PROGRAMS_KEY, updated);
+    this.dataSync.trackLocalModification(this.PROGRAMS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   updateProgram(id: string, data: Partial<EducationalProgram>): void {
-    const updated = this.programs().map(p => p.id === id ? { ...p, ...data } : p);
-    this.programs.set(updated);
+    const updated = this._programsSignal().map(p => p.id === id ? { ...p, ...data } : p);
+    this._programsSignal.set(updated);
     this.storage.set(this.PROGRAMS_KEY, updated);
+    this.dataSync.trackLocalModification(this.PROGRAMS_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   deleteProgram(id: string): void {
-    const updated = this.programs().filter(p => p.id !== id);
-    this.programs.set(updated);
+    const updated = this._programsSignal().map(p => p.id === id ? { ...p, isDeleted: true, updatedAt: new Date().toISOString() } : p);
+    this._programsSignal.set(updated);
     this.storage.set(this.PROGRAMS_KEY, updated);
+    this.dataSync.trackLocalModification(this.PROGRAMS_KEY);
+    this.dataSync.saveToServerDebounced();
     
     // Also delete associated incomes and expenses
-    const updatedIncomes = this.incomes().filter(i => i.programId !== id);
-    this.incomes.set(updatedIncomes);
+    const updatedIncomes = this._incomesSignal().map(i => i.programId === id ? { ...i, isDeleted: true, updatedAt: new Date().toISOString() } : i);
+    this._incomesSignal.set(updatedIncomes);
     this.storage.set(this.INCOMES_KEY, updatedIncomes);
+    this.dataSync.trackLocalModification(this.INCOMES_KEY);
+    this.dataSync.saveToServerDebounced();
     
-    const updatedExpenses = this.expenses().filter(e => e.programId !== id);
-    this.expenses.set(updatedExpenses);
+    const updatedExpenses = this._expensesSignal().map(e => e.programId === id ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e);
+    this._expensesSignal.set(updatedExpenses);
     this.storage.set(this.EXPENSES_KEY, updatedExpenses);
+    this.dataSync.trackLocalModification(this.EXPENSES_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   // — CRUD Incomes —
@@ -159,15 +182,19 @@ export class EducationService {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    const updated = [record, ...this.incomes()];
-    this.incomes.set(updated);
+    const updated = [record, ...this._incomesSignal()];
+    this._incomesSignal.set(updated);
     this.storage.set(this.INCOMES_KEY, updated);
+    this.dataSync.trackLocalModification(this.INCOMES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   deleteIncome(id: string): void {
-    const updated = this.incomes().filter(i => i.id !== id);
-    this.incomes.set(updated);
+    const updated = this._incomesSignal().map(i => i.id === id ? { ...i, isDeleted: true, updatedAt: new Date().toISOString() } : i);
+    this._incomesSignal.set(updated);
     this.storage.set(this.INCOMES_KEY, updated);
+    this.dataSync.trackLocalModification(this.INCOMES_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   // — CRUD Expenses —
@@ -177,14 +204,18 @@ export class EducationService {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    const updated = [record, ...this.expenses()];
-    this.expenses.set(updated);
+    const updated = [record, ...this._expensesSignal()];
+    this._expensesSignal.set(updated);
     this.storage.set(this.EXPENSES_KEY, updated);
+    this.dataSync.trackLocalModification(this.EXPENSES_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 
   deleteExpense(id: string): void {
-    const updated = this.expenses().filter(e => e.id !== id);
-    this.expenses.set(updated);
+    const updated = this._expensesSignal().map(e => e.id === id ? { ...e, isDeleted: true, updatedAt: new Date().toISOString() } : e);
+    this._expensesSignal.set(updated);
     this.storage.set(this.EXPENSES_KEY, updated);
+    this.dataSync.trackLocalModification(this.EXPENSES_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 }

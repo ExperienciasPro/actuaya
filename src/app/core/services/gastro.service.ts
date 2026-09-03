@@ -25,24 +25,24 @@ export class GastroService {
     return this._dataSync;
   }
 
-  private _zones = signal<Zone[]>(this.storage.get<Zone[]>(ZONES_KEY) || []);
-  private _tables = signal<Table[]>(this.storage.get<Table[]>(TABLES_KEY) || []);
-  private _orders = signal<TableOrder[]>(this.storage.get<TableOrder[]>(ORDERS_KEY) || []);
+  private _zonesSignal = signal<Zone[]>(this.storage.get<Zone[]>(ZONES_KEY) || []);
+  private _tablesSignal = signal<Table[]>(this.storage.get<Table[]>(TABLES_KEY) || []);
+  private _ordersSignal = signal<TableOrder[]>(this.storage.get<TableOrder[]>(ORDERS_KEY) || []);
 
-  zones = this._zones.asReadonly();
-  tables = this._tables.asReadonly();
-  orders = this._orders.asReadonly();
+  zones = computed(() => this._zonesSignal().filter(z => !z.isDeleted));
+  tables = computed(() => this._tablesSignal().filter(t => !t.isDeleted));
+  orders = computed(() => this._ordersSignal().filter(o => !o.isDeleted));
 
   zonesWithTables = computed(() => {
-    const ts = this._tables();
-    return this._zones().map(z => ({
+    const ts = this._tablesSignal();
+    return this._zonesSignal().map(z => ({
       ...z,
       tables: ts.filter(t => t.zoneId === z.id).sort((a, b) => a.order - b.order)
     })).sort((a, b) => a.order - b.order);
   });
 
   tableStatusSummary = computed<TableStatusSummary>(() => {
-    const ts = this._tables();
+    const ts = this._tablesSignal();
     const summary = { total: ts.length, available: 0, occupied: 0, reserved: 0, billing: 0 };
     for (const t of ts) {
       summary[t.status]++;
@@ -50,36 +50,37 @@ export class GastroService {
     return summary;
   });
 
-  activeOrders = computed(() => this._orders().filter(o => o.status === 'open'));
+  activeOrders = computed(() => this._ordersSignal().filter(o => o.status === 'open'));
 
   // ─── Zonas ──────────────────────────────
   addZone(name: string, color: string = '#6c3ce9') {
     const zone: Zone = {
       id: 'zon-' + Date.now().toString(36),
       name,
-      order: this._zones().length,
+      order: this._zonesSignal().length,
       color
     };
-    this._zones.update(list => [...list, zone]);
+    this._zonesSignal.update(list => [...list, zone]);
     this.persistZones();
     return zone;
   }
 
   updateZone(id: string, changes: Partial<Zone>) {
-    this._zones.update(list => list.map(z => z.id === id ? { ...z, ...changes } : z));
+    this._zonesSignal.update(list => list.map(z => z.id === id ? { ...z, ...changes } : z));
     this.persistZones();
   }
 
   removeZone(id: string) {
-    this._zones.update(list => list.filter(z => z.id !== id));
-    this._tables.update(list => list.filter(t => t.zoneId !== id)); // Cascading
+    this._zonesSignal.update(list => list.map(z => z.id === id ? { ...z, isDeleted: true, updatedAt: new Date().toISOString() } : z));
+    this._tablesSignal.update(list => list.map(t => t.zoneId === id ? { ...t, isDeleted: true, updatedAt: new Date().toISOString() } : t)); // Cascading
     this.persistZones();
     this.persistTables();
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Mesas ──────────────────────────────
   addTable(zoneId: string, label: string, capacity: number = 4, x?: number, y?: number) {
-    const tablesInZone = this._tables().filter(t => t.zoneId === zoneId).length;
+    const tablesInZone = this._tablesSignal().filter(t => t.zoneId === zoneId).length;
     const table: Table = {
       id: 'tbl-' + Date.now().toString(36),
       zoneId,
@@ -90,19 +91,21 @@ export class GastroService {
       x,
       y
     };
-    this._tables.update(list => [...list, table]);
+    this._tablesSignal.update(list => [...list, table]);
     this.persistTables();
     return table;
   }
 
   updateTable(id: string, changes: Partial<Table>) {
-    this._tables.update(list => list.map(t => t.id === id ? { ...t, ...changes } : t));
+    this._tablesSignal.update(list => list.map(t => t.id === id ? { ...t, ...changes } : t));
     this.persistTables();
+    this.dataSync.saveToServerImmediate();
   }
 
   removeTable(id: string) {
-    this._tables.update(list => list.filter(t => t.id !== id));
+    this._tablesSignal.update(list => list.map(t => t.id === id ? { ...t, isDeleted: true, updatedAt: new Date().toISOString() } : t));
     this.persistTables();
+    this.dataSync.saveToServerImmediate();
   }
 
   // ─── Cuentas / Órdenes ───────────────────
@@ -110,9 +113,9 @@ export class GastroService {
     const activeProfile = this.userService.profile();
     if (!activeProfile) throw new Error('No user profile active.');
 
-    const table = this._tables().find(t => t.id === tableId);
+    const table = this._tablesSignal().find(t => t.id === tableId);
     if (!table) throw new Error('Table not found');
-    const zone = this._zones().find(z => z.id === table.zoneId);
+    const zone = this._zonesSignal().find(z => z.id === table.zoneId);
 
     const order: TableOrder = {
       id: 'ord-' + Date.now().toString(36),
@@ -132,7 +135,7 @@ export class GastroService {
       guestCount
     };
 
-    this._orders.update(list => [...list, order]);
+    this._ordersSignal.update(list => [...list, order]);
     this.updateTable(tableId, { status: 'occupied', activeOrderId: order.id });
     this.persistOrders();
     return order;
@@ -142,7 +145,7 @@ export class GastroService {
     const activeProfile = this.userService.profile();
     if (!activeProfile) return;
 
-    this._orders.update(list => list.map(o => {
+    this._ordersSignal.update(list => list.map(o => {
       if (o.id !== orderId) return o;
 
       const existingItem = o.items.find(i => i.productId === product.id && i.notes === notes);
@@ -179,7 +182,7 @@ export class GastroService {
   }
 
   removeItemFromOrder(orderId: string, itemId: string) {
-    this._orders.update(list => list.map(o => {
+    this._ordersSignal.update(list => list.map(o => {
       if (o.id !== orderId) return o;
       const newItems = o.items.filter(i => i.id !== itemId);
       const subtotal = newItems.reduce((sum, i) => sum + i.subtotal, 0);
@@ -190,7 +193,7 @@ export class GastroService {
   }
 
   updateOrderTotals(orderId: string, discount: number, tip: number) {
-    this._orders.update(list => list.map(o => {
+    this._ordersSignal.update(list => list.map(o => {
       if (o.id !== orderId) return o;
       const total = Math.max(0, o.subtotal - discount) + tip;
       return { ...o, discount, tip, total };
@@ -199,7 +202,7 @@ export class GastroService {
   }
 
   closeTable(orderId: string, paymentMethod: PaymentMethod, cashReceived?: number, closingNotes?: string) {
-    const order = this._orders().find(o => o.id === orderId);
+    const order = this._ordersSignal().find(o => o.id === orderId);
     if (!order) return { success: false, error: 'Order not found' };
 
     // Delegate to POSService to actually register the sale, move inventory, cashflow
@@ -237,7 +240,7 @@ export class GastroService {
     );
 
     if (result.success) {
-      this._orders.update(list => list.map(o => 
+      this._ordersSignal.update(list => list.map(o => 
         o.id === orderId ? { 
           ...o, 
           status: 'closed' as const, 
@@ -253,16 +256,16 @@ export class GastroService {
   }
 
   moveTable(orderId: string, newTableId: string) {
-    const order = this._orders().find(o => o.id === orderId);
+    const order = this._ordersSignal().find(o => o.id === orderId);
     if (!order) return false;
     
     const oldTableId = order.tableId;
-    const newTable = this._tables().find(t => t.id === newTableId);
+    const newTable = this._tablesSignal().find(t => t.id === newTableId);
     if (!newTable || newTable.status === 'occupied') return false;
 
-    const zone = this._zones().find(z => z.id === newTable.zoneId);
+    const zone = this._zonesSignal().find(z => z.id === newTable.zoneId);
 
-    this._orders.update(list => list.map(o => 
+    this._ordersSignal.update(list => list.map(o => 
       o.id === orderId ? {
         ...o,
         tableId: newTableId,
@@ -279,19 +282,19 @@ export class GastroService {
   }
 
   private persistZones() {
-    this.storage.set(ZONES_KEY, this._zones());
+    this.storage.set(ZONES_KEY, this._zonesSignal());
     this.dataSync.trackLocalModification(ZONES_KEY);
     this.dataSync.saveToServerDebounced();
   }
 
   private persistTables() {
-    this.storage.set(TABLES_KEY, this._tables());
+    this.storage.set(TABLES_KEY, this._tablesSignal());
     this.dataSync.trackLocalModification(TABLES_KEY);
     this.dataSync.saveToServerDebounced();
   }
 
   private persistOrders() {
-    this.storage.set(ORDERS_KEY, this._orders());
+    this.storage.set(ORDERS_KEY, this._ordersSignal());
     this.dataSync.trackLocalModification(ORDERS_KEY);
     this.dataSync.saveToServerDebounced();
   }

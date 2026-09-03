@@ -5,6 +5,8 @@ export interface ClientLocation {
   city: string;
   latitude?: number;
   longitude?: number;
+  isDeleted?: boolean;
+  updatedAt?: string;
 }
 
 export interface Client {

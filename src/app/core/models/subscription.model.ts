@@ -76,6 +76,7 @@ export interface Subscription {
   storageLimitMB?: number;
   createdAt: string;
   updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 /** Resultado de la evaluación de salud de renovación */
