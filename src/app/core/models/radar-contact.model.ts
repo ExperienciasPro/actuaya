@@ -28,6 +28,7 @@ export interface RadarContact {
   whatsappTemplate?: string;       // Custom pre-fill message template
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
 }
 
 export type RelationshipTag =

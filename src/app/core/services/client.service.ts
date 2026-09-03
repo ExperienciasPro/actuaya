@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject, Injector } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector, effect } from '@angular/core';
 import { Client } from '../models/client.model';
 import { StorageService } from './storage.service';
 import { DataSyncService } from './data-sync.service';
@@ -15,7 +15,7 @@ export class ClientService {
   private clientsSignal = signal<Client[]>([]);
 
   // Public computed
-  clients = computed(() => this.clientsSignal());
+  clients = computed(() => this.clientsSignal().filter(c => !c.isDeleted));
 
   private get dataSync(): DataSyncService {
     if (!this._dataSync) {
@@ -26,9 +26,8 @@ export class ClientService {
 
   constructor() {
     this.loadFromStorage();
-    // Re-load if another tab changes the data
-    window.addEventListener('storage', (e) => {
-      if (e.key === `${this.CLIENTS_KEY}_${this.storage.getActiveUserId()}`) {
+    effect(() => {
+      if (this.storage.updateToken() >= 0) {
         this.loadFromStorage();
       }
     });
@@ -40,33 +39,41 @@ export class ClientService {
   }
 
   addClient(client: Client) {
+    const updatedClient = {
+      ...client,
+      updatedAt: new Date().toISOString()
+    };
     const current = this.clientsSignal();
-    const updated = [client, ...current];
+    const updated = [updatedClient, ...current];
     this.clientsSignal.set(updated);
     this.saveAndSync(updated);
   }
 
   updateClient(updatedClient: Client) {
     const current = this.clientsSignal();
-    const updated = current.map((c) => (c.id === updatedClient.id ? updatedClient : c));
+    const updated = current.map((c) => (c.id === updatedClient.id ? { ...updatedClient, updatedAt: new Date().toISOString() } : c));
     this.clientsSignal.set(updated);
     this.saveAndSync(updated);
   }
 
   deleteClient(id: string) {
     const current = this.clientsSignal();
-    const updated = current.filter((c) => c.id !== id);
+    const updated = current.map((c) => (c.id === id ? { ...c, isDeleted: true, updatedAt: new Date().toISOString() } : c));
     this.clientsSignal.set(updated);
-    this.saveAndSync(updated);
+    
+    this.storage.set(this.CLIENTS_KEY, updated);
+    this.dataSync.trackLocalModification(this.CLIENTS_KEY);
+    this.dataSync.saveToServerImmediate();
   }
 
   private saveAndSync(data: Client[]) {
     this.storage.set(this.CLIENTS_KEY, data);
+    this.dataSync.trackLocalModification(this.CLIENTS_KEY);
     this.dataSync.saveToServerDebounced();
   }
 
   getClientById(id: string): Client | undefined {
-    return this.clientsSignal().find((c) => c.id === id);
+    return this.clients().find((c) => c.id === id);
   }
 
   generateQrCode(): string {

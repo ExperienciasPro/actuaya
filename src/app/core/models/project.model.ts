@@ -5,6 +5,7 @@ export interface TeamMember {
   email?: string;
   color: string;
   avatar?: string; // emoji or initials
+  isDeleted?: boolean;
 }
 
 export interface Project {
@@ -22,6 +23,7 @@ export interface Project {
   status: ProjectStatus;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted?: boolean;
 
   /** @deprecated — migrated to sections */
   stages?: ProjectStage[];
@@ -32,6 +34,7 @@ export interface ProjectSection {
   name: string;
   order: number;
   color: string;
+  isDeleted?: boolean;
 }
 
 export interface ProjectTask {
@@ -46,6 +49,7 @@ export interface ProjectTask {
   completed: boolean;
   order: number;
   createdAt: string;
+  isDeleted?: boolean;
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high';

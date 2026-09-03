@@ -30,4 +30,5 @@ export interface Client {
   lastVisitAt?: string;
   createdAt: string;
   updatedAt: string;
+  isDeleted?: boolean;
 }

@@ -34,6 +34,8 @@ export interface Quote {
   status?: 'draft' | 'sent' | 'sold' | 'cancelled';
   soldAt?: string;
   cashflowTransactionId?: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
 }
 
 export const UNIT_OPTIONS = [

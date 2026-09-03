@@ -12,6 +12,8 @@ export interface Task {
   notes: string[];
   estimatedMinutes?: number;
   actualMinutes?: number;
+  updatedAt?: Date;
+  isDeleted?: boolean;
 }
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';

@@ -15,6 +15,7 @@ export interface Goal {
   taskIds: string[];
   mode: GoalMode;
   tags: string[];
+  isDeleted?: boolean;
 }
 
 export type GoalStatus = 'not_started' | 'in_progress' | 'completed' | 'paused' | 'blocked';

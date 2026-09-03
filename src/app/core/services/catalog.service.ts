@@ -34,8 +34,8 @@ export class CatalogService {
     }));
   });
 
-  private _quotes = signal<Quote[]>([]);
-  quotes = this._quotes.asReadonly();
+  private _quotesSignal = signal<Quote[]>([]);
+  quotes = computed(() => this._quotesSignal().filter(q => !q.isDeleted));
 
   activeItems = computed<CatalogItem[]>(() => {
     return this.items().filter(i => i.active);
@@ -86,21 +86,24 @@ export class CatalogService {
       ...quote,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       status: quote.status || 'draft',
     };
-    this._quotes.update(list => [newQuote, ...list]);
+    this._quotesSignal.update(list => [newQuote, ...list]);
     this.persistQuotes();
     return newQuote;
   }
 
   removeQuote(id: string): void {
-    this._quotes.update(list => list.filter(q => q.id !== id));
-    this.persistQuotes();
+    this._quotesSignal.update(list => list.map(q => q.id === id ? { ...q, isDeleted: true, updatedAt: new Date().toISOString() } : q));
+    this.storage.set(this.QUOTES_KEY, this._quotesSignal());
+    this.dataSync.trackLocalModification(this.QUOTES_KEY);
+    this.dataSync.saveToServerImmediate(); // Prioridad a los borrados
   }
 
   updateQuote(id: string, quote: Partial<Quote>): void {
-    this._quotes.update(list =>
-      list.map(q => (q.id === id ? { ...q, ...quote } : q))
+    this._quotesSignal.update(list =>
+      list.map(q => (q.id === id ? { ...q, ...quote, updatedAt: new Date().toISOString() } : q))
     );
     this.persistQuotes();
   }
@@ -156,11 +159,11 @@ export class CatalogService {
 
   private load(): void {
     const quotes = this.storage.get<Quote[]>(this.QUOTES_KEY);
-    if (quotes) this._quotes.set(quotes);
+    if (quotes) this._quotesSignal.set(quotes);
   }
 
   private persistQuotes(): void {
-    this.storage.set(this.QUOTES_KEY, this._quotes());
+    this.storage.set(this.QUOTES_KEY, this._quotesSignal());
     this.dataSync.trackLocalModification(this.QUOTES_KEY);
     this.dataSync.saveToServerDebounced();
   }

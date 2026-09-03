@@ -1,44 +1,56 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { RadarContact, RadarStatus, RelationshipTag } from '../models/radar-contact.model';
 import { StorageService } from './storage.service';
 import { SalesService } from './sales.service';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class RadarService {
   private readonly STORAGE_KEY = 'um_radar';
   private readonly DEFAULT_TEMPLATE = 'Hola [Name], ¿cómo estás? Soy [User]. Me encantaría ponernos al día. ¿Tendrás un momento esta semana para un café virtual? ☕';
 
+  private storage = inject(StorageService);
+  private salesService = inject(SalesService);
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
+
   private contactsSignal = signal<RadarContact[]>([]);
 
-  readonly contacts = this.contactsSignal.asReadonly();
+  readonly contacts = computed(() => this.contactsSignal().filter(c => !c.isDeleted));
 
   // — Filtered lists —
   readonly radarContacts = computed(() =>
-    this.contactsSignal().filter(c => c.status === 'radar')
+    this.contacts().filter(c => c.status === 'radar')
   );
 
   readonly contactedContacts = computed(() =>
-    this.contactsSignal().filter(c => c.status === 'contacted')
+    this.contacts().filter(c => c.status === 'contacted')
   );
 
   readonly snoozedContacts = computed(() =>
-    this.contactsSignal().filter(c => c.status === 'snoozed')
+    this.contacts().filter(c => c.status === 'snoozed')
   );
 
   readonly promotedContacts = computed(() =>
-    this.contactsSignal().filter(c => c.status === 'promoted')
+    this.contacts().filter(c => c.status === 'promoted')
   );
 
   // — Stats —
   readonly totalContacts = computed(() =>
-    this.contactsSignal().filter(c => c.status !== 'promoted').length
+    this.contacts().filter(c => c.status !== 'promoted').length
   );
 
   readonly contactedThisWeek = computed(() => {
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    return this.contactsSignal().filter(c =>
+    return this.contacts().filter(c =>
       c.contactedAt && new Date(c.contactedAt) >= weekStart
     ).length;
   });
@@ -51,7 +63,7 @@ export class RadarService {
   readonly overdueContacts = computed(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return this.contactsSignal().filter(c => {
+    return this.contacts().filter(c => {
       if (c.status !== 'radar') return false;
       if (c.hasTappedContactButton) return false;
       if (!c.assignedDate) return false;
@@ -76,7 +88,7 @@ export class RadarService {
 
     // Fill remaining slots with fresh radar contacts
     const overdueIds = new Set(overdue.map(c => c.id));
-    const freshPool = this.contactsSignal().filter(c => {
+    const freshPool = this.contacts().filter(c => {
       if (overdueIds.has(c.id)) return false;
       if (c.hasTappedContactButton) return false;
       if (c.status === 'radar') return true;
@@ -114,10 +126,7 @@ export class RadarService {
     this.dailyFive().filter(c => c.hasTappedContactButton).length
   );
 
-  constructor(
-    private storage: StorageService,
-    private salesService: SalesService,
-  ) {
+  constructor() {
     this.loadFromStorage();
     this.processOverdues(); // Mark overdue contacts on init
     effect(() => {
@@ -165,33 +174,30 @@ export class RadarService {
   }
 
   deleteContact(id: string): void {
-    this.contactsSignal.update(cs => cs.filter(c => c.id !== id));
+    this.contactsSignal.update(cs => 
+      cs.map(c => (c.id === id ? { ...c, isDeleted: true, updatedAt: new Date() } : c))
+    );
     this.save();
+    this.dataSync.saveToServerImmediate();
   }
 
   getById(id: string): RadarContact | undefined {
-    return this.contactsSignal().find(c => c.id === id);
+    return this.contacts().find(c => c.id === id);
   }
 
   // ═══════════════════════════════════════════
   // — STATUS TRANSITIONS —
   // ═══════════════════════════════════════════
 
-  /**
-   * Triggered ONLY when user taps "Contactar Ahora" → opens WhatsApp deep link.
-   * This is the ONLY way to break the persistence loop.
-   */
   triggerWhatsAppContact(id: string): string {
     const contact = this.getById(id);
     if (!contact) return '';
 
-    // Build WhatsApp deep link with pre-filled template
     const template = contact.whatsappTemplate || this.DEFAULT_TEMPLATE;
     const message = template.replace(/\[Name\]/g, contact.name.split(' ')[0]);
     const phone = contact.phone.replace(/[^0-9+]/g, '');
     const deepLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-    // Update state — THIS breaks the persistence loop
     this.updateContact(id, {
       hasTappedContactButton: true,
       status: 'contacted',
@@ -202,7 +208,6 @@ export class RadarService {
     return deepLink;
   }
 
-  /** Mark as contacted (without WhatsApp — legacy/manual) */
   markContacted(id: string): void {
     this.updateContact(id, {
       status: 'contacted',
@@ -212,7 +217,6 @@ export class RadarService {
     });
   }
 
-  /** Snooze with specific date — forces user to pick a future date */
   snooze(id: string, months: number): void {
     const snoozedUntil = new Date();
     snoozedUntil.setMonth(snoozedUntil.getMonth() + months);
@@ -225,7 +229,6 @@ export class RadarService {
     });
   }
 
-  /** Snooze until a specific date */
   snoozeUntilDate(id: string, date: Date): void {
     this.updateContact(id, {
       status: 'snoozed',
@@ -246,7 +249,6 @@ export class RadarService {
     });
   }
 
-  // — Promote to Deal (Conversion Trigger) —
   promoteToDeal(id: string, funnelId: string, stageId: string, value?: number): void {
     const contact = this.getById(id);
     if (!contact) return;
@@ -272,26 +274,30 @@ export class RadarService {
   // — PERSISTENCE LOOP ENGINE —
   // ═══════════════════════════════════════════
 
-  /** Process overdues: contacts assigned yesterday+ that were never contacted */
   private processOverdues(): void {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    this.contactsSignal().forEach(c => {
-      if (c.status !== 'radar') return;
-      if (c.hasTappedContactButton) return;
-      if (!c.assignedDate) return;
+    let changed = false;
+    const current = this.contactsSignal().map(c => {
+      if (c.status !== 'radar' || c.hasTappedContactButton || !c.assignedDate || c.isDeleted) return c;
 
       const assigned = new Date(c.assignedDate);
       assigned.setHours(0, 0, 0, 0);
 
       if (assigned < today && !c.overduesSince) {
-        this.updateContact(c.id, { overduesSince: assigned });
+        changed = true;
+        return { ...c, overduesSince: assigned, updatedAt: new Date() };
       }
+      return c;
     });
+
+    if (changed) {
+      this.contactsSignal.set(current);
+      this.save();
+    }
   }
 
-  /** Get reminder text based on time-of-day logic */
   getReminderForContact(contact: RadarContact): string | null {
     if (contact.hasTappedContactButton) return null;
     if (!contact.assignedDate) return null;
@@ -319,7 +325,7 @@ export class RadarService {
 
   // — Helpers —
   getByTag(tag: RelationshipTag): RadarContact[] {
-    return this.contactsSignal().filter(c => c.relationshipTag === tag);
+    return this.contacts().filter(c => c.relationshipTag === tag);
   }
 
   getDefaultTemplate(): string {
@@ -336,18 +342,35 @@ export class RadarService {
     return hash;
   }
 
-  hydrateDirectly(contacts: any[]): void {
-    if (Array.isArray(contacts)) {
-      const migratedData: RadarContact[] = contacts.map(c => ({
-        ...c,
-        name: c.name || c.fullName || 'Sin nombre',
-        phone: c.phone || c.mobile || '',
-        relationshipTag: c.relationshipTag || 'acquaintance',
-        status: c.status || 'radar',
-        hasTappedContactButton: c.hasTappedContactButton ?? false,
-      }));
-      this.contactsSignal.set(migratedData);
+  hydrateDirectly(serverContacts: any[]): void {
+    if (!Array.isArray(serverContacts)) return;
+    
+    const local = this.contactsSignal();
+    const localMap = new Map(local.map(c => [c.id, c]));
+    
+    for (const serverContact of serverContacts) {
+      const c: RadarContact = {
+        ...serverContact,
+        name: serverContact.name || serverContact.fullName || 'Sin nombre',
+        phone: serverContact.phone || serverContact.mobile || '',
+        relationshipTag: serverContact.relationshipTag || 'acquaintance',
+        status: serverContact.status || 'radar',
+        hasTappedContactButton: serverContact.hasTappedContactButton ?? false,
+      };
+      
+      const localC = localMap.get(c.id);
+      if (localC) {
+        const localTime = new Date(localC.updatedAt || 0).getTime();
+        const serverTime = new Date(c.updatedAt || 0).getTime();
+        if (serverTime >= localTime) {
+          localMap.set(c.id, c);
+        }
+      } else {
+        localMap.set(c.id, c);
+      }
     }
+    
+    this.contactsSignal.set(Array.from(localMap.values()));
   }
 
   private loadFromStorage(): void {
@@ -357,5 +380,7 @@ export class RadarService {
 
   private save(): void {
     this.storage.set(this.STORAGE_KEY, this.contactsSignal());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

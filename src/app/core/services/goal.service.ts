@@ -1,21 +1,31 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { Goal, GoalStatus, GoalMode } from '../models/goal.model';
 import { StorageService } from './storage.service';
 import { TaskService } from './task.service';
+import { DataSyncService } from './data-sync.service';
 
 @Injectable({ providedIn: 'root' })
 export class GoalService {
   private readonly STORAGE_KEY = 'um_goals';
   private taskService = inject(TaskService);
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private goalsSignal = signal<Goal[]>([]);
 
-  readonly goals = this.goalsSignal.asReadonly();
+  readonly goals = computed(() => this.goalsSignal().filter(g => !g.isDeleted));
+  
   readonly activeGoals = computed(() =>
-    this.goalsSignal().filter((g) => g.status === 'in_progress')
+    this.goals().filter((g) => g.status === 'in_progress')
   );
   readonly completedGoals = computed(() =>
-    this.goalsSignal().filter((g) => g.status === 'completed')
+    this.goals().filter((g) => g.status === 'completed')
   );
 
   constructor(private storage: StorageService) {
@@ -58,25 +68,28 @@ export class GoalService {
     }
     // Delete tasks belonging to this goal
     this.taskService.deleteByGoalId(id);
-    // Delete the goal itself
-    this.goalsSignal.update((goals) => goals.filter((g) => g.id !== id));
+    // Soft delete the goal itself
+    this.goalsSignal.update((goals) => 
+      goals.map((g) => g.id === id ? { ...g, isDeleted: true, updatedAt: new Date() } : g)
+    );
     this.saveToStorage();
+    this.dataSync.saveToServerImmediate();
   }
 
   getById(id: string): Goal | undefined {
-    return this.goalsSignal().find((g) => g.id === id);
+    return this.goals().find((g) => g.id === id);
   }
 
   getByMode(mode: GoalMode): Goal[] {
-    return this.goalsSignal().filter((g) => g.mode === mode);
+    return this.goals().filter((g) => g.mode === mode);
   }
 
   getChildren(parentId: string): Goal[] {
-    return this.goalsSignal().filter((g) => g.parentGoalId === parentId);
+    return this.goals().filter((g) => g.parentGoalId === parentId);
   }
 
   getRootGoals(): Goal[] {
-    return this.goalsSignal().filter((g) => !g.parentGoalId);
+    return this.goals().filter((g) => !g.parentGoalId);
   }
 
   updateProgress(id: string, progress: number): void {
@@ -86,16 +99,33 @@ export class GoalService {
     });
   }
 
-  hydrateDirectly(goals: any[]): void {
-    if (Array.isArray(goals)) {
-      const migratedData: Goal[] = goals.map(g => ({
-        ...g,
-        intentionTrigger: g.intentionTrigger || '',
-        intentionAction: g.intentionAction || g.description || '',
-        microSteps: g.microSteps || [],
-      }));
-      this.goalsSignal.set(migratedData);
+  hydrateDirectly(serverGoals: any[]): void {
+    if (!Array.isArray(serverGoals)) return;
+    
+    const local = this.goalsSignal();
+    const localMap = new Map(local.map(g => [g.id, g]));
+    
+    for (const serverGoal of serverGoals) {
+      const g: Goal = {
+        ...serverGoal,
+        intentionTrigger: serverGoal.intentionTrigger || '',
+        intentionAction: serverGoal.intentionAction || serverGoal.description || '',
+        microSteps: serverGoal.microSteps || [],
+      };
+      
+      const localG = localMap.get(g.id);
+      if (localG) {
+        const localTime = new Date(localG.updatedAt || 0).getTime();
+        const serverTime = new Date(g.updatedAt || 0).getTime();
+        if (serverTime >= localTime) {
+          localMap.set(g.id, g);
+        }
+      } else {
+        localMap.set(g.id, g);
+      }
     }
+    
+    this.goalsSignal.set(Array.from(localMap.values()));
   }
 
   private loadFromStorage(): void {
@@ -107,5 +137,7 @@ export class GoalService {
 
   private saveToStorage(): void {
     this.storage.set(this.STORAGE_KEY, this.goalsSignal());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }

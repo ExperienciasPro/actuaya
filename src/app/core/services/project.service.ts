@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { Project, ProjectSection, ProjectTask, TaskPriority, TeamMember } from '../models/project.model';
 import { StorageService } from './storage.service';
+import { DataSyncService } from './data-sync.service';
 
 const SECTION_COLORS = ['#6c5ce7', '#00cec9', '#e84393', '#54a0ff', '#feca57', '#fd79a8', '#a29bfe', '#55efc4'];
 const MEMBER_COLORS = ['#6c5ce7', '#00cec9', '#e17055', '#0984e3', '#fdcb6e', '#e84393', '#00b894', '#d63031', '#a29bfe', '#55efc4'];
@@ -8,12 +9,30 @@ const MEMBER_COLORS = ['#6c5ce7', '#00cec9', '#e17055', '#0984e3', '#fdcb6e', '#
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
   private readonly STORAGE_KEY = 'um_projects';
+  private storage = inject(StorageService);
+  private injector = inject(Injector);
+  private _dataSync: DataSyncService | null = null;
+  private get dataSync(): DataSyncService {
+    if (!this._dataSync) {
+      this._dataSync = this.injector.get(DataSyncService);
+    }
+    return this._dataSync;
+  }
 
   private projectsSignal = signal<Project[]>([]);
 
-  readonly projects = this.projectsSignal.asReadonly();
+  readonly projects = computed(() => {
+    return this.projectsSignal()
+      .filter(p => !p.isDeleted)
+      .map(p => ({
+        ...p,
+        members: (p.members || []).filter(m => !m.isDeleted),
+        sections: (p.sections || []).filter(s => !s.isDeleted),
+        tasks: (p.tasks || []).filter(t => !t.isDeleted)
+      }));
+  });
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadFromStorage();
     effect(() => {
       if (this.storage.updateToken() >= 0) {
@@ -59,12 +78,15 @@ export class ProjectService {
   }
 
   delete(id: string): void {
-    this.projectsSignal.update((p) => p.filter((proj) => proj.id !== id));
+    this.projectsSignal.update((p) => 
+      p.map((proj) => proj.id === id ? { ...proj, isDeleted: true, updatedAt: new Date() } : proj)
+    );
     this.saveToStorage();
+    this.dataSync.saveToServerImmediate();
   }
 
   getById(id: string): Project | undefined {
-    return this.projectsSignal().find((p) => p.id === id);
+    return this.projects().find((p) => p.id === id);
   }
 
   // ─── Team Members ────────────────────────────
@@ -110,7 +132,6 @@ export class ProjectService {
       projects.map((p) => {
         if (p.id !== projectId) return p;
         const member = (p.members || []).find(m => m.id === memberId);
-        // Unassign tasks by member ID (not name) to avoid collisions with same-name members
         const updatedTasks = member
           ? p.tasks.map(t => (t.assigneeId === memberId || t.assignee === member.name)
               ? { ...t, assignee: undefined, assigneeId: undefined }
@@ -118,7 +139,7 @@ export class ProjectService {
           : p.tasks;
         return {
           ...p,
-          members: (p.members || []).filter((m) => m.id !== memberId),
+          members: (p.members || []).map((m) => m.id === memberId ? { ...m, isDeleted: true } : m),
           tasks: updatedTasks,
           leaderId: p.leaderId === memberId ? undefined : p.leaderId,
           updatedAt: new Date(),
@@ -138,7 +159,8 @@ export class ProjectService {
     this.projectsSignal.update((projects) =>
       projects.map((p) => {
         if (p.id !== projectId) return p;
-        const order = p.sections.length;
+        const activeSections = p.sections.filter(s => !s.isDeleted);
+        const order = activeSections.length;
         const color = SECTION_COLORS[order % SECTION_COLORS.length];
         const newSection: ProjectSection = {
           id: crypto.randomUUID(),
@@ -173,8 +195,8 @@ export class ProjectService {
         return {
           ...p,
           updatedAt: new Date(),
-          sections: p.sections.filter((s) => s.id !== sectionId),
-          tasks: p.tasks.filter((t) => t.sectionId !== sectionId),
+          sections: p.sections.map((s) => s.id === sectionId ? { ...s, isDeleted: true } : s),
+          tasks: p.tasks.map((t) => t.sectionId === sectionId ? { ...t, isDeleted: true } : t),
         };
       })
     );
@@ -198,7 +220,7 @@ export class ProjectService {
     this.projectsSignal.update((projects) =>
       projects.map((p) => {
         if (p.id !== projectId) return p;
-        const sectionTasks = p.tasks.filter((t) => t.sectionId === sectionId);
+        const sectionTasks = p.tasks.filter((t) => t.sectionId === sectionId && !t.isDeleted);
         task.order = sectionTasks.length;
         return { ...p, tasks: [...p.tasks, task], updatedAt: new Date() };
       })
@@ -235,7 +257,7 @@ export class ProjectService {
     this.projectsSignal.update((projects) =>
       projects.map((p) => {
         if (p.id !== projectId) return p;
-        return { ...p, tasks: p.tasks.filter((t) => t.id !== taskId), updatedAt: new Date() };
+        return { ...p, tasks: p.tasks.map((t) => t.id === taskId ? { ...t, isDeleted: true } : t), updatedAt: new Date() };
       })
     );
     this.saveToStorage();
@@ -253,9 +275,9 @@ export class ProjectService {
         const task = p.tasks.find((t) => t.id === taskId);
         if (!task) return p;
 
-        // Get tasks in the target section, excluding the dragged one
+        // Get tasks in the target section, excluding the dragged one and deleted ones
         const sectionTasks = p.tasks
-          .filter((t) => t.sectionId === task.sectionId && t.id !== taskId)
+          .filter((t) => t.sectionId === task.sectionId && t.id !== taskId && !t.isDeleted)
           .sort((a, b) => a.order - b.order);
 
         // Insert at target position
@@ -263,9 +285,10 @@ export class ProjectService {
 
         // Reassign order values
         const reordered = sectionTasks.map((t, i) => ({ ...t, order: i }));
+        const reorderedIds = new Set(reordered.map(t => t.id));
 
-        // Replace section tasks with reordered ones, keep other sections untouched
-        const otherTasks = p.tasks.filter((t) => t.sectionId !== task.sectionId);
+        // Keep other tasks untouched (including deleted ones or from other sections)
+        const otherTasks = p.tasks.filter((t) => !reorderedIds.has(t.id));
 
         return { ...p, tasks: [...otherTasks, ...reordered], updatedAt: new Date() };
       })
@@ -290,20 +313,15 @@ export class ProjectService {
   private loadFromStorage(): void {
     const data = this.storage.get<Project[]>(this.STORAGE_KEY);
     if (data) {
-      // Migrate old projects that use stages instead of sections
       const migrated = data.map((p) => this.migrateProject(p));
       this.projectsSignal.set(migrated);
     }
   }
 
   private migrateProject(p: any): Project {
-    // Ensure members array exists (for projects created before team feature)
     if (!p.members) p.members = [];
-
-    // If project already has sections, no migration needed
     if (p.sections && p.sections.length) return p;
 
-    // Migrate stages → sections
     const stages: any[] = p.stages || [];
     const sections: ProjectSection[] = stages.map((s: any, i: number) => ({
       id: s.id || crypto.randomUUID(),
@@ -312,7 +330,6 @@ export class ProjectService {
       color: s.color || SECTION_COLORS[i % SECTION_COLORS.length],
     }));
 
-    // Default sections if none exist
     if (!sections.length) {
       sections.push(
         { id: crypto.randomUUID(), name: 'Por hacer', order: 0, color: '#8b95a9' },
@@ -325,11 +342,11 @@ export class ProjectService {
   }
 
   /** @deprecated */
-  updateStage(projectId: string, stageId: string, changes: any): void {
-    // no-op — kept for backward compatibility during migration
-  }
+  updateStage(projectId: string, stageId: string, changes: any): void {}
 
   private saveToStorage(): void {
     this.storage.set(this.STORAGE_KEY, this.projectsSignal());
+    this.dataSync.trackLocalModification(this.STORAGE_KEY);
+    this.dataSync.saveToServerDebounced();
   }
 }
