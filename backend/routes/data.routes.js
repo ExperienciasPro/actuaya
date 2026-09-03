@@ -37,11 +37,13 @@ function mergeArrayById(serverArr, clientArr) {
   // Apply client changes
   for (const item of clientArr) {
     if (!item || !item.id) continue;
-    // Support soft-delete: client sends { id, _deleted: true }
+    
+    // Support hard-delete (legacy)
     if (item._deleted) {
       map.delete(item.id);
       continue;
     }
+    
     const existing = map.get(item.id);
     if (!existing) {
       // New record from client
@@ -50,10 +52,18 @@ function mergeArrayById(serverArr, clientArr) {
       // Both exist — keep the one with the most recent updatedAt
       const tServer = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
       const tClient = new Date(item.updatedAt || item.createdAt || 0).getTime();
-      if (tClient >= tServer) {
+      
+      // Anti-Zombie Rule: If it's deleted on the server, NEVER resurrect it
+      // unless the client explicitly sends an undo-delete (which we don't have yet,
+      // but if we did, we'd need a specific flag). For now, once deleted, stays deleted.
+      if (existing.isDeleted && !item.isDeleted) {
+         // Client is trying to update a deleted item. Keep it deleted, but accept the newest data.
+         if (tClient > tServer) {
+           map.set(item.id, { ...item, isDeleted: true, updatedAt: new Date().toISOString() });
+         }
+      } else if (tClient >= tServer) {
         map.set(item.id, item);
       }
-      // else: server version is newer, keep it
     }
   }
   return Array.from(map.values());
@@ -232,10 +242,10 @@ router.post('/', async (req, res) => {
           continue;
         }
 
-        // ── MERGE para listas con ID (subscribers, subscriptions) ──
+        // ── MERGE para listas con ID ──
         // Fusionar por ID usando updatedAt para evitar que dispositivos
-        // con caché antigua resuciten registros eliminados.
-        if (MERGEABLE_ARRAY_KEYS.has(dataKey) && Array.isArray(dataValue)) {
+        // con caché antigua resuciten registros eliminados o pisen nuevos registros.
+        if (Array.isArray(dataValue) && dataValue.length > 0 && typeof dataValue[0] === 'object' && dataValue[0] !== null && 'id' in dataValue[0]) {
           const existing = await DataStore.findOne({ key: dataKey });
           const serverArr = (existing && Array.isArray(existing.value)) ? existing.value : [];
           const merged = mergeArrayById(serverArr, dataValue);
@@ -249,6 +259,13 @@ router.post('/', async (req, res) => {
           continue;
         }
 
+        // Si es un array vacío pero el servidor tiene datos, no lo sobreescribimos a menos que
+        // la regla de negocio lo permita, pero para evitar pérdida accidental de datos por
+        // clientes que inician vacíos, podríamos requerir una fusión. Sin embargo, para no romper
+        // el borrado total, lo dejamos pasar, pero con la nueva regla de soft deletes, las listas
+        // vacías generalmente no deberían sobreescribir listas llenas si son colecciones principales.
+        // Pero para no romper cosas como limpiar historial, dejamos el comportamiento normal si está vacío.
+        
         operations.push({
           updateOne: {
             filter: { key: dataKey },
@@ -321,8 +338,8 @@ router.post('/', async (req, res) => {
        valueToSave = [...noEmail, ...Array.from(byEmail.values())];
     }
 
-    // ── MERGE para listas con ID (subscribers, subscriptions) ──
-    if (MERGEABLE_ARRAY_KEYS.has(key) && Array.isArray(req.body)) {
+    // ── MERGE para listas con ID ──
+    if (Array.isArray(req.body) && req.body.length > 0 && typeof req.body[0] === 'object' && req.body[0] !== null && 'id' in req.body[0]) {
        const existing = await DataStore.findOne({ key });
        const serverArr = (existing && Array.isArray(existing.value)) ? existing.value : [];
        valueToSave = mergeArrayById(serverArr, req.body);
