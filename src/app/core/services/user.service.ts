@@ -156,12 +156,45 @@ export class UserService {
   /** Authenticate using Firebase Google Login */
   async loginWithGoogle(): Promise<UserProfile | null> {
     try {
+      this.ensureSuperAdmin();
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(this.auth, provider);
       const googleUser = result.user;
 
-      const users = this.getAllUsers();
+      let users = this.getAllUsers();
       let user = users.find(u => u.email?.toLowerCase() === googleUser.email?.toLowerCase());
+
+      if (!user) {
+        // Fallback: If they just cleared cache, fetch from server to ensure we don't duplicate them
+        try {
+          // Avoid circular dependency with DataSyncService by making a raw fetch
+          const response = await fetch(`https://app.actuaya.co/api/data?key=um_users&_t=${Date.now()}`, {
+             headers: { 'X-Auth-Token': 'd8f7632145b2062f854b79032549a0b1c9441a7d653782d71', 'ngsw-bypass': 'true' },
+             cache: 'no-store'
+          });
+          if (response.ok) {
+             const serverUsers = await response.json();
+             if (Array.isArray(serverUsers)) {
+                // Find them directly in the server response
+                const found = serverUsers.find(u => u.email?.toLowerCase() === googleUser.email?.toLowerCase() && !u.isDeleted);
+                if (found) {
+                   // Add to local storage
+                   const allLocal = this.storage.getUnscoped<UserProfile[]>(this.USERS_KEY) || [];
+                   const localMap = new Map();
+                   for(const u of allLocal) { localMap.set(u.id, u); }
+                   for(const u of serverUsers) { localMap.set(u.id, u); }
+                   const merged = Array.from(localMap.values());
+                   this.storage.setUnscoped(this.USERS_KEY, merged);
+                   this._usersSignal.set(merged.filter(u => !u.isDeleted));
+                   
+                   user = found;
+                }
+             }
+          }
+        } catch (e) {
+          console.warn('[UserService] Could not fetch user list during Google Login fallback');
+        }
+      }
 
       if (user) {
         // User exists, update lastLogin
