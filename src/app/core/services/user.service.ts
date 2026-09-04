@@ -90,6 +90,27 @@ export class UserService {
   });
 
   constructor() {
+    // Check for impersonation in URL
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const impersonateId = urlParams.get('impersonate');
+      if (impersonateId) {
+        const users = this.loadAllUsers();
+        const userToImpersonate = users.find(u => u.id === impersonateId);
+        if (userToImpersonate) {
+          sessionStorage.setItem('um_impersonated_user', JSON.stringify(userToImpersonate));
+          // Update URL to remove the parameter without reloading
+          urlParams.delete('impersonate');
+          const newSearch = urlParams.toString();
+          const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+          window.history.replaceState({}, document.title, newUrl);
+          
+          // Force reload the active profile signal now that sessionStorage is set
+          this.profile.set(this.loadActiveProfile());
+        }
+      }
+    } catch (e) {}
+
     // Si hay un perfil activo en localStorage, restaurar el scope
     const existingProfile = this.profile();
     if (existingProfile?.id) {
@@ -305,6 +326,9 @@ export class UserService {
     this.storage.setActiveUser(null);
     // Limpiar solo la sesión activa (clave sin scope)
     this.storage.removeUnscoped(this.PROFILE_KEY);
+    try {
+      sessionStorage.removeItem('um_impersonated_user');
+    } catch (e) {}
     this.profile.set(null);
   }
 
@@ -415,7 +439,15 @@ export class UserService {
   // ─── Internal Helpers ──────────────────────────
 
   private setActiveProfile(user: UserProfile): void {
-    this.storage.set(this.PROFILE_KEY, user);
+    try {
+      if (sessionStorage.getItem('um_impersonated_user')) {
+        sessionStorage.setItem('um_impersonated_user', JSON.stringify(user));
+      } else {
+        this.storage.set(this.PROFILE_KEY, user);
+      }
+    } catch (e) {
+      this.storage.set(this.PROFILE_KEY, user);
+    }
     this.profile.set(user);
   }
 
@@ -450,6 +482,13 @@ export class UserService {
   }
 
   private loadActiveProfile(): UserProfile | null {
+    try {
+      const impersonated = sessionStorage.getItem('um_impersonated_user');
+      if (impersonated) {
+        return this.migrateUser(JSON.parse(impersonated));
+      }
+    } catch (e) {}
+
     const raw = this.storage.get<UserProfile>(this.PROFILE_KEY);
     if (raw) {
       return this.migrateUser(raw);

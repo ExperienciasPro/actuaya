@@ -898,6 +898,13 @@ export class SubscribersComponent {
     }
   }
 
+  impersonateUser(user: UserProfile): void {
+    if (confirm(`¿Entrar a la cuenta de "${user.name}"? Se abrirá en una nueva ventana.`)) {
+      const url = window.location.origin + '/d/dashboard?impersonate=' + encodeURIComponent(user.id);
+      window.open(url, '_blank');
+    }
+  }
+
   openPasswordModal(user: UserProfile): void {
     this.editingUser.set(user);
     this.newPassword = '';

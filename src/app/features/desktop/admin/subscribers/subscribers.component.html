@@ -1015,6 +1015,10 @@
               <span class="action-text">Editar Correo</span>
             </button>
             @if (user.role !== 'superadmin') {
+              <button class="action-card" (click)="impersonateUser(user)" style="background: rgba(9, 132, 227, 0.1); color: #0984e3; border: 1.5px dashed #0984e3;">
+                <span class="action-icon">👁️</span>
+                <span class="action-text">Entrar como usuario</span>
+              </button>
               @if (user.subscriptionStatus !== 'active') {
                 <button class="action-card accent" (click)="activateUserSubscription(user)">
                   <span class="action-icon">💎</span>

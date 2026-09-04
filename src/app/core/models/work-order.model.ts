@@ -57,7 +57,7 @@ export const OT_PRIORITY_COLORS: Record<OtPriority, string> = {
   critica: '#e74c3c',
 };
 
-export interface WorkOrder {
+export interface WorkOrder { isDeleted?: boolean;
   id: string;
   title: string;
   description: string;

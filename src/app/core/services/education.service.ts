@@ -8,7 +8,7 @@ import { StorageService } from './storage.service';
 
 export type EducationProgramType = 'course' | 'workshop' | 'diploma' | 'conference' | 'other';
 
-export interface EducationalProgram {
+export interface EducationalProgram { isDeleted?: boolean;
   id: string;
   name: string;
   type: EducationProgramType;
@@ -18,7 +18,7 @@ export interface EducationalProgram {
   website?: string;
 }
 
-export interface ProgramIncome {
+export interface ProgramIncome { isDeleted?: boolean;
   id: string;
   programId: string;
   type: 'per_person' | 'global';
@@ -29,7 +29,7 @@ export interface ProgramIncome {
   createdAt: string;
 }
 
-export interface ProgramExpense {
+export interface ProgramExpense { isDeleted?: boolean;
   id: string;
   programId: string;
   category: string;

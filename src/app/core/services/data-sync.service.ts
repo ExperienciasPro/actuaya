@@ -237,7 +237,11 @@ export class DataSyncService {
 
               if (!baseKey || !baseKey.startsWith(this.UM_PREFIX)) continue;
               if (this.SESSION_LOCAL_KEYS.has(baseKey)) continue;
-              if (this.EXPLICITLY_HYDRATED_KEYS.has(baseKey)) continue; // handled by hydrateDirectly()
+              
+              // Evitar restaurar claves mal-scoped de servicios explícitos (ej. um_annual_budget_sa-001)
+              const isExplicit = Array.from(this.EXPLICITLY_HYDRATED_KEYS).some(ex => baseKey === ex || baseKey!.startsWith(ex + '_'));
+              if (isExplicit) continue; 
+              
               if (processedBaseKeys.has(baseKey)) continue;
               processedBaseKeys.add(baseKey);
 

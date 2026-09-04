@@ -58,6 +58,7 @@ export class BudgetService {
 
     if (!localBudgets.length) {
       this.budgetsSignal.set(serverBudgets);
+      this.storage.set(this.STORAGE_KEY, serverBudgets);
       return;
     }
 
