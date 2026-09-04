@@ -538,6 +538,8 @@ export class DataSyncService {
    */
   /** Mark a key as locally modified — prevents syncFromServer from overwriting it */
   trackLocalModification(key: string): void {
+    // Don't track keys as "locally modified" when syncFromServer is populating localStorage
+    if (this.isSyncing) return;
     this.locallyModifiedKeys.add(key);
     this.persistPendingKeys();
   }

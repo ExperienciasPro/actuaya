@@ -287,10 +287,14 @@ export class LoginComponent implements OnInit {
       }
 
       if (user) {
-        // Sincronizar en segundo plano sin bloquear la redirección
-        this.dataSync.syncFromServer().then(() => {
-          this.mockSubService.checkAndUpdateStatus();
-        });
+        // Sincronizar ANTES de navegar para que el dashboard tenga datos
+        try {
+          await Promise.race([
+            this.dataSync.syncFromServer(),
+            new Promise<void>(resolve => setTimeout(resolve, 12000)), // 12s max
+          ]);
+        } catch (e) { console.warn('[Login] Sync after login failed:', e); }
+        this.mockSubService.checkAndUpdateStatus();
 
         // Redirigir de inmediato al dashboard
         if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
@@ -318,10 +322,14 @@ export class LoginComponent implements OnInit {
       this.errorMsg = '';
       const user = await this.userService.loginWithGoogle();
       if (user) {
-        // Sincronizar en segundo plano
-        this.dataSync.syncFromServer().then(() => {
-          this.mockSubService.checkAndUpdateStatus();
-        });
+        // Sincronizar ANTES de navegar para que el dashboard tenga datos
+        try {
+          await Promise.race([
+            this.dataSync.syncFromServer(),
+            new Promise<void>(resolve => setTimeout(resolve, 12000)), // 12s max
+          ]);
+        } catch (e) { console.warn('[Login] Sync after Google login failed:', e); }
+        this.mockSubService.checkAndUpdateStatus();
 
         if (user.subscriptionStatus === 'expired' && user.role !== 'superadmin') {
           this.router.navigate(['/subscription-required']);
