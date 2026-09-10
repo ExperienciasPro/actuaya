@@ -265,13 +265,7 @@ export class DataSyncService {
             try { this.radarService.hydrateDirectly(radarArr); } catch (err) { console.error('Error hidratando radar:', err); }
             try {
               if (budgetVal !== undefined) {
-                const budgetKey = 'um_annual_budget';
-                const budgetKeyScoped = `${budgetKey}_${userId}`;
-                if (this.locallyModifiedKeys.has(budgetKey) || this.locallyModifiedKeys.has(budgetKeyScoped)) {
-                  console.log(`[DataSync] Skipping budget hydration — modified locally since sync started`);
-                } else {
-                  this.budgetService.hydrateDirectly(budgetVal);
-                }
+                this.budgetService.hydrateDirectly(budgetVal);
               }
             } catch (err) { console.error('Error hidratando budget:', err); }
             try { this.userService.refreshActiveProfileFromList(); } catch (err) { console.error('Error actualizando perfil activo:', err); }
