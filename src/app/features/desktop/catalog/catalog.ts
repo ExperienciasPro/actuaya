@@ -287,34 +287,11 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
           <!-- Actions -->
           <div class="send-actions">
             <button
-              class="btn-whatsapp"
-              [disabled]="quoteItems().length === 0 || !clientName.trim()"
-              (click)="sendWhatsApp()">
-              <span class="wa-icon">📱</span> Enviar por WhatsApp
-            </button>
-            <button
-              class="btn-print"
-              [disabled]="quoteItems().length === 0"
-              (click)="printQuote()">
-              🖨️ Imprimir / PDF
-            </button>
-            <button
-              class="btn-email"
-              [disabled]="quoteItems().length === 0 || !clientEmail.trim()"
-              (click)="sendEmail()">
-              ✉️ Enviar por Email
-            </button>
-            <button
-              class="btn-copy"
-              [disabled]="quoteItems().length === 0"
-              (click)="copyQuoteHTML()">
-              📋 Copiar Formato HTML
-            </button>
-            <button
+              type="button"
               class="btn-save-quote"
-              [disabled]="quoteItems().length === 0"
-              (click)="saveAndClear()">
-              💾 Guardar
+              [disabled]="quoteItems().length === 0 || isDownloadingPdf()"
+              (click)="downloadQuotePDF()">
+              {{ isDownloadingPdf() ? '⏳ Generando PDF...' : '📄 Descargar Cotización en PDF' }}
             </button>
           </div>
         </div>
@@ -377,9 +354,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                   <button class="btn-icon success-btn" title="Marcar como vendida" (click)="markAsSold(q.id)">✅</button>
                   <button class="btn-icon" title="Editar" (click)="editQuote(q)">✏️</button>
                 }
-                <button class="btn-icon" title="Reimprimir" (click)="reprintQuote(q)">🖨️</button>
-                <button class="btn-icon" title="Reenviar por WhatsApp" (click)="resendWhatsApp(q)">📱</button>
-                <button class="btn-icon" title="Reenviar por Email" (click)="resendEmail(q)">✉️</button>
+                <button class="btn-icon" title="Descargar PDF" [disabled]="isDownloadingPdf()" (click)="reprintQuote(q)">📄</button>
                 <button class="btn-icon danger" title="Eliminar" (click)="cat.removeQuote(q.id)"><um-icon name="trash" [size]="16"></um-icon></button>
               </div>
             </div>
@@ -654,6 +629,8 @@ export class CatalogComponent {
 
   // ─── Quote builder ──────────────────────
   quoteItems = signal<QuoteLineItem[]>([]);
+  editingQuoteId = signal<string | null>(null);
+  isDownloadingPdf = signal(false);
   clientName = '';
   clientPhone = '';
   clientEmail = '';
@@ -758,64 +735,8 @@ export class CatalogComponent {
     this.quoteItems.update(list => list.filter((_, i) => i !== index));
   }
 
-  sendWhatsApp(): void {
-    const quote = this.buildQuote();
-    const saved = this.cat.saveQuote(quote);
-    const link = this.cat.generateWhatsAppLink(saved);
-    window.open(link, '_blank');
-  }
-
-  async sendEmail(): Promise<void> {
-    const quote = this.buildQuote();
-    const saved = this.cat.saveQuote(quote);
-
-    // Prepare HTML and copy it automatically
-    await this.copyQuoteHTML(false); // Silent copy without alert
-
-    const link = this.cat.generateEmailLink(saved);
-    window.open(link, '_blank');
-  }
-
-  async copyQuoteHTML(showAlert: boolean = true): Promise<void> {
-    const items = this.quoteItems();
-    const total = this.quoteTotal();
-    const html = this.generatePrintHTML(
-      this.clientName,
-      this.clientEmail,
-      this.clientPhone,
-      items,
-      total,
-      this.quoteNotes,
-      this.validDays,
-      new Date()
-    );
-
-    try {
-      const blob = new Blob([html], { type: 'text/html' });
-      const data = [new ClipboardItem({ 'text/html': blob })];
-      await navigator.clipboard.write(data);
-      if (showAlert) {
-        alert('Formato copiado. Ahora puedes pegarlo directamente en tu correo (Gmail, Outlook, etc.)');
-      }
-    } catch (err) {
-      console.error('Error copying HTML: ', err);
-      if (showAlert) {
-        alert('No se pudo copiar el formato automáticamente. Intenta usar la opción de Imprimir/PDF.');
-      }
-    }
-  }
-
-  resendWhatsApp(q: any): void {
-    const link = this.cat.generateWhatsAppLink(q);
-    window.open(link, '_blank');
-  }
-
-  resendEmail(q: any): void {
-    const link = this.cat.generateEmailLink(q);
-    window.open(link, '_blank');
-  }
-
   editQuote(q: any): void {
+    this.editingQuoteId.set(q.id || null);
     this.clientName = q.clientName;
     this.clientPhone = q.clientPhone || '';
     this.clientEmail = q.clientEmail || '';
@@ -825,47 +746,218 @@ export class CatalogComponent {
     this.activeTab.set('quote');
   }
 
-  printQuote(): void {
-    const items = this.quoteItems();
-    const total = this.quoteTotal();
+  async downloadQuotePDF(): Promise<void> {
+    if (this.quoteItems().length === 0 || this.isDownloadingPdf()) return;
+
     const now = new Date();
-    const html = this.generatePrintHTML(
-      this.clientName || 'Cliente',
-      this.clientEmail,
-      this.clientPhone,
-      items,
-      total,
-      this.quoteNotes,
+    const clientLabel = this.clientName.trim() || 'Cliente';
+    const downloaded = await this.promptAndSaveQuotePdf(
+      clientLabel,
+      this.clientEmail.trim(),
+      this.clientPhone.trim(),
+      this.quoteItems(),
+      this.quoteTotal(),
+      this.quoteNotes.trim(),
       this.validDays,
       now,
     );
-    this.openPrintWindow(html);
-  }
 
-  reprintQuote(q: any): void {
-    const total = this.cat.getQuoteTotal(q);
-    const html = this.generatePrintHTML(
-      q.clientName,
-      q.clientEmail || '',
-      q.clientPhone || '',
-      q.items,
-      total,
-      q.notes || '',
-      q.validDays || 15,
-      new Date(q.createdAt),
-    );
-    this.openPrintWindow(html);
-  }
+    if (!downloaded) return;
 
-  saveAndClear(): void {
     const quote = this.buildQuote();
-    this.cat.saveQuote(quote);
+    const existingId = this.editingQuoteId();
+    if (existingId) {
+      this.cat.updateQuote(existingId, quote);
+    } else {
+      this.cat.saveQuote(quote);
+    }
+
+    this.editingQuoteId.set(null);
     this.quoteItems.set([]);
     this.clientName = '';
     this.clientPhone = '';
     this.clientEmail = '';
     this.quoteNotes = '';
-    this.activeTab.set('history');
+  }
+
+  async reprintQuote(q: any): Promise<void> {
+    if (this.isDownloadingPdf()) return;
+    const total = this.cat.getQuoteTotal(q);
+    await this.promptAndSaveQuotePdf(
+      q.clientName || 'Cliente',
+      q.clientEmail || '',
+      q.clientPhone || '',
+      q.items || [],
+      total,
+      q.notes || '',
+      q.validDays || 15,
+      new Date(q.createdAt || new Date()),
+    );
+  }
+
+  private async promptAndSaveQuotePdf(
+    clientName: string,
+    clientEmail: string,
+    clientPhone: string,
+    items: QuoteLineItem[],
+    total: number,
+    notes: string,
+    validDays: number,
+    date: Date,
+  ): Promise<boolean> {
+    const safeClient = (clientName || 'Cliente')
+      .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s_-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_') || 'Cliente';
+    const dateStr = date.toISOString().split('T')[0];
+    const fileName = `Cotizacion_${safeClient}_${dateStr}.pdf`;
+
+    // 1. Consultar carpeta/ubicación al usuario inmediatamente en el gesto de clic
+    let fileHandle: any = null;
+    const win = window as any;
+    if (typeof win.showSaveFilePicker === 'function') {
+      try {
+        fileHandle = await win.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'Documento PDF',
+              accept: { 'application/pdf': ['.pdf'] },
+            },
+          ],
+        });
+      } catch (err: any) {
+        if (err?.name === 'AbortError') {
+          return false; // Usuario canceló el diálogo de selección de carpeta
+        }
+        console.warn('No se pudo usar showSaveFilePicker, usando descarga directa:', err);
+      }
+    }
+
+    this.isDownloadingPdf.set(true);
+    try {
+      const pdfBlob = await this.generateQuotePdfBlob(
+        clientName,
+        clientEmail,
+        clientPhone,
+        items,
+        total,
+        notes,
+        validDays,
+        date,
+      );
+
+      if (fileHandle) {
+        const writable = await fileHandle.createWritable();
+        await writable.write(pdfBlob);
+        await writable.close();
+      } else {
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      }
+      return true;
+    } catch (err) {
+      console.error('Error generando PDF de cotización:', err);
+      alert('Ocurrió un error al generar el archivo PDF de la cotización.');
+      return false;
+    } finally {
+      this.isDownloadingPdf.set(false);
+    }
+  }
+
+  private async generateQuotePdfBlob(
+    clientName: string,
+    clientEmail: string,
+    clientPhone: string,
+    items: QuoteLineItem[],
+    total: number,
+    notes: string,
+    validDays: number,
+    date: Date,
+  ): Promise<Blob> {
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = '800px';
+    container.style.background = '#ffffff';
+    container.style.zIndex = '-9999';
+    container.style.fontFamily = `'${this.tpl.fontFamily}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    container.style.color = '#1e293b';
+    container.innerHTML = this.generateQuoteDocBodyHTML(
+      clientName,
+      clientEmail,
+      clientPhone,
+      items,
+      total,
+      notes,
+      validDays,
+      date,
+    );
+
+    document.body.appendChild(container);
+
+    try {
+      const images = Array.from(container.querySelectorAll('img'));
+      await Promise.all(
+        images.map(img =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>(resolve => {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+              })
+        )
+      );
+
+      const [jspdfModule, html2canvasModule] = await Promise.all([
+        import('jspdf') as Promise<any>,
+        import('html2canvas') as Promise<any>,
+      ]);
+      const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
+      const html2canvas = html2canvasModule.default || html2canvasModule;
+
+      const canvas: HTMLCanvasElement = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 800,
+        windowWidth: 800,
+      });
+
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL('image/png');
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      return doc.output('blob');
+    } finally {
+      if (container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
+    }
   }
 
   getTotal(q: any): number {
@@ -874,7 +966,7 @@ export class CatalogComponent {
 
   private buildQuote() {
     return {
-      clientName: this.clientName.trim(),
+      clientName: this.clientName.trim() || 'Cliente',
       clientPhone: this.clientPhone.trim(),
       clientEmail: this.clientEmail.trim(),
       items: this.quoteItems(),
@@ -993,7 +1085,7 @@ export class CatalogComponent {
     return '$' + value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
-  private generatePrintHTML(
+  private generateQuoteDocBodyHTML(
     clientName: string,
     clientEmail: string,
     clientPhone: string,
@@ -1004,6 +1096,7 @@ export class CatalogComponent {
     date: Date,
   ): string {
     const t = this.tpl;
+    const accent = t.primaryColor || '#6c5ce7';
     const dateStr = date.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
     const quoteNum = 'COT-' + date.getFullYear() + String(date.getMonth() + 1).padStart(2, '0') + String(date.getDate()).padStart(2, '0') + '-' + Math.floor(Math.random() * 900 + 100);
 
@@ -1011,8 +1104,6 @@ export class CatalogComponent {
       ? `<img src="${t.logoDataUrl}" alt="Logo" style="width:${t.logoWidth}px;height:auto;object-fit:contain;" />`
       : '';
 
-
-    // Image-inspired Header
     const headerHtml = `
       <div style="padding:40px 48px 30px; display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
@@ -1024,15 +1115,14 @@ export class CatalogComponent {
           </div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:32px; font-weight:900; color:var(--accent); letter-spacing:-0.02em; line-height:1;">COTIZACIÓN</div>
+          <div style="font-size:32px; font-weight:900; color:${accent}; letter-spacing:-0.02em; line-height:1;">COTIZACIÓN</div>
           <div style="font-size:14px; color:#64748b; margin-top:8px; font-weight:600;">${quoteNum}</div>
           <div style="font-size:14px; color:#64748b; font-weight:500;">${dateStr}</div>
         </div>
       </div>
-      <hr style="border:none; border-top:3px solid var(--accent); margin:0 48px;" />
+      <hr style="border:none; border-top:3px solid ${accent}; margin:0 48px;" />
     `;
 
-    // Company contact details
     const contactParts = [t.companyPhone, t.companyEmail, t.companyAddress, t.companyWebsite].filter(Boolean);
     const contactHtml = contactParts.length > 0 && t.headerStyle === 'modern'
       ? `<div style="background:${t.secondaryColor};padding:10px 32px;font-size:12px;color:#475569;display:flex;gap:20px;flex-wrap:wrap;">
@@ -1043,7 +1133,6 @@ export class CatalogComponent {
          </div>`
       : '';
 
-    // Client section
     const clientHtml = `
       <div style="padding:30px 48px 20px;">
         <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; font-weight:800; margin-bottom:12px;">COTIZACIÓN PARA</div>
@@ -1054,7 +1143,6 @@ export class CatalogComponent {
         </div>
       </div>`;
 
-    // Items table
     const rowsHtml = items.map((item, i) => `
       <tr style="border-bottom:1px solid #e2e8f0;">
         <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center;">${i + 1}</td>
@@ -1071,12 +1159,12 @@ export class CatalogComponent {
         <table style="width:100%; border-collapse:collapse;">
           <thead>
             <tr style="background:#f1f5f9;">
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:center; width:40px;">#</th>
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:left;">DESCRIPCIÓN</th>
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:center; width:70px;">CANT.</th>
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:center; width:80px;">UNIDAD</th>
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:right; width:120px;">PRECIO UNIT.</th>
-              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:800; text-align:right; width:130px;">SUBTOTAL</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:center; width:40px;">#</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:left;">DESCRIPCIÓN</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:center; width:70px;">CANT.</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:center; width:80px;">UNIDAD</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:right; width:120px;">PRECIO UNIT.</th>
+              <th style="padding:12px; font-size:11px; text-transform:uppercase; color:${accent}; font-weight:800; text-align:right; width:130px;">SUBTOTAL</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1084,7 +1172,6 @@ export class CatalogComponent {
         ${this.buildTotalBlock(t, total)}
       </div>`;
 
-    // Notes and validity
     let notesHtml = '';
     if (notes || validDays) {
       notesHtml = `
@@ -1096,15 +1183,47 @@ export class CatalogComponent {
         </div>`;
     }
 
-    // Quoter section
     const quoterHtml = this.buildQuoterBlock(t);
 
-    // Footer
     const footerHtml = t.showFooterNotes && t.footerText
       ? `<div style="border-top:1px solid #e2e8f0;padding:16px 32px;text-align:center;">
            <div style="font-size:11px;color:#94a3b8;line-height:1.5;">${t.footerText}</div>
          </div>`
       : '';
+
+    return `
+      <div class="quote-doc" style="--accent:${accent}; background:#ffffff;">
+        ${headerHtml}
+        ${contactHtml}
+        ${clientHtml}
+        ${tableHtml}
+        ${notesHtml}
+        ${quoterHtml}
+        ${footerHtml}
+      </div>`;
+  }
+
+  private generatePrintHTML(
+    clientName: string,
+    clientEmail: string,
+    clientPhone: string,
+    items: QuoteLineItem[],
+    total: number,
+    notes: string,
+    validDays: number,
+    date: Date,
+  ): string {
+    const t = this.tpl;
+    const bodyContent = this.generateQuoteDocBodyHTML(
+      clientName,
+      clientEmail,
+      clientPhone,
+      items,
+      total,
+      notes,
+      validDays,
+      date,
+    );
 
     return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" />
       <title>Cotización - ${clientName}</title>
@@ -1123,20 +1242,13 @@ export class CatalogComponent {
       <div class="no-print" style="text-align:center;margin-bottom:16px;">
         <button onclick="window.print()" style="padding:10px 28px;border-radius:24px;background:${t.primaryColor};color:white;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'${t.fontFamily}',sans-serif;">🖨️ Imprimir / Guardar como PDF</button>
       </div>
-      <div class="quote-doc">
-        ${headerHtml}
-        ${contactHtml}
-        ${clientHtml}
-        ${tableHtml}
-        ${notesHtml}
-        ${quoterHtml}
-        ${footerHtml}
-      </div>
+      ${bodyContent}
     </body></html>`;
   }
 
   // ─── IVA total block ────────────────────
   private buildTotalBlock(t: QuoteTemplate, subtotal: number): string {
+    const accent = t.primaryColor || '#6c5ce7';
     if (t.ivaMode === 'excluded') {
       const ivaAmount = Math.round(subtotal * t.ivaRate / 100);
       const grandTotal = subtotal + ivaAmount;
@@ -1154,7 +1266,7 @@ export class CatalogComponent {
             <hr style="border:none; border-top:2px solid #e2e8f0; margin:8px 0;" />
             <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:12px;">
               <span style="font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; font-weight:800; padding-bottom:6px;">TOTAL</span>
-              <span style="font-size:36px; font-weight:900; color:var(--accent); line-height:1;">${this.fmtCurrency(grandTotal)}</span>
+              <span style="font-size:36px; font-weight:900; color:${accent}; line-height:1;">${this.fmtCurrency(grandTotal)}</span>
             </div>
           </div>
         </div>`;
@@ -1163,7 +1275,7 @@ export class CatalogComponent {
         <div style="display:flex; justify-content:flex-end; padding:24px 0 0;">
           <div style="text-align:right;">
             <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; font-weight:800;">TOTAL (IVA INCLUIDO)</span>
-            <div style="font-size:36px; font-weight:900; color:var(--accent); line-height:1; margin-top:4px;">${this.fmtCurrency(subtotal)}</div>
+            <div style="font-size:36px; font-weight:900; color:${accent}; line-height:1; margin-top:4px;">${this.fmtCurrency(subtotal)}</div>
           </div>
         </div>`;
     } else {
@@ -1171,7 +1283,7 @@ export class CatalogComponent {
         <div style="display:flex; justify-content:flex-end; padding:24px 0 0;">
           <div style="text-align:right;">
             <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; font-weight:800;">TOTAL (EXENTO)</span>
-            <div style="font-size:36px; font-weight:900; color:var(--accent); line-height:1; margin-top:4px;">${this.fmtCurrency(subtotal)}</div>
+            <div style="font-size:36px; font-weight:900; color:${accent}; line-height:1; margin-top:4px;">${this.fmtCurrency(subtotal)}</div>
           </div>
         </div>`;
     }
