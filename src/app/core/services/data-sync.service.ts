@@ -531,6 +531,15 @@ export class DataSyncService {
   }
 
   /**
+   * Indica si la sincronización inicial con el servidor ya terminó (o falló definitivamente)
+   * y no hay una sincronización en curso. Útil para ejecutar escrituras automáticas
+   * sin riesgo de que datos locales recién generados bloqueen la hidratación del servidor.
+   */
+  get isInitialSyncDone(): boolean {
+    return this.hasSynced && !this.isSyncing;
+  }
+
+  /**
    * Guarda TODOS los datos de localStorage al servidor.
    * Usa debounce para no hacer demasiadas peticiones.
    */

@@ -439,3 +439,535 @@
   border-radius: 4px;
 }
 
+
+.badge-recurring {
+  color: #0f766e;
+  background: rgba(0, 180, 166, 0.1);
+  margin-left: 4px;
+}
+
+// ─── Egresos básicos mensuales ────────────
+.recurring-panel {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 18px 20px;
+  margin-bottom: $spacing-xl;
+}
+
+.recurring-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.recurring-title-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  flex: 1;
+  min-width: 240px;
+}
+
+.recurring-title-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: rgba(232, 67, 147, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.recurring-title-text {
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+  p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: $color-text-muted;
+  }
+}
+
+.recurring-chevron {
+  margin-left: 4px;
+  color: $color-text-muted;
+  transition: transform $transition-fast;
+  transform: rotate(-90deg);
+
+  &.open { transform: rotate(0deg); }
+}
+
+.rk-track {
+  height: 6px;
+  border-radius: 999px;
+  background: $color-border-subtle;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.rk-fill {
+  height: 100%;
+  background: $color-accent-secondary;
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
+
+.recurring-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.presets-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+}
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-primary;
+  color: $color-text-secondary;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+  }
+
+  &.used {
+    border-style: dashed;
+    opacity: 0.75;
+  }
+
+  &.custom {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+    background: rgba(108, 92, 231, 0.06);
+  }
+}
+
+.recurring-form {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: $radius-md;
+  border: 1px dashed $color-border-default;
+  background: $color-bg-primary;
+  animation: slideDown 250ms ease;
+
+  h4 {
+    margin: 0 0 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: $color-text-primary;
+  }
+}
+
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icon-opt {
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  border: 1px solid $color-border-subtle;
+  background: $color-bg-secondary;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover { border-color: $color-accent-primary; }
+  &.active {
+    border-color: $color-accent-primary;
+    box-shadow: 0 0 0 3px $color-accent-primary-glow;
+  }
+}
+
+.recurring-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-ghost {
+  padding: 10px 18px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: transparent;
+  color: $color-text-secondary;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { border-color: $color-text-muted; }
+}
+
+.btn-save.inline {
+  width: auto;
+  padding: 10px 22px;
+}
+
+.recurring-empty {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: $radius-md;
+  background: $color-bg-primary;
+  font-size: 0.85rem;
+  color: $color-text-muted;
+  text-align: center;
+}
+
+.recurring-list {
+  margin-top: 14px;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.recurring-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid $color-border-subtle;
+  background: $color-bg-primary;
+  transition: background $transition-fast;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $color-bg-hover; }
+  &.paused { opacity: 0.55; }
+
+  @media (max-width: 640px) { flex-wrap: wrap; }
+}
+
+.rr-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  background: $color-bg-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.rr-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rr-name {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $color-text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rr-meta {
+  margin: 1px 0 0;
+  font-size: 0.74rem;
+  color: $color-text-muted;
+}
+
+.rr-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.registered { background: rgba(0, 180, 166, 0.12); color: #0f766e; }
+  &.pending { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+  &.scheduled { background: rgba(108, 92, 231, 0.1); color: $color-accent-primary; }
+  &.paused { background: $color-border-subtle; color: $color-text-muted; }
+}
+
+.rr-amount {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: $color-accent-warm;
+  white-space: nowrap;
+  min-width: 100px;
+  text-align: right;
+}
+
+.rr-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rr-btn {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  background: transparent;
+  color: $color-text-muted;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-fast;
+
+  &:hover { background: $color-bg-secondary; border-color: $color-border-subtle; }
+
+  &.primary {
+    color: $color-accent-primary;
+    border-color: rgba(108, 92, 231, 0.3);
+    &:hover { background: $color-accent-primary; color: white; }
+  }
+
+  &.danger:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: $color-accent-danger;
+  }
+}
+
+.recurring-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.auto-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: $color-text-secondary;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    accent-color: $color-accent-primary;
+  }
+}
+
+.btn-register-all {
+  padding: 9px 18px;
+  border-radius: $radius-full;
+  border: none;
+  background: $color-accent-warm;
+  color: white;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(232, 67, 147, 0.3); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ─── Balance básico (ingresos − egresos) ──
+.basic-balance {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.2fr;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 16px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+    .bb-op { display: none; }
+  }
+}
+
+.bb-op {
+  align-self: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: $color-text-muted;
+}
+
+.bb-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: $radius-md;
+  background: $color-bg-primary;
+  border: 1px solid $color-border-subtle;
+
+  &.income .bb-value { color: $color-accent-secondary; }
+  &.expense .bb-value { color: $color-accent-warm; }
+
+  &.result.deficit {
+    background: rgba(231, 76, 60, 0.07);
+    border-color: rgba(231, 76, 60, 0.25);
+    .bb-value { color: $color-accent-danger; }
+  }
+
+  &.result.surplus {
+    background: rgba(0, 180, 166, 0.07);
+    border-color: rgba(0, 180, 166, 0.25);
+    .bb-value { color: #0f766e; }
+  }
+}
+
+.bb-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $color-text-muted;
+}
+
+.bb-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: $color-text-primary;
+}
+
+.bb-hint {
+  font-size: 0.72rem;
+  color: $color-text-muted;
+}
+
+.coverage {
+  margin-top: 12px;
+}
+
+.coverage-top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+  margin-bottom: 6px;
+
+  strong { color: $color-text-primary; }
+  .txt-warn { color: #b45309; }
+  .txt-ok { color: #0f766e; }
+}
+
+.coverage-month {
+  font-size: 0.76rem;
+  color: $color-text-muted;
+}
+
+.coverage-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(232, 67, 147, 0.15);
+  overflow: hidden;
+}
+
+.coverage-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f59e0b, $color-accent-secondary);
+  transition: width 300ms ease;
+
+  &.full { background: $color-accent-secondary; }
+}
+
+// ─── Pestañas ingresos / egresos ──────────
+.recurring-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  border-bottom: 1px solid $color-border-subtle;
+
+  button {
+    padding: 8px 14px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: $color-text-muted;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: all $transition-fast;
+
+    &:hover { color: $color-text-primary; }
+
+    &.active {
+      color: $color-accent-primary;
+      border-bottom-color: $color-accent-primary;
+    }
+  }
+}
+
+.tab-progress {
+  margin-top: 14px;
+}
+
+.tp-text {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+
+  strong { color: $color-text-primary; }
+}
+
+.tp-pending {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.rk-fill.income { background: $color-accent-secondary; }
+
+.rr-amount.income { color: $color-accent-secondary; }
+
+.btn-register-all.income {
+  background: $color-accent-secondary;
+
+  &:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(0, 180, 166, 0.3); }
+}
+
+.recurring-form.income {
+  border-color: rgba(0, 180, 166, 0.4);
+}
