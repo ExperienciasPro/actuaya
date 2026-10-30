@@ -55,6 +55,55 @@
   }
 }
 
+// ─── Main Tab Bar ────────────────────────
+.main-tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: $spacing-lg;
+  border-bottom: 2px solid $color-border-subtle;
+  padding-bottom: 0;
+}
+
+.main-tab {
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: $color-text-muted;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all $transition-fast;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    color: $color-text-primary;
+  }
+
+  &.active {
+    color: $color-accent-primary;
+    border-bottom-color: $color-accent-primary;
+  }
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: $color-accent-primary;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0 5px;
+}
+
 // ─── Month Nav ────────────────────────────
 .month-nav {
   display: flex;
@@ -511,13 +560,16 @@
   margin-left: 4px;
 }
 
-// ─── Egresos básicos mensuales ────────────
 .recurring-panel {
   background: $color-bg-secondary;
   border: 1px solid $color-border-subtle;
   border-radius: $radius-lg;
   padding: 18px 20px;
   margin-bottom: $spacing-xl;
+
+  &.recurring-panel-tab {
+    padding: 24px 22px;
+  }
 }
 
 .recurring-header {
@@ -528,18 +580,22 @@
   flex-wrap: wrap;
 }
 
+.recurring-title-wrap,
 .recurring-title-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.recurring-title-btn {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  flex: 1;
-  min-width: 240px;
 }
 
 .recurring-title-icon {

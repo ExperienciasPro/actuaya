@@ -20,6 +20,8 @@ import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+export type CashflowMainTab = 'cashflow' | 'recurring';
+
 @Component({
   selector: 'um-cashflow',
   standalone: true,
@@ -39,50 +41,124 @@ import { FormsModule } from '@angular/forms';
           </button>
         </div>
 
-        <!-- Month Nav -->
-        <div class="month-nav">
-          <button class="month-arrow" (click)="cf.goToPreviousMonth()">‹</button>
-          <span class="month-label">{{ getMonthLabel() }}</span>
-          <button class="month-arrow" (click)="cf.goToNextMonth()">›</button>
+        <!-- Main Tabs -->
+        <div class="main-tab-bar">
+          <button
+            type="button"
+            class="main-tab"
+            [class.active]="mainTab() === 'cashflow'"
+            (click)="mainTab.set('cashflow')">
+            📊 Flujo de Caja
+          </button>
+          <button
+            type="button"
+            class="main-tab"
+            [class.active]="mainTab() === 'recurring'"
+            (click)="mainTab.set('recurring')">
+            🔁 Ingresos & Egresos Básicos
+            @if (cf.recurringItems().length > 0) {
+              <span class="tab-badge">{{ cf.recurringItems().length }}</span>
+            }
+          </button>
         </div>
+
+        @if (mainTab() === 'cashflow') {
+          <!-- Month Nav -->
+          <div class="month-nav">
+            <button class="month-arrow" (click)="cf.goToPreviousMonth()">‹</button>
+            <span class="month-label">{{ getMonthLabel() }}</span>
+            <button class="month-arrow" (click)="cf.goToNextMonth()">›</button>
+          </div>
+        }
       </header>
 
-      <!-- ═══ Summary Cards ═══ -->
-      <div class="summary-row">
-        <div class="summary-card ingreso">
-          <span class="summary-icon">↗</span>
-          <div>
-            <p class="summary-label">Ingresos</p>
-            <p class="summary-value">{{ cf.summary().totalIngresos | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+      <!-- ═══════════════ TAB 1: FLUJO DE CAJA (MENSUAL) ═══════════════ -->
+      @if (mainTab() === 'cashflow') {
+        <!-- ═══ Summary Cards ═══ -->
+        <div class="summary-row">
+          <div class="summary-card ingreso">
+            <span class="summary-icon">↗</span>
+            <div>
+              <p class="summary-label">Ingresos</p>
+              <p class="summary-value">{{ cf.summary().totalIngresos | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+            </div>
+          </div>
+          <div class="summary-card egreso">
+            <span class="summary-icon">↙</span>
+            <div>
+              <p class="summary-label">Egresos</p>
+              <p class="summary-value">{{ cf.summary().totalEgresos | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+            </div>
+          </div>
+          <div class="summary-card balance" [class.positive]="cf.summary().balance >= 0" [class.negative]="cf.summary().balance < 0">
+            <span class="summary-icon">⚖</span>
+            <div>
+              <p class="summary-label">Balance</p>
+              <p class="summary-value">{{ cf.summary().balance | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+            </div>
           </div>
         </div>
-        <div class="summary-card egreso">
-          <span class="summary-icon">↙</span>
-          <div>
-            <p class="summary-label">Egresos</p>
-            <p class="summary-value">{{ cf.summary().totalEgresos | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
-          </div>
-        </div>
-        <div class="summary-card balance" [class.positive]="cf.summary().balance >= 0" [class.negative]="cf.summary().balance < 0">
-          <span class="summary-icon">⚖</span>
-          <div>
-            <p class="summary-label">Balance</p>
-            <p class="summary-value">{{ cf.summary().balance | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
-          </div>
-        </div>
-      </div>
 
-      <!-- ═══ Ingresos y egresos básicos mensuales ═══ -->
-      <section class="recurring-panel">
+        <!-- ═══ Transaction List ═══ -->
+        <div class="tx-list">
+          <div class="tx-list-header">
+            <h2>Movimientos ({{ cf.monthTransactions().length }})</h2>
+            <div class="filter-tabs">
+              <button [class.active]="filterType() === 'all'" (click)="filterType.set('all')">Todos</button>
+              <button [class.active]="filterType() === 'ingreso'" (click)="filterType.set('ingreso')">Ingresos</button>
+              <button [class.active]="filterType() === 'egreso'" (click)="filterType.set('egreso')">Egresos</button>
+            </div>
+          </div>
+
+          @if (filteredTransactions().length === 0) {
+            <div class="empty-state">
+              <span class="empty-icon">📭</span>
+              <p>No hay movimientos {{ filterType() !== 'all' ? 'de este tipo ' : '' }}en este mes.</p>
+              <p class="empty-hint">Toca "+ Registrar movimiento" para empezar.</p>
+            </div>
+          }
+
+          @for (tx of filteredTransactions(); track tx.id) {
+            <div class="tx-row" [class.ingreso]="tx.type === 'ingreso'" [class.egreso]="tx.type === 'egreso'">
+              <div class="tx-indicator">
+                <span>{{ tx.type === 'ingreso' ? '↗' : '↙' }}</span>
+              </div>
+              <div class="tx-info">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <p class="tx-desc">{{ tx.description }}</p>
+                  @if (tx.autoGenerated) {
+                    <span class="badge-auto">🔗 Auto</span>
+                  }
+                  @if (tx.recurringExpenseId) {
+                    <span class="badge-auto badge-recurring">🔁 Básico</span>
+                  }
+                </div>
+                <p class="tx-meta">{{ getCategoryLabel(tx.category) }} · {{ tx.date | date:'d MMM' }}</p>
+              </div>
+              <div class="tx-amount" [class.positive]="tx.type === 'ingreso'" [class.negative]="tx.type === 'egreso'">
+                {{ tx.type === 'ingreso' ? '+' : '-' }}{{ tx.amount | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </div>
+              @if (!tx.autoGenerated) {
+                <button class="tx-delete" (click)="cf.remove(tx.id)" title="Eliminar"><um-icon name="trash" [size]="14"></um-icon></button>
+              } @else {
+                <button class="tx-delete disabled" title="Auto-generada (no editable)" style="opacity: 0.3; cursor: not-allowed;"><um-icon name="trash" [size]="14"></um-icon></button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ═══════════════ TAB 2: INGRESOS & EGRESOS BÁSICOS ═══════════════ -->
+      @if (mainTab() === 'recurring') {
+        <section class="recurring-panel recurring-panel-tab">
         <div class="recurring-header">
-          <button type="button" class="recurring-title-btn" (click)="showRecurringPanel.set(!showRecurringPanel())">
+          <div class="recurring-title-wrap">
             <span class="recurring-title-icon">🔁</span>
             <div class="recurring-title-text">
               <h3>Ingresos y egresos básicos mensuales</h3>
-              <p>Cárgalos una sola vez y descubre cuánto dinero extra necesitas conseguir cada mes.</p>
+              <p>Gestiona aquí tus conceptos fijos repetitivos (arriendos, salud, telefonía, internet, alimentación, transporte, créditos…) para proyectar tus finanzas.</p>
             </div>
-            <span class="recurring-chevron" [class.open]="showRecurringPanel()">▾</span>
-          </button>
+          </div>
         </div>
 
         <!-- Balance básico: siempre visible -->
@@ -129,7 +205,6 @@ import { FormsModule } from '@angular/forms';
           </div>
         }
 
-        @if (showRecurringPanel()) {
           <!-- Pestañas Egresos / Ingresos -->
           <div class="recurring-tabs">
             <button type="button" [class.active]="recurringTab() === 'egreso'" (click)="setRecurringTab('egreso')">
@@ -280,8 +355,8 @@ import { FormsModule } from '@angular/forms';
               </button>
             </div>
           }
-        }
-      </section>
+        </section>
+      }
 
       <!-- ═══ Quick Add Form (Modal Flotante) ═══ -->
       @if (showForm()) {
@@ -363,54 +438,6 @@ import { FormsModule } from '@angular/forms';
           </div>
         </div>
       }
-
-      <!-- ═══ Transaction List ═══ -->
-      <div class="tx-list">
-        <div class="tx-list-header">
-          <h2>Movimientos ({{ cf.monthTransactions().length }})</h2>
-          <div class="filter-tabs">
-            <button [class.active]="filterType() === 'all'" (click)="filterType.set('all')">Todos</button>
-            <button [class.active]="filterType() === 'ingreso'" (click)="filterType.set('ingreso')">Ingresos</button>
-            <button [class.active]="filterType() === 'egreso'" (click)="filterType.set('egreso')">Egresos</button>
-          </div>
-        </div>
-
-        @if (filteredTransactions().length === 0) {
-          <div class="empty-state">
-            <span class="empty-icon">📭</span>
-            <p>No hay movimientos {{ filterType() !== 'all' ? 'de este tipo ' : '' }}en este mes.</p>
-            <p class="empty-hint">Toca "+ Registrar movimiento" para empezar.</p>
-          </div>
-        }
-
-        @for (tx of filteredTransactions(); track tx.id) {
-          <div class="tx-row" [class.ingreso]="tx.type === 'ingreso'" [class.egreso]="tx.type === 'egreso'">
-            <div class="tx-indicator">
-              <span>{{ tx.type === 'ingreso' ? '↗' : '↙' }}</span>
-            </div>
-            <div class="tx-info">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <p class="tx-desc">{{ tx.description }}</p>
-                @if (tx.autoGenerated) {
-                  <span class="badge-auto">🔗 Auto</span>
-                }
-                @if (tx.recurringExpenseId) {
-                  <span class="badge-auto badge-recurring">🔁 Básico</span>
-                }
-              </div>
-              <p class="tx-meta">{{ getCategoryLabel(tx.category) }} · {{ tx.date | date:'d MMM' }}</p>
-            </div>
-            <div class="tx-amount" [class.positive]="tx.type === 'ingreso'" [class.negative]="tx.type === 'egreso'">
-              {{ tx.type === 'ingreso' ? '+' : '-' }}{{ tx.amount | currency:'COP':'symbol-narrow':'1.0-0' }}
-            </div>
-            @if (!tx.autoGenerated) {
-              <button class="tx-delete" (click)="cf.remove(tx.id)" title="Eliminar"><um-icon name="trash" [size]="14"></um-icon></button>
-            } @else {
-              <button class="tx-delete disabled" title="Auto-generada (no editable)" style="opacity: 0.3; cursor: not-allowed;"><um-icon name="trash" [size]="14"></um-icon></button>
-            }
-          </div>
-        }
-      </div>
     </div>
   `,
   styleUrl: 'cashflow.scss',
@@ -418,6 +445,8 @@ import { FormsModule } from '@angular/forms';
 export class CashflowComponent {
   cf = inject(CashflowService);
   productService = inject(ProductCatalogService);
+
+  mainTab = signal<CashflowMainTab>('cashflow');
 
   showForm = signal(false);
   formType = signal<TransactionType>('ingreso');
