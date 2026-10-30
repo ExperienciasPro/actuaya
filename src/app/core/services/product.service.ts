@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed, effect, Injector } from '@angular/core';
+import { Injectable, inject, signal, computed, effect, untracked, Injector } from '@angular/core';
 import { StorageService } from './storage.service';
 import { ProductService, ProductCategory } from '../models/product-service.model';
 import { DataSyncService } from './data-sync.service';
@@ -28,7 +28,7 @@ export class ProductDataService {
     this.load();
     effect(() => {
       if (this.storage.updateToken() >= 0) {
-        this.load();
+        untracked(() => this.load());
       }
     });
   }
@@ -63,12 +63,7 @@ export class ProductDataService {
 
   private load(): void {
     const saved = this.storage.get<ProductService[]>(this.STORAGE_KEY);
-    if (saved) {
-      this._products.set(saved);
-    } else {
-      this._products.set([]);
-      this.storage.set(this.STORAGE_KEY, []);
-    }
+    this._products.set(Array.isArray(saved) ? saved : []);
   }
 
   private persist(): void {

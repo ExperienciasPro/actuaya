@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
+import { Injectable, signal, computed, effect, untracked, inject, Injector } from '@angular/core';
 import { RadarContact, RadarStatus, RelationshipTag } from '../models/radar-contact.model';
 import { StorageService } from './storage.service';
 import { SalesService } from './sales.service';
@@ -13,6 +13,8 @@ export class RadarService {
   private salesService = inject(SalesService);
   private injector = inject(Injector);
   private _dataSync: DataSyncService | null = null;
+  private lastSelfSaveToken = -1;
+  private lastLoadedUserId: string | null = null;
   private get dataSync(): DataSyncService {
     if (!this._dataSync) {
       this._dataSync = this.injector.get(DataSyncService);
@@ -130,9 +132,12 @@ export class RadarService {
     this.loadFromStorage();
     this.processOverdues(); // Mark overdue contacts on init
     effect(() => {
-      if (this.storage.updateToken() >= 0) {
-        this.loadFromStorage();
-        this.processOverdues();
+      const token = this.storage.updateToken();
+      if (token >= 0 && token !== this.lastSelfSaveToken) {
+        untracked(() => {
+          this.loadFromStorage();
+          this.processOverdues();
+        });
       }
     });
   }
@@ -342,44 +347,83 @@ export class RadarService {
     return hash;
   }
 
-  hydrateDirectly(serverContacts: any[]): void {
-    if (!Array.isArray(serverContacts)) return;
-    
-    const local = this.contactsSignal();
+  private normalizeContact(raw: any): RadarContact {
+    return {
+      ...raw,
+      name: String(raw?.name || raw?.fullName || 'Sin nombre'),
+      phone: String(raw?.phone || raw?.mobile || ''),
+      relationshipTag: raw?.relationshipTag || 'acquaintance',
+      status: raw?.status || 'radar',
+      hasTappedContactButton: raw?.hasTappedContactButton ?? false,
+    };
+  }
+
+  private mergeIntoLocal(incomingContacts: any[], preferIncomingOnTie: boolean): { merged: RadarContact[]; changed: boolean } {
+    const local = untracked(() => this.contactsSignal());
     const localMap = new Map(local.map(c => [c.id, c]));
-    
-    for (const serverContact of serverContacts) {
-      const c: RadarContact = {
-        ...serverContact,
-        name: serverContact.name || serverContact.fullName || 'Sin nombre',
-        phone: serverContact.phone || serverContact.mobile || '',
-        relationshipTag: serverContact.relationshipTag || 'acquaintance',
-        status: serverContact.status || 'radar',
-        hasTappedContactButton: serverContact.hasTappedContactButton ?? false,
-      };
-      
+    let changed = false;
+
+    for (const raw of incomingContacts) {
+      if (!raw?.id) continue;
+      const c = this.normalizeContact(raw);
       const localC = localMap.get(c.id);
+
       if (localC) {
         const localTime = new Date(localC.updatedAt || 0).getTime();
-        const serverTime = new Date(c.updatedAt || 0).getTime();
-        if (serverTime >= localTime) {
+        const incomingTime = new Date(c.updatedAt || 0).getTime();
+        if (incomingTime > localTime || (preferIncomingOnTie && incomingTime === localTime && JSON.stringify(localC) !== JSON.stringify(c))) {
           localMap.set(c.id, c);
+          changed = true;
         }
       } else {
         localMap.set(c.id, c);
+        changed = true;
       }
     }
-    
-    this.contactsSignal.set(Array.from(localMap.values()));
+
+    return { merged: Array.from(localMap.values()), changed };
+  }
+
+  hydrateDirectly(serverContacts: any[]): void {
+    if (!Array.isArray(serverContacts)) return;
+
+    const currentUserId = this.storage.getActiveUserId();
+    if (currentUserId !== this.lastLoadedUserId) {
+      this.lastLoadedUserId = currentUserId;
+    }
+
+    const { merged, changed } = this.mergeIntoLocal(serverContacts, true);
+    if (changed) {
+      this.contactsSignal.set(merged);
+      this.storage.set(this.STORAGE_KEY, merged);
+      this.lastSelfSaveToken = this.storage.updateToken();
+    }
   }
 
   private loadFromStorage(): void {
-    const data = this.storage.get<RadarContact[]>(this.STORAGE_KEY);
-    if (data) this.hydrateDirectly(data);
+    const currentUserId = this.storage.getActiveUserId();
+    const userChanged = currentUserId !== this.lastLoadedUserId;
+    this.lastLoadedUserId = currentUserId;
+
+    const data = this.storage.get<any[]>(this.STORAGE_KEY);
+    if (userChanged) {
+      const normalized = Array.isArray(data) ? data.filter(c => c?.id).map(c => this.normalizeContact(c)) : [];
+      this.contactsSignal.set(normalized);
+      return;
+    }
+
+    if (!Array.isArray(data)) return;
+
+    const { merged, changed } = this.mergeIntoLocal(data, true);
+    if (changed) {
+      this.contactsSignal.set(merged);
+    }
   }
 
   private save(): void {
-    this.storage.set(this.STORAGE_KEY, this.contactsSignal());
+    const current = untracked(() => this.contactsSignal());
+    this.storage.set(this.STORAGE_KEY, current);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.STORAGE_KEY);
     this.dataSync.saveToServerDebounced();
   }

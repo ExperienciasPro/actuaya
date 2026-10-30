@@ -1,9 +1,9 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 import { AsignacionesService } from '../../../core/services/asignaciones.service';
-import { DataSyncService } from '../../../core/services/data-sync.service';
 import {
   Technician, Assignment, ASSIGNMENT_TYPES, STATUS_CONFIG, WEEKDAYS, WEEKDAYS_SHORT, AssignmentType, AssignmentStatus
 } from '../../../core/models/asignaciones.model';
@@ -13,7 +13,7 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
 @Component({
   selector: 'app-asignaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, UmIconComponent],
+  imports: [CommonModule, FormsModule, UmIconComponent],
   styleUrl: 'asignaciones.scss',
   template: `
     <div class="clinica-page">
@@ -186,11 +186,14 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
         </div>
 
         <div class="technicians-grid" *ngIf="filteredTechnicians().length > 0">
-          <div class="technician-card" *ngFor="let p of filteredTechnicians()" (click)="selectedTechnician.set(p)">
+          <div class="technician-card" *ngFor="let p of filteredTechnicians()" (click)="openEditTechnicianModal(p)" [style.opacity]="p.active === false ? '0.68' : '1'">
             <div class="technician-card-header">
-              <div class="technician-avatar">{{ p.firstName[0] }}{{ p.lastName[0] }}</div>
+              <div class="technician-avatar">{{ getInitials(p) }}</div>
               <div class="header-content">
-                <div class="technician-name">{{ p.firstName }} {{ p.lastName }}</div>
+                <div class="technician-name">
+                  {{ getFullName(p) }}
+                  <span *ngIf="p.active === false" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 999px; background: #f1f5f9; color: #64748b; margin-left: 6px; font-weight: 600;">Inactivo</span>
+                </div>
                 <div class="technician-meta">{{ p.specialty || 'General' }}</div>
               </div>
               <button class="tech-remove" (click)="deleteTechnician(p, $event)" title="Eliminar técnico">
@@ -199,10 +202,10 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
             </div>
             <div class="technician-card-body">
               <div class="technician-info-row">
-                📞 <span>{{ p.phone || 'Sin teléfono' }}</span>
+                <span>📞</span> <span>{{ p.phone || 'Sin teléfono' }}</span>
               </div>
               <div class="technician-info-row">
-                📧 <span>{{ p.email || 'Sin email' }}</span>
+                <span>📧</span> <span>{{ p.email || 'Sin email' }}</span>
               </div>
             </div>
           </div>
@@ -228,8 +231,14 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
               <label>Técnico</label>
               <select [(ngModel)]="asgForm.technicianId" (ngModelChange)="onAsgTechnicianChange($event)">
                 <option value="">Seleccionar técnico...</option>
-                <option *ngFor="let p of asignacionesService.activeTechnicians()" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
+                <option *ngFor="let p of getSelectableTechnicians()" [value]="p.id">{{ getFullName(p) }}</option>
               </select>
+              <div *ngIf="asignacionesService.activeTechnicians().length === 0" style="margin-top: 6px; font-size: 0.8rem; color: #64748b;">
+                No hay técnicos activos registrados.
+                <button type="button" (click)="showAsgModal.set(false); openNewTechnicianModal()" style="background: none; border: none; color: var(--accent, #0ea5e9); font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline;">
+                  + Registrar técnico ahora
+                </button>
+              </div>
             </div>
             <div class="form-field" style="grid-column: 1 / -1;">
               <label>Título / Tarea</label>
@@ -289,15 +298,15 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
         </div>
       </div>
 
-      <!-- ═══════ MODAL: NUEVO TÉCNICO ═══════ -->
+      <!-- ═══════ MODAL: NUEVO / EDITAR TÉCNICO ═══════ -->
       <div class="modal-overlay" *ngIf="showTechnicianModal()" (click)="showTechnicianModal.set(false)">
         <div class="modal-card" (click)="$event.stopPropagation()">
-          <h3 class="modal-title">Nuevo Técnico</h3>
-          <p class="modal-subtitle">Registra personal operativo</p>
+          <h3 class="modal-title">{{ isEditingTech ? 'Editar Técnico' : 'Nuevo Técnico' }}</h3>
+          <p class="modal-subtitle">Registra o actualiza personal operativo para tus asignaciones</p>
 
           <div class="form-grid cols-2">
             <div class="form-field">
-              <label>Nombre</label>
+              <label>Nombre *</label>
               <input type="text" [(ngModel)]="technicianForm.firstName" placeholder="Nombre">
             </div>
             <div class="form-field">
@@ -312,15 +321,24 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
               <label>Teléfono</label>
               <input type="tel" [(ngModel)]="technicianForm.phone" placeholder="555-1234">
             </div>
-            <div class="form-field" style="grid-column: 1 / -1;">
+            <div class="form-field" [style.grid-column]="isEditingTech ? 'auto' : '1 / -1'">
               <label>Especialidad</label>
               <input type="text" [(ngModel)]="technicianForm.specialty" placeholder="Ej: Electricidad">
+            </div>
+            <div class="form-field" *ngIf="isEditingTech">
+              <label>Estado</label>
+              <select [(ngModel)]="technicianForm.active">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
             </div>
           </div>
 
           <div class="form-actions">
             <button class="btn-secondary" (click)="showTechnicianModal.set(false)">Cancelar</button>
-            <button class="btn-primary" (click)="saveTechnician()" [disabled]="!technicianForm.firstName || !technicianForm.lastName">Registrar Técnico</button>
+            <button class="btn-primary" (click)="saveTechnician()" [disabled]="!technicianForm.firstName?.trim()">
+              {{ isEditingTech ? 'Guardar Cambios' : 'Registrar Técnico' }}
+            </button>
           </div>
         </div>
       </div>
@@ -330,7 +348,8 @@ type MainTab = 'agenda' | 'tecnicos' | 'config';
 })
 export class AsignacionesComponent implements OnInit {
   asignacionesService = inject(AsignacionesService);
-  private dataSync = inject(DataSyncService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // ─── State ──────────────────────
   activeTab = signal<MainTab>('agenda');
@@ -345,6 +364,7 @@ export class AsignacionesComponent implements OnInit {
   showAsgModal = signal(false);
   showTechnicianModal = signal(false);
   isEditingAsg = false;
+  isEditingTech = false;
 
   // Constants
   assignmentTypes = ASSIGNMENT_TYPES;
@@ -360,12 +380,13 @@ export class AsignacionesComponent implements OnInit {
 
   filteredTechnicians = computed(() => {
     const q = this.technicianSearch().toLowerCase().trim();
-    const all = this.asignacionesService.activeTechnicians();
+    const all = this.asignacionesService.technicians();
     if (!q) return all;
     return all.filter(p =>
-      `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
-      p.email.toLowerCase().includes(q) ||
-      p.phone.includes(q)
+      this.getFullName(p).toLowerCase().includes(q) ||
+      (p.specialty || '').toLowerCase().includes(q) ||
+      (p.email || '').toLowerCase().includes(q) ||
+      (p.phone || '').includes(q)
     );
   });
 
@@ -470,12 +491,53 @@ export class AsignacionesComponent implements OnInit {
     return days;
   });
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab === 'agenda' || tab === 'tecnicos' || tab === 'config') {
+        this.activeTab.set(tab);
+      } else {
+        this.activeTab.set('agenda');
+      }
+    });
+  }
 
   // ─── Calendars & Logic ────────
 
+  getFullName(tech: Pick<Technician, 'firstName' | 'lastName'>): string {
+    return AsignacionesService.formatFullName(tech);
+  }
+
+  getInitials(tech: Pick<Technician, 'firstName' | 'lastName'>): string {
+    const f = (tech.firstName || '').trim();
+    const l = (tech.lastName || '').trim();
+    if (f && l) return (f[0] + l[0]).toUpperCase();
+    if (f) return f.substring(0, 2).toUpperCase();
+    return 'T';
+  }
+
+  getSelectableTechnicians(): Technician[] {
+    const active = this.asignacionesService.activeTechnicians();
+    if (this.isEditingAsg && this.asgForm.technicianId) {
+      const alreadyInList = active.some(t => t.id === this.asgForm.technicianId);
+      if (!alreadyInList) {
+        const assignedTech = this.asignacionesService.getTechnician(this.asgForm.technicianId);
+        if (assignedTech && !assignedTech.isDeleted) {
+          return [...active, assignedTech];
+        }
+      }
+    }
+    return active;
+  }
+
   setTab(tab: MainTab): void {
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tab === 'agenda' ? null : tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   setView(view: 'dia' | 'semana' | 'mes'): void {
@@ -512,20 +574,39 @@ export class AsignacionesComponent implements OnInit {
   }
 
   openNewTechnicianModal(): void {
+    this.isEditingTech = false;
     this.technicianForm = this.emptyTechnicianForm();
+    this.showTechnicianModal.set(true);
+  }
+
+  openEditTechnicianModal(tech: Technician): void {
+    this.selectedTechnician.set(tech);
+    this.isEditingTech = true;
+    this.technicianForm = { ...tech };
     this.showTechnicianModal.set(true);
   }
 
   deleteTechnician(tech: Technician, event: Event): void {
     event.stopPropagation();
-    if (confirm(`¿Estás seguro de que deseas eliminar al técnico ${tech.firstName} ${tech.lastName}?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar al técnico ${this.getFullName(tech)}?`)) {
       this.asignacionesService.deleteTechnician(tech.id);
-      this.dataSync.saveToServerImmediate();
     }
   }
 
   saveTechnician(): void {
-    this.asignacionesService.addTechnician(this.technicianForm as any);
+    if (!this.technicianForm.firstName?.trim()) return;
+    if (this.isEditingTech && this.technicianForm.id) {
+      this.asignacionesService.updateTechnician(this.technicianForm.id, {
+        firstName: (this.technicianForm.firstName || '').trim(),
+        lastName: (this.technicianForm.lastName || '').trim(),
+        email: (this.technicianForm.email || '').trim(),
+        phone: (this.technicianForm.phone || '').trim(),
+        specialty: (this.technicianForm.specialty || '').trim() || 'General',
+        active: this.technicianForm.active !== false,
+      });
+    } else {
+      this.asignacionesService.addTechnician(this.technicianForm as any);
+    }
     this.showTechnicianModal.set(false);
   }
 
@@ -551,10 +632,14 @@ export class AsignacionesComponent implements OnInit {
 
   onAsgTechnicianChange(techId: string): void {
     const t = this.asignacionesService.getTechnician(techId);
-    if (t) this.asgForm.technicianName = `${t.firstName} ${t.lastName}`;
+    if (t) this.asgForm.technicianName = this.getFullName(t);
   }
 
   saveAssignment(): void {
+    if (this.asgForm.technicianId) {
+      const t = this.asignacionesService.getTechnician(this.asgForm.technicianId);
+      if (t) this.asgForm.technicianName = this.getFullName(t);
+    }
     if (this.isEditingAsg) {
       if (!this.asgForm.id) return;
       this.asignacionesService.updateAssignment(this.asgForm.id, this.asgForm as any);

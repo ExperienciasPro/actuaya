@@ -25,13 +25,18 @@ import { Tecnico } from '../../../../../core/models/tecnico.model';
             </div>
 
             <div class="form-group full-width">
-              <label>Teléfono de contacto <span class="req">*</span></label>
-              <input type="tel" name="telefono" [(ngModel)]="fData.telefono" required placeholder="Ej: +57 300 000 0000" />
+              <label>Especialidad</label>
+              <input type="text" name="especialidad" [(ngModel)]="fData.especialidad" placeholder="Ej: Electricidad, General..." />
             </div>
 
             <div class="form-group full-width">
-              <label>Correo de contacto <span class="req">*</span></label>
-              <input type="email" name="correo" [(ngModel)]="fData.correo" required placeholder="Ej: carlos@actuaya.co" />
+              <label>Teléfono de contacto</label>
+              <input type="tel" name="telefono" [(ngModel)]="fData.telefono" placeholder="Ej: +57 300 000 0000" />
+            </div>
+
+            <div class="form-group full-width">
+              <label>Correo de contacto</label>
+              <input type="email" name="correo" [(ngModel)]="fData.correo" placeholder="Ej: carlos@actuaya.co" />
             </div>
 
             @if (tecnico) {
@@ -126,6 +131,7 @@ export class TecnicoFormComponent implements OnInit {
 
   fData: any = {
     nombre: '',
+    especialidad: '',
     telefono: '',
     correo: '',
     estatus: 'Activo'
@@ -133,19 +139,26 @@ export class TecnicoFormComponent implements OnInit {
 
   ngOnInit() {
     if (this.tecnico) {
-      this.fData = { ...this.tecnico };
+      this.fData = {
+        ...this.tecnico,
+        especialidad: this.tecnico.especialidad || 'General',
+      };
     }
   }
 
   isValid() {
-    return this.fData.nombre && 
-           this.fData.telefono && 
-           this.fData.correo;
+    return !!(this.fData.nombre && this.fData.nombre.trim());
   }
 
   onSave() {
     if (!this.isValid()) return;
-    this.save.emit(this.fData);
+    this.save.emit({
+      ...this.fData,
+      nombre: this.fData.nombre.trim(),
+      especialidad: (this.fData.especialidad || '').trim() || 'General',
+      telefono: (this.fData.telefono || '').trim(),
+      correo: (this.fData.correo || '').trim(),
+    });
   }
 
   onClose() {

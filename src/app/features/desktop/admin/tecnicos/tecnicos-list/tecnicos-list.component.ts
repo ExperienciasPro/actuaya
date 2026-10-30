@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { TecnicoService } from '../../../../../core/services/tecnico.service';
 import { Tecnico } from '../../../../../core/models/tecnico.model';
 import { TecnicoFormComponent } from '../tecnico-form/tecnico-form.component';
@@ -8,12 +9,16 @@ import { TecnicoFormComponent } from '../tecnico-form/tecnico-form.component';
 @Component({
   selector: 'um-tecnicos-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TecnicoFormComponent],
+  imports: [CommonModule, FormsModule, RouterModule, TecnicoFormComponent],
   template: `
     <div class="tecnicos-layout animate-fadeIn">
       <div class="top-bar">
-        <h1 class="page-title">Técnicos</h1>
+        <div>
+          <h1 class="page-title">Mis Técnicos</h1>
+          <p class="page-subtitle">Sincronizados automáticamente con el Módulo Asignaciones</p>
+        </div>
         <div class="actions">
+          <button class="btn btn-blue" routerLink="/d/asignaciones">📅 Ir a Asignaciones</button>
           <button class="btn btn-green" (click)="openForm()">+ Agregar técnico</button>
         </div>
       </div>
@@ -25,8 +30,9 @@ import { TecnicoFormComponent } from '../tecnico-form/tecnico-form.component';
             id="search" 
             type="text" 
             class="search-input" 
-            [(ngModel)]="searchQuery" 
-            placeholder="Buscar por nombre o correo..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            placeholder="Buscar por nombre, especialidad o correo..."
           />
         </div>
 
@@ -36,6 +42,7 @@ import { TecnicoFormComponent } from '../tecnico-form/tecnico-form.component';
               <tr>
                 <th class="col-check"><input type="checkbox"></th>
                 <th>Nombre del técnico ↕</th>
+                <th>Especialidad</th>
                 <th>Teléfono de contacto</th>
                 <th>Correo de contacto</th>
                 <th>Estado</th>
@@ -47,22 +54,23 @@ import { TecnicoFormComponent } from '../tecnico-form/tecnico-form.component';
                 <tr>
                   <td class="col-check"><input type="checkbox"></td>
                   <td class="tecnico-name">{{ tecnico.nombre }}</td>
-                  <td>{{ tecnico.telefono }}</td>
-                  <td>{{ tecnico.correo }}</td>
+                  <td>{{ tecnico.especialidad || 'General' }}</td>
+                  <td>{{ tecnico.telefono || '—' }}</td>
+                  <td>{{ tecnico.correo || '—' }}</td>
                   <td>
                     <span class="status-badge" [class.active]="tecnico.estatus === 'Activo'">
                       {{ tecnico.estatus }}
                     </span>
                   </td>
                   <td class="col-actions">
-                    <button class="btn-icon" (click)="openForm(tecnico)">✏️</button>
-                    <button class="btn-icon text-danger" (click)="deleteTecnico(tecnico.id)">🗑️</button>
+                    <button class="btn-icon" (click)="openForm(tecnico)" title="Editar técnico">✏️</button>
+                    <button class="btn-icon text-danger" (click)="deleteTecnico(tecnico.id)" title="Eliminar técnico">🗑️</button>
                   </td>
                 </tr>
               }
               @if (filteredTecnicos().length === 0) {
                 <tr>
-                  <td colspan="6" class="empty-state">No se encontraron técnicos.</td>
+                  <td colspan="7" class="empty-state">No se encontraron técnicos.</td>
                 </tr>
               }
             </tbody>
@@ -88,15 +96,17 @@ export class TecnicosListComponent implements OnInit {
   formVisible = signal(false);
   editingTecnico = signal<Tecnico | null>(null);
 
-  searchQuery = '';
+  searchQuery = signal('');
 
   filteredTecnicos = computed(() => {
     let list = this.tecnicos();
-    if (this.searchQuery) {
-      const q = this.searchQuery.toLowerCase();
+    const q = this.searchQuery().toLowerCase().trim();
+    if (q) {
       list = list.filter(t => 
         t.nombre.toLowerCase().includes(q) || 
-        t.correo.toLowerCase().includes(q)
+        (t.especialidad || '').toLowerCase().includes(q) ||
+        t.correo.toLowerCase().includes(q) ||
+        t.telefono.includes(q)
       );
     }
     return list;

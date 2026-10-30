@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 import { desktopOnlyGuard, mobileOnlyGuard } from './core/guards/device.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { subscriptionGuard } from './core/guards/subscription.guard';
@@ -350,8 +351,8 @@ export const routes: Routes = [
       },
       {
         path: 'admin/tecnicos',
-        loadComponent: () =>
-          import('./features/desktop/admin/tecnicos/tecnicos-list/tecnicos-list.component').then((m) => m.TecnicosListComponent),
+        pathMatch: 'full',
+        redirectTo: () => inject(Router).createUrlTree(['/d/asignaciones'], { queryParams: { tab: 'tecnicos' } }),
       },
       {
         path: 'admin/equipos',

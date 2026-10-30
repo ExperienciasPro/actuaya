@@ -3,6 +3,7 @@ export interface Tecnico {
   nombre: string;
   telefono: string;
   correo: string;
+  especialidad?: string;
   estatus: 'Activo' | 'Inactivo';
   createdAt: string;
   updatedAt: string;

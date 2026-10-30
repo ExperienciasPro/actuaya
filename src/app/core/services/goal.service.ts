@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
+import { Injectable, signal, computed, effect, untracked, inject, Injector } from '@angular/core';
 import { Goal, GoalStatus, GoalMode } from '../models/goal.model';
 import { StorageService } from './storage.service';
 import { TaskService } from './task.service';
@@ -7,9 +7,12 @@ import { DataSyncService } from './data-sync.service';
 @Injectable({ providedIn: 'root' })
 export class GoalService {
   private readonly STORAGE_KEY = 'um_goals';
+  private storage = inject(StorageService);
   private taskService = inject(TaskService);
   private injector = inject(Injector);
   private _dataSync: DataSyncService | null = null;
+  private lastSelfSaveToken = -1;
+  private lastLoadedUserId: string | null = null;
   private get dataSync(): DataSyncService {
     if (!this._dataSync) {
       this._dataSync = this.injector.get(DataSyncService);
@@ -28,11 +31,14 @@ export class GoalService {
     this.goals().filter((g) => g.status === 'completed')
   );
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadFromStorage();
     effect(() => {
-      if (this.storage.updateToken() >= 0) {
-        this.loadFromStorage();
+      const token = this.storage.updateToken();
+      if (token >= 0 && token !== this.lastSelfSaveToken) {
+        untracked(() => {
+          this.loadFromStorage();
+        });
       }
     });
   }
@@ -99,44 +105,81 @@ export class GoalService {
     });
   }
 
-  hydrateDirectly(serverGoals: any[]): void {
-    if (!Array.isArray(serverGoals)) return;
-    
-    const local = this.goalsSignal();
+  private normalizeGoal(raw: any): Goal {
+    return {
+      ...raw,
+      intentionTrigger: raw?.intentionTrigger || '',
+      intentionAction: raw?.intentionAction || raw?.description || '',
+      microSteps: raw?.microSteps || [],
+    };
+  }
+
+  private mergeIntoLocal(incomingGoals: any[]): { merged: Goal[]; changed: boolean } {
+    const local = untracked(() => this.goalsSignal());
     const localMap = new Map(local.map(g => [g.id, g]));
-    
-    for (const serverGoal of serverGoals) {
-      const g: Goal = {
-        ...serverGoal,
-        intentionTrigger: serverGoal.intentionTrigger || '',
-        intentionAction: serverGoal.intentionAction || serverGoal.description || '',
-        microSteps: serverGoal.microSteps || [],
-      };
-      
+    let changed = false;
+
+    for (const raw of incomingGoals) {
+      if (!raw?.id) continue;
+      const g = this.normalizeGoal(raw);
       const localG = localMap.get(g.id);
+
       if (localG) {
         const localTime = new Date(localG.updatedAt || 0).getTime();
-        const serverTime = new Date(g.updatedAt || 0).getTime();
-        if (serverTime >= localTime) {
+        const incomingTime = new Date(g.updatedAt || 0).getTime();
+        if (incomingTime > localTime || (incomingTime === localTime && JSON.stringify(localG) !== JSON.stringify(g))) {
           localMap.set(g.id, g);
+          changed = true;
         }
       } else {
         localMap.set(g.id, g);
+        changed = true;
       }
     }
-    
-    this.goalsSignal.set(Array.from(localMap.values()));
+
+    return { merged: Array.from(localMap.values()), changed };
+  }
+
+  hydrateDirectly(serverGoals: any[]): void {
+    if (!Array.isArray(serverGoals)) return;
+
+    const currentUserId = this.storage.getActiveUserId();
+    if (currentUserId !== this.lastLoadedUserId) {
+      this.lastLoadedUserId = currentUserId;
+    }
+
+    const { merged, changed } = this.mergeIntoLocal(serverGoals);
+    if (changed) {
+      this.goalsSignal.set(merged);
+      this.storage.set(this.STORAGE_KEY, merged);
+      this.lastSelfSaveToken = this.storage.updateToken();
+    }
   }
 
   private loadFromStorage(): void {
+    const currentUserId = this.storage.getActiveUserId();
+    const userChanged = currentUserId !== this.lastLoadedUserId;
+    this.lastLoadedUserId = currentUserId;
+
     const data = this.storage.get<any[]>(this.STORAGE_KEY);
-    if (data) {
-      this.hydrateDirectly(data);
+    if (userChanged) {
+      const normalized = Array.isArray(data) ? data.filter(g => g?.id).map(g => this.normalizeGoal(g)) : [];
+      this.goalsSignal.set(normalized);
+      return;
+    }
+
+    if (!Array.isArray(data)) return;
+
+    const { merged, changed } = this.mergeIntoLocal(data);
+    if (changed) {
+      this.goalsSignal.set(merged);
     }
   }
 
   private saveToStorage(): void {
-    this.storage.set(this.STORAGE_KEY, this.goalsSignal());
+    const current = untracked(() => this.goalsSignal());
+    this.storage.set(this.STORAGE_KEY, current);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.STORAGE_KEY);
     this.dataSync.saveToServerDebounced();
   }

@@ -468,7 +468,6 @@ export class DesktopLayoutComponent implements OnInit {
       const migrated = saved.filter(m => m !== 'pos');
       if (!migrated.includes('pos_retail')) migrated.push('pos_retail');
       if (!migrated.includes('pos_gastro')) migrated.push('pos_gastro');
-      this.storage.set('um_enabled_modules', migrated);
       return new Set(migrated);
     }
     

@@ -67,7 +67,7 @@
           <div class="qa-grid">
             <button class="qa-btn" routerLink="/d/admin/clientes">Mis clientes</button>
             <button class="qa-btn" routerLink="/d/asignaciones">ASIGNACIONES</button>
-            <button class="qa-btn" routerLink="/d/admin/tecnicos">Mis Tecnicos</button>
+            <button class="qa-btn" routerLink="/d/asignaciones" [queryParams]="{ tab: 'tecnicos' }">Mis Técnicos</button>
             <button class="qa-btn" routerLink="/d/admin/equipos">Equipos</button>
           </div>
         </div>

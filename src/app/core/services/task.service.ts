@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
+import { Injectable, signal, computed, effect, untracked, inject, Injector } from '@angular/core';
 import { Task, TaskStatus, TaskPriority } from '../models/task.model';
 import { StorageService } from './storage.service';
 import { DataSyncService } from './data-sync.service';
@@ -9,6 +9,8 @@ export class TaskService {
   private storage = inject(StorageService);
   private injector = inject(Injector);
   private _dataSync: DataSyncService | null = null;
+  private lastSelfSaveToken = -1;
+  private lastLoadedUserId: string | null = null;
   private get dataSync(): DataSyncService {
     if (!this._dataSync) {
       this._dataSync = this.injector.get(DataSyncService);
@@ -27,8 +29,11 @@ export class TaskService {
   constructor() {
     this.loadFromStorage();
     effect(() => {
-      if (this.storage.updateToken() >= 0) {
-        this.loadFromStorage();
+      const token = this.storage.updateToken();
+      if (token >= 0 && token !== this.lastSelfSaveToken) {
+        untracked(() => {
+          this.loadFromStorage();
+        });
       }
     });
   }
@@ -100,39 +105,77 @@ export class TaskService {
     }
   }
 
-  hydrateDirectly(serverTasks: Task[]): void {
-    if (!Array.isArray(serverTasks)) return;
-    
-    const local = this.tasksSignal();
+  private mergeIntoLocal(incomingTasks: Task[]): { merged: Task[]; changed: boolean } {
+    const local = untracked(() => this.tasksSignal());
     const localMap = new Map(local.map(t => [t.id, t]));
-    
-    for (const serverTask of serverTasks) {
-      const t = { ...serverTask };
+    let changed = false;
+
+    for (const serverTask of incomingTasks) {
+      if (!serverTask?.id) continue;
+      const t: Task = {
+        ...serverTask,
+        notes: Array.isArray(serverTask.notes) ? serverTask.notes : [],
+      };
       const localT = localMap.get(t.id);
-      
+
       if (localT) {
         const localTime = new Date(localT.updatedAt || 0).getTime();
-        const serverTime = new Date(t.updatedAt || 0).getTime();
-        if (serverTime >= localTime) {
+        const incomingTime = new Date(t.updatedAt || 0).getTime();
+        if (incomingTime > localTime || (incomingTime === localTime && JSON.stringify(localT) !== JSON.stringify(t))) {
           localMap.set(t.id, t);
+          changed = true;
         }
       } else {
         localMap.set(t.id, t);
+        changed = true;
       }
     }
-    
-    this.tasksSignal.set(Array.from(localMap.values()));
+
+    return { merged: Array.from(localMap.values()), changed };
+  }
+
+  hydrateDirectly(serverTasks: Task[]): void {
+    if (!Array.isArray(serverTasks)) return;
+
+    const currentUserId = this.storage.getActiveUserId();
+    if (currentUserId !== this.lastLoadedUserId) {
+      this.lastLoadedUserId = currentUserId;
+    }
+
+    const { merged, changed } = this.mergeIntoLocal(serverTasks);
+    if (changed) {
+      this.tasksSignal.set(merged);
+      this.storage.set(this.STORAGE_KEY, merged);
+      this.lastSelfSaveToken = this.storage.updateToken();
+    }
   }
 
   private loadFromStorage(): void {
+    const currentUserId = this.storage.getActiveUserId();
+    const userChanged = currentUserId !== this.lastLoadedUserId;
+    this.lastLoadedUserId = currentUserId;
+
     const data = this.storage.get<Task[]>(this.STORAGE_KEY);
-    if (data) {
-      this.hydrateDirectly(data);
+    if (userChanged) {
+      const normalized = Array.isArray(data)
+        ? data.filter(t => t?.id).map(t => ({ ...t, notes: Array.isArray(t.notes) ? t.notes : [] }))
+        : [];
+      this.tasksSignal.set(normalized);
+      return;
+    }
+
+    if (!Array.isArray(data)) return;
+
+    const { merged, changed } = this.mergeIntoLocal(data);
+    if (changed) {
+      this.tasksSignal.set(merged);
     }
   }
 
   private saveToStorage(): void {
-    this.storage.set(this.STORAGE_KEY, this.tasksSignal());
+    const current = untracked(() => this.tasksSignal());
+    this.storage.set(this.STORAGE_KEY, current);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.STORAGE_KEY);
     this.dataSync.saveToServerDebounced();
   }

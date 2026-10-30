@@ -51,8 +51,12 @@ export class StorageService {
    * Called by UserService on login/logout.
    */
   setActiveUser(userId: string | null): void {
+    const changed = this._activeUserId !== userId;
     this._activeUserId = userId;
     console.log(`[StorageService] Usuario activo: ${userId ?? '(ninguno)'}`);
+    if (changed) {
+      this.notifyChange();
+    }
   }
 
   /** Returns the currently active user ID */

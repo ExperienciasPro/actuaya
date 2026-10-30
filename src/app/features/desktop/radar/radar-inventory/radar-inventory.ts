@@ -19,11 +19,11 @@ import { RadarContact, RelationshipTag, RadarStatus, RELATIONSHIP_LABELS, RELATI
         </div>
         <div class="header-actions">
           <a class="btn-kanban" routerLink="/d/radar/board">📋 Ver Kanban</a>
-          <button class="btn-import" (click)="fileInput.click()">
+          <button type="button" class="btn-import" (click)="fileInput.click()">
             📥 Importar CSV
           </button>
           <input type="file" #fileInput style="display: none" accept=".csv" (change)="onFileImport($event)">
-          <button class="btn-add-contact" (click)="showBulkAdd.set(!showBulkAdd())">
+          <button type="button" class="btn-add-contact" (click)="showBulkAdd.set(!showBulkAdd())">
             {{ showBulkAdd() ? '✕ Cerrar' : '+ Nuevo Contacto' }}
           </button>
         </div>
@@ -71,11 +71,11 @@ import { RadarContact, RelationshipTag, RadarStatus, RELATIONSHIP_LABELS, RELATI
             <input class="qi" type="tel" [(ngModel)]="newPhone" placeholder="Teléfono *" />
             <input class="qi" type="email" [(ngModel)]="newEmail" placeholder="Email (opcional)" />
             <input class="qi" type="text" [(ngModel)]="newCompany" placeholder="Empresa (opcional)" />
-            <button class="btn-ghost btn-detallar" (click)="showMoreDetails.set(!showMoreDetails())">
+            <button type="button" class="btn-ghost btn-detallar" (click)="showMoreDetails.set(!showMoreDetails())">
               <span class="icon">{{ showMoreDetails() ? '➖' : '➕' }}</span> Detallar datos
             </button>
             @if (!showMoreDetails()) {
-              <button class="btn-quick-add" [disabled]="!newName().trim() || !newPhone().trim()" (click)="addSingle()">
+              <button type="button" class="btn-quick-add" [disabled]="!newName().trim() || !newPhone().trim()" (click)="addSingle()">
                 + Agregar
               </button>
             }
@@ -96,7 +96,7 @@ import { RadarContact, RelationshipTag, RadarStatus, RELATIONSHIP_LABELS, RELATI
               <input class="qi" type="text" [(ngModel)]="newSocialLinks" placeholder="Sitio Web y Redes Sociales" />
               <textarea class="qi" [(ngModel)]="newNotes" placeholder="Notas / Información adicional sobre este contacto..."></textarea>
               <div class="details-actions" style="display: flex; justify-content: flex-end; margin-top: 12px;">
-                <button class="btn-quick-add" [disabled]="!newName().trim() || !newPhone().trim()" (click)="addSingle()">
+                <button type="button" class="btn-quick-add" [disabled]="!newName().trim() || !newPhone().trim()" (click)="addSingle()">
                   + Agregar
                 </button>
               </div>
@@ -416,9 +416,9 @@ export class RadarInventoryComponent {
 
     if (search) {
       contacts = contacts.filter(c =>
-        c.name.toLowerCase().includes(search) ||
-        c.phone.includes(search) ||
-        (c.company?.toLowerCase().includes(search))
+        String(c.name || '').toLowerCase().includes(search) ||
+        String(c.phone || '').includes(search) ||
+        String(c.company || '').toLowerCase().includes(search)
       );
     }
     if (tag) contacts = contacts.filter(c => c.relationshipTag === tag);
