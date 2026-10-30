@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, computed, Injector } from '@angular/core';
+import { Injectable, signal, inject, computed, Injector, effect, untracked } from '@angular/core';
 import { CatalogItem, Quote } from '../models/catalog.model';
 import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
@@ -10,6 +10,7 @@ export class CatalogService {
   private productService = inject(ProductCatalogService);
 
   private readonly QUOTES_KEY = 'um_quotes';
+  private lastSelfSaveToken = -1;
 
   private injector = inject(Injector);
   private _dataSync: DataSyncService | null = null;
@@ -47,6 +48,14 @@ export class CatalogService {
 
   constructor() {
     this.load();
+    effect(() => {
+      const token = this.storage.updateToken();
+      if (token >= 0 && token !== this.lastSelfSaveToken) {
+        untracked(() => {
+          this.load();
+        });
+      }
+    });
   }
 
   // ─── Catalog CRUD ───────────────────────
@@ -81,12 +90,59 @@ export class CatalogService {
 
   // ─── Quotes ─────────────────────────────
 
-  saveQuote(quote: Omit<Quote, 'id' | 'createdAt'>): Quote {
+  private normalizeClientName(name?: string): string {
+    return (name || 'Cliente').trim().toLowerCase();
+  }
+
+  /**
+   * Guarda o actualiza una cotización asegurando que en el historial solo quede
+   * la última cotización (la más reciente) para esa cotización/cliente pendiente.
+   */
+  saveQuote(quote: Omit<Quote, 'id' | 'createdAt'>, existingId?: string | null): Quote {
+    const now = new Date().toISOString();
+    const normClient = this.normalizeClientName(quote.clientName);
+    const currentList = untracked(() => this._quotesSignal());
+
+    // Buscar si ya existe por ID explícito o una cotización pendiente del mismo cliente
+    const targetQuote = currentList.find(q =>
+      !q.isDeleted &&
+      ((existingId && q.id === existingId) ||
+        (q.status !== 'sold' && this.normalizeClientName(q.clientName) === normClient))
+    );
+
+    if (targetQuote) {
+      const updatedQuote: Quote = {
+        ...targetQuote,
+        ...quote,
+        id: targetQuote.id,
+        createdAt: now,
+        updatedAt: now,
+        status: targetQuote.status === 'sold' ? 'sold' : (quote.status || 'draft'),
+        isDeleted: false,
+      };
+
+      const nextList = [
+        updatedQuote,
+        ...currentList
+          .filter(q => q.id !== targetQuote.id)
+          .map(q => {
+            if (!q.isDeleted && q.status !== 'sold' && this.normalizeClientName(q.clientName) === normClient) {
+              return { ...q, isDeleted: true, updatedAt: now };
+            }
+            return q;
+          }),
+      ];
+
+      this._quotesSignal.set(nextList);
+      this.persistQuotes();
+      return updatedQuote;
+    }
+
     const newQuote: Quote = {
       ...quote,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       status: quote.status || 'draft',
     };
     this._quotesSignal.update(list => [newQuote, ...list]);
@@ -95,21 +151,33 @@ export class CatalogService {
   }
 
   removeQuote(id: string): void {
-    this._quotesSignal.update(list => list.map(q => q.id === id ? { ...q, isDeleted: true, updatedAt: new Date().toISOString() } : q));
+    const now = new Date().toISOString();
+    this._quotesSignal.update(list => list.map(q => q.id === id ? { ...q, isDeleted: true, updatedAt: now } : q));
     this.storage.set(this.QUOTES_KEY, this._quotesSignal());
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.QUOTES_KEY);
     this.dataSync.saveToServerImmediate(); // Prioridad a los borrados
   }
 
-  updateQuote(id: string, quote: Partial<Quote>): void {
-    this._quotesSignal.update(list =>
-      list.map(q => (q.id === id ? { ...q, ...quote, updatedAt: new Date().toISOString() } : q))
+  updateQuote(id: string, quote: Partial<Quote>): Quote | undefined {
+    const existing = untracked(() => this._quotesSignal()).find(q => q.id === id);
+    if (!existing) return undefined;
+    return this.saveQuote(
+      {
+        clientName: quote.clientName ?? existing.clientName,
+        clientPhone: quote.clientPhone ?? existing.clientPhone,
+        clientEmail: quote.clientEmail ?? existing.clientEmail,
+        items: quote.items ?? existing.items,
+        notes: quote.notes ?? existing.notes,
+        validDays: quote.validDays ?? existing.validDays,
+        status: (quote.status ?? existing.status) as any,
+      },
+      id,
     );
-    this.persistQuotes();
   }
 
   getQuoteTotal(quote: Quote): number {
-    return quote.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+    return (quote.items || []).reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
   }
 
   generateWhatsAppLink(quote: Quote): string {
@@ -155,15 +223,50 @@ export class CatalogService {
     return `mailto:${quote.clientEmail}?subject=${subject}&body=${body}`;
   }
 
-  // ─── Persistence ────────────────────────
+  // ─── Persistence & Deduplication ────────
+
+  private deduplicatePendingQuotes(quotes: Quote[]): { list: Quote[]; changed: boolean } {
+    const sorted = [...quotes].sort((a, b) => {
+      const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const seenPendingClients = new Set<string>();
+    let changed = false;
+    const now = new Date().toISOString();
+
+    const deduplicated = sorted.map(q => {
+      if (q.isDeleted || q.status === 'sold') {
+        return q;
+      }
+      const normClient = this.normalizeClientName(q.clientName);
+      if (seenPendingClients.has(normClient)) {
+        changed = true;
+        return { ...q, isDeleted: true, updatedAt: now };
+      }
+      seenPendingClients.add(normClient);
+      return q;
+    });
+
+    return { list: deduplicated, changed };
+  }
 
   private load(): void {
     const quotes = this.storage.get<Quote[]>(this.QUOTES_KEY);
-    if (quotes) this._quotesSignal.set(quotes);
+    if (!Array.isArray(quotes)) return;
+
+    const { list, changed } = this.deduplicatePendingQuotes(quotes);
+    this._quotesSignal.set(list);
+    if (changed) {
+      this.persistQuotes();
+    }
   }
 
   private persistQuotes(): void {
-    this.storage.set(this.QUOTES_KEY, this._quotesSignal());
+    const current = untracked(() => this._quotesSignal());
+    this.storage.set(this.QUOTES_KEY, current);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.QUOTES_KEY);
     this.dataSync.saveToServerDebounced();
   }

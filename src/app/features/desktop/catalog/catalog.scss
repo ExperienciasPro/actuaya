@@ -1011,3 +1011,97 @@ input[type="range"] {
   }
 }
 
+// ─── History Filter Panel ─────────────────
+.history-filter-panel {
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-subtle;
+  border-radius: $radius-lg;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.history-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.history-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 820px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.history-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid $color-border-subtle;
+}
+
+.summary-metrics {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+  background: $color-bg-primary;
+  border: 1px solid $color-border-subtle;
+  padding: 5px 12px;
+  border-radius: $radius-full;
+
+  strong {
+    color: $color-text-primary;
+    font-weight: 800;
+  }
+
+  &.sold {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #059669;
+
+    strong {
+      color: #047857;
+    }
+  }
+}
+
+.btn-clear-filters {
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1px solid $color-border-default;
+  background: $color-bg-primary;
+  color: $color-text-secondary;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all $transition-fast;
+
+  &:hover {
+    border-color: $color-accent-primary;
+    color: $color-accent-primary;
+    background: rgba($color-accent-primary, 0.05);
+  }
+}
+
+

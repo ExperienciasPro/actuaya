@@ -174,7 +174,14 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
 
           <!-- Client info -->
           <div class="client-card">
-            <h3>👤 Datos del cliente</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="margin: 0;">👤 Datos del cliente</h3>
+              @if (editingQuoteId() || quoteItems().length > 0 || clientName.trim()) {
+                <button type="button" class="btn-clear-filters" (click)="startNewQuote()">
+                  ➕ Nueva cotización
+                </button>
+              }
+            </div>
             <div class="form-row-3">
               <div class="form-field">
                 <label>Nombre</label>
@@ -301,20 +308,134 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
       @if (activeTab() === 'history') {
         <div class="history-section">
 
-          <!-- History search -->
+          <!-- History search & filters -->
           @if (cat.quotes().length > 0) {
-            <div class="search-filter-bar">
-              <div class="search-wrap">
-                <span class="search-icon">🔍</span>
-                <input
-                  type="text"
-                  class="search-input"
-                  placeholder="Buscar cotizaciones por cliente..."
-                  [ngModel]="historySearch()"
-                  (ngModelChange)="historySearch.set($event)"
-                />
-                @if (historySearch()) {
-                  <button class="clear-search" (click)="historySearch.set('')">✕</button>
+            <div class="history-filter-panel">
+              <!-- Row 1: Search bar + Quick Status Chips -->
+              <div class="history-top-bar">
+                <div class="search-wrap" style="flex: 1;">
+                  <span class="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    class="search-input"
+                    placeholder="Buscar por cliente, teléfono, email, producto o nota..."
+                    [ngModel]="historySearch()"
+                    (ngModelChange)="historySearch.set($event)"
+                  />
+                  @if (historySearch()) {
+                    <button type="button" class="clear-search" (click)="historySearch.set('')">✕</button>
+                  }
+                </div>
+
+                <div class="filter-chips">
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="historyStatusFilter() === 'all'"
+                    (click)="historyStatusFilter.set('all')">
+                    Todas ({{ cat.quotes().length }})
+                  </button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="historyStatusFilter() === 'pending'"
+                    (click)="historyStatusFilter.set('pending')">
+                    ⏳ Pendientes ({{ pendingQuotesCount() }})
+                  </button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="historyStatusFilter() === 'sold'"
+                    (click)="historyStatusFilter.set('sold')">
+                    ✅ Vendidas ({{ soldQuotesCount() }})
+                  </button>
+                </div>
+              </div>
+
+              <!-- Row 2: Detailed Filters (Cliente, Periodo, Desde, Hasta, Producto, Ordenar) -->
+              <div class="history-filters-grid">
+                <div class="form-field">
+                  <label>👤 Cliente</label>
+                  <select [ngModel]="historyClientFilter()" (ngModelChange)="historyClientFilter.set($event)">
+                    <option value="">Todos los clientes</option>
+                    @for (client of uniqueHistoryClients(); track client) {
+                      <option [value]="client">{{ client }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label>📅 Periodo</label>
+                  <select [ngModel]="historyPeriodFilter()" (ngModelChange)="onHistoryPeriodChange($event)">
+                    <option value="all">Todas las fechas</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Últimos 7 días</option>
+                    <option value="month">Este mes</option>
+                    <option value="year">Este año</option>
+                    <option value="custom">Rango personalizado</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label>📆 Desde</label>
+                  <input
+                    type="date"
+                    [ngModel]="historyDateFrom()"
+                    (ngModelChange)="onDateRangeChange('from', $event)"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>📆 Hasta</label>
+                  <input
+                    type="date"
+                    [ngModel]="historyDateTo()"
+                    (ngModelChange)="onDateRangeChange('to', $event)"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>📦 Producto / Servicio</label>
+                  <select [ngModel]="historyProductFilter()" (ngModelChange)="historyProductFilter.set($event)">
+                    <option value="">Todos los ítems</option>
+                    @for (prod of uniqueQuotedProducts(); track prod) {
+                      <option [value]="prod">{{ prod }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label>↕️ Ordenar por</label>
+                  <select [ngModel]="historySortBy()" (ngModelChange)="historySortBy.set($event)">
+                    <option value="date_desc">Más recientes primero</option>
+                    <option value="date_asc">Más antiguas primero</option>
+                    <option value="total_desc">Mayor valor ($)</option>
+                    <option value="total_asc">Menor valor ($)</option>
+                    <option value="client_asc">Cliente (A - Z)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Row 3: Summary & Clear Filters -->
+              <div class="history-summary-bar">
+                <div class="summary-metrics">
+                  <span class="summary-pill">
+                    📋 Mostrando <strong>{{ filteredQuotes().length }}</strong> de {{ cat.quotes().length }}
+                  </span>
+                  <span class="summary-pill">
+                    💰 Total filtrado: <strong>{{ filteredQuotesTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                  </span>
+                  @if (filteredSoldTotal() > 0) {
+                    <span class="summary-pill sold">
+                      ✅ Vendido: <strong>{{ filteredSoldTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                    </span>
+                  }
+                </div>
+
+                @if (hasActiveHistoryFilters()) {
+                  <button type="button" class="btn-clear-filters" (click)="clearHistoryFilters()">
+                    🔄 Limpiar filtros
+                  </button>
                 }
               </div>
             </div>
@@ -323,8 +444,8 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
           @if (filteredQuotes().length === 0 && cat.quotes().length > 0) {
             <div class="empty-state">
               <span class="empty-icon">🔍</span>
-              <p>No se encontraron cotizaciones para "{{ historySearch() }}"</p>
-              <button class="btn-sm" (click)="historySearch.set('')">Limpiar búsqueda</button>
+              <p>No se encontraron cotizaciones con los filtros seleccionados.</p>
+              <button type="button" class="btn-sm" (click)="clearHistoryFilters()">Limpiar todos los filtros</button>
             </div>
           } @else if (cat.quotes().length === 0) {
             <div class="empty-state">
@@ -336,7 +457,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
           @for (q of filteredQuotes(); track q.id) {
             <div class="history-row" [class.sold-row]="q.status === 'sold'">
               <div class="history-info">
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <h4>{{ q.clientName }}</h4>
                   @if (q.status === 'sold') {
                     <span class="status-badge sold">✅ Vendida</span>
@@ -344,7 +465,12 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                     <span class="status-badge pending">⏳ Pendiente</span>
                   }
                 </div>
-                <p class="history-meta">{{ q.createdAt | date:'d MMM yyyy, HH:mm' }} · {{ q.items.length }} ítems</p>
+                <p class="history-meta">
+                  {{ (q.updatedAt || q.createdAt) | date:'d MMM yyyy, HH:mm' }} · {{ q.items.length }} ítems
+                  @if (getQuoteItemsSummary(q)) {
+                    · <span>{{ getQuoteItemsSummary(q) }}</span>
+                  }
+                </p>
               </div>
               <div class="history-total">
                 {{ getTotal(q) | currency:'COP':'symbol-narrow':'1.0-0' }}
@@ -578,6 +704,13 @@ export class CatalogComponent {
   catalogSearch = signal('');
   catalogCategory = signal('');
   historySearch = signal('');
+  historyStatusFilter = signal<'all' | 'pending' | 'sold'>('all');
+  historyClientFilter = signal('');
+  historyPeriodFilter = signal<'all' | 'today' | 'week' | 'month' | 'year' | 'custom'>('all');
+  historyDateFrom = signal('');
+  historyDateTo = signal('');
+  historyProductFilter = signal('');
+  historySortBy = signal<'date_desc' | 'date_asc' | 'total_desc' | 'total_asc' | 'client_asc'>('date_desc');
 
   /** Unique categories from catalog items */
   categories = computed(() => {
@@ -608,16 +741,201 @@ export class CatalogComponent {
     return items;
   });
 
-  /** Filtered history quotes */
-  filteredQuotes = computed(() => {
-    const q = this.historySearch().toLowerCase().trim();
-    if (!q) return this.cat.quotes();
-    return this.cat.quotes().filter(quote =>
-      quote.clientName.toLowerCase().includes(q) ||
-      (quote.clientEmail || '').toLowerCase().includes(q) ||
-      (quote.clientPhone || '').toLowerCase().includes(q)
+  /** Counts by status for History chips */
+  pendingQuotesCount = computed(() =>
+    this.cat.quotes().filter(q => q.status !== 'sold').length
+  );
+
+  soldQuotesCount = computed(() =>
+    this.cat.quotes().filter(q => q.status === 'sold').length
+  );
+
+  /** Unique client names in History */
+  uniqueHistoryClients = computed(() => {
+    const map = new Map<string, string>();
+    for (const q of this.cat.quotes()) {
+      const name = (q.clientName || '').trim();
+      if (name) {
+        const key = name.toLowerCase();
+        if (!map.has(key)) map.set(key, name);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'es'));
+  });
+
+  /** Unique product/service names quoted in History */
+  uniqueQuotedProducts = computed(() => {
+    const set = new Set<string>();
+    for (const q of this.cat.quotes()) {
+      for (const item of q.items || []) {
+        const name = (item.name || '').trim();
+        if (name) set.add(name);
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'es'));
+  });
+
+  hasActiveHistoryFilters = computed(() => {
+    return Boolean(
+      this.historySearch().trim() ||
+      this.historyStatusFilter() !== 'all' ||
+      this.historyClientFilter() ||
+      this.historyPeriodFilter() !== 'all' ||
+      this.historyDateFrom() ||
+      this.historyDateTo() ||
+      this.historyProductFilter() ||
+      this.historySortBy() !== 'date_desc'
     );
   });
+
+  /** Filtered & sorted history quotes */
+  filteredQuotes = computed(() => {
+    let list = [...this.cat.quotes()];
+    const q = this.historySearch().toLowerCase().trim();
+    const status = this.historyStatusFilter();
+    const client = this.historyClientFilter().toLowerCase().trim();
+    const product = this.historyProductFilter().toLowerCase().trim();
+    const dateFrom = this.historyDateFrom();
+    const dateTo = this.historyDateTo();
+    const sortBy = this.historySortBy();
+
+    if (q) {
+      list = list.filter(quote => {
+        const inClient = (quote.clientName || '').toLowerCase().includes(q);
+        const inEmail = (quote.clientEmail || '').toLowerCase().includes(q);
+        const inPhone = (quote.clientPhone || '').toLowerCase().includes(q);
+        const inNotes = (quote.notes || '').toLowerCase().includes(q);
+        const inItems = (quote.items || []).some(it => (it.name || '').toLowerCase().includes(q));
+        return inClient || inEmail || inPhone || inNotes || inItems;
+      });
+    }
+
+    if (status === 'pending') {
+      list = list.filter(quote => quote.status !== 'sold');
+    } else if (status === 'sold') {
+      list = list.filter(quote => quote.status === 'sold');
+    }
+
+    if (client) {
+      list = list.filter(quote => (quote.clientName || '').trim().toLowerCase() === client);
+    }
+
+    if (product) {
+      list = list.filter(quote =>
+        (quote.items || []).some(it => (it.name || '').trim().toLowerCase() === product)
+      );
+    }
+
+    if (dateFrom) {
+      const fromTime = new Date(`${dateFrom}T00:00:00`).getTime();
+      if (!isNaN(fromTime)) {
+        list = list.filter(quote => {
+          const qt = new Date(quote.updatedAt || quote.createdAt).getTime();
+          return qt >= fromTime;
+        });
+      }
+    }
+
+    if (dateTo) {
+      const toTime = new Date(`${dateTo}T23:59:59.999`).getTime();
+      if (!isNaN(toTime)) {
+        list = list.filter(quote => {
+          const qt = new Date(quote.updatedAt || quote.createdAt).getTime();
+          return qt <= toTime;
+        });
+      }
+    }
+
+    list.sort((a, b) => {
+      if (sortBy === 'date_asc') {
+        return new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime();
+      }
+      if (sortBy === 'total_desc') {
+        return this.getTotal(b) - this.getTotal(a);
+      }
+      if (sortBy === 'total_asc') {
+        return this.getTotal(a) - this.getTotal(b);
+      }
+      if (sortBy === 'client_asc') {
+        return (a.clientName || '').localeCompare(b.clientName || '', 'es');
+      }
+      return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
+    });
+
+    return list;
+  });
+
+  filteredQuotesTotal = computed(() =>
+    this.filteredQuotes().reduce((sum, q) => sum + this.getTotal(q), 0)
+  );
+
+  filteredSoldTotal = computed(() =>
+    this.filteredQuotes()
+      .filter(q => q.status === 'sold')
+      .reduce((sum, q) => sum + this.getTotal(q), 0)
+  );
+
+  onHistoryPeriodChange(period: 'all' | 'today' | 'week' | 'month' | 'year' | 'custom'): void {
+    this.historyPeriodFilter.set(period);
+    const now = new Date();
+    const toIsoDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    if (period === 'all') {
+      this.historyDateFrom.set('');
+      this.historyDateTo.set('');
+    } else if (period === 'today') {
+      const today = toIsoDate(now);
+      this.historyDateFrom.set(today);
+      this.historyDateTo.set(today);
+    } else if (period === 'week') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 6);
+      this.historyDateFrom.set(toIsoDate(start));
+      this.historyDateTo.set(toIsoDate(now));
+    } else if (period === 'month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      this.historyDateFrom.set(toIsoDate(start));
+      this.historyDateTo.set(toIsoDate(now));
+    } else if (period === 'year') {
+      const start = new Date(now.getFullYear(), 0, 1);
+      this.historyDateFrom.set(toIsoDate(start));
+      this.historyDateTo.set(toIsoDate(now));
+    }
+  }
+
+  onDateRangeChange(bound: 'from' | 'to', value: string): void {
+    if (bound === 'from') {
+      this.historyDateFrom.set(value || '');
+    } else {
+      this.historyDateTo.set(value || '');
+    }
+    this.historyPeriodFilter.set(
+      this.historyDateFrom() || this.historyDateTo() ? 'custom' : 'all'
+    );
+  }
+
+  clearHistoryFilters(): void {
+    this.historySearch.set('');
+    this.historyStatusFilter.set('all');
+    this.historyClientFilter.set('');
+    this.historyPeriodFilter.set('all');
+    this.historyDateFrom.set('');
+    this.historyDateTo.set('');
+    this.historyProductFilter.set('');
+    this.historySortBy.set('date_desc');
+  }
+
+  getQuoteItemsSummary(q: any): string {
+    const items = q?.items || [];
+    if (items.length === 0) return '';
+    const names = items.slice(0, 2).map((it: any) => `${it.name} (x${it.quantity})`);
+    return items.length > 2 ? `${names.join(', ')} +${items.length - 2} más` : names.join(', ');
+  }
 
   // ─── Catalog form ───────────────────────
   formName = '';
@@ -695,6 +1013,16 @@ export class CatalogComponent {
 
   // ─── Quote actions ──────────────────────
 
+  startNewQuote(): void {
+    this.editingQuoteId.set(null);
+    this.quoteItems.set([]);
+    this.clientName = '';
+    this.clientPhone = '';
+    this.clientEmail = '';
+    this.quoteNotes = '';
+    this.validDays = 15;
+  }
+
   addToQuote(item: CatalogItem): void {
     if (this.isInQuote(item.id)) return;
     this.quoteItems.update(list => [
@@ -751,7 +1079,13 @@ export class CatalogComponent {
 
     const now = new Date();
     const clientLabel = this.clientName.trim() || 'Cliente';
-    const downloaded = await this.promptAndSaveQuotePdf(
+
+    // Guardar o actualizar primero en el historial conservando únicamente la versión más reciente
+    const quote = this.buildQuote();
+    const saved = this.cat.saveQuote(quote, this.editingQuoteId());
+    this.editingQuoteId.set(saved.id);
+
+    await this.promptAndSaveQuotePdf(
       clientLabel,
       this.clientEmail.trim(),
       this.clientPhone.trim(),
@@ -761,23 +1095,6 @@ export class CatalogComponent {
       this.validDays,
       now,
     );
-
-    if (!downloaded) return;
-
-    const quote = this.buildQuote();
-    const existingId = this.editingQuoteId();
-    if (existingId) {
-      this.cat.updateQuote(existingId, quote);
-    } else {
-      this.cat.saveQuote(quote);
-    }
-
-    this.editingQuoteId.set(null);
-    this.quoteItems.set([]);
-    this.clientName = '';
-    this.clientPhone = '';
-    this.clientEmail = '';
-    this.quoteNotes = '';
   }
 
   async reprintQuote(q: any): Promise<void> {
