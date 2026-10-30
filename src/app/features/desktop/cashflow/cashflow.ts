@@ -34,8 +34,8 @@ import { FormsModule } from '@angular/forms';
             <h1>Flujo de Caja</h1>
             <p class="header-subtitle">Lo que entra y lo que sale, simple y claro.</p>
           </div>
-          <button class="btn-add" (click)="showForm.set(!showForm())">
-            {{ showForm() ? '✕ Cerrar' : '+ Registrar movimiento' }}
+          <button class="btn-add" (click)="showForm.set(true)">
+            + Registrar movimiento
           </button>
         </div>
 
@@ -283,74 +283,84 @@ import { FormsModule } from '@angular/forms';
         }
       </section>
 
-      <!-- ═══ Quick Add Form ═══ -->
+      <!-- ═══ Quick Add Form (Modal Flotante) ═══ -->
       @if (showForm()) {
-        <div class="form-panel">
-          <h3>Nuevo movimiento</h3>
+        <div class="modal-overlay" (click)="showForm.set(false)">
+          <div class="modal-card form-panel" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Nuevo movimiento</h3>
+              <button type="button" class="btn-close-modal" (click)="showForm.set(false)" title="Cerrar">✕</button>
+            </div>
 
-          <!-- Type toggle -->
-          <div class="type-toggle">
-            <button
-              class="toggle-btn"
-              [class.active]="formType() === 'ingreso'"
-              (click)="formType.set('ingreso')">
-              ↗ Ingreso
-            </button>
-            <button
-              class="toggle-btn"
-              [class.active]="formType() === 'egreso'"
-              (click)="formType.set('egreso')">
-              ↙ Egreso
-            </button>
-          </div>
+            <!-- Type toggle -->
+            <div class="type-toggle">
+              <button
+                type="button"
+                class="toggle-btn"
+                [class.active]="formType() === 'ingreso'"
+                (click)="formType.set('ingreso')">
+                ↗ Ingreso
+              </button>
+              <button
+                type="button"
+                class="toggle-btn"
+                [class.active]="formType() === 'egreso'"
+                (click)="formType.set('egreso')">
+                ↙ Egreso
+              </button>
+            </div>
 
-          <div class="form-grid">
-            <div class="form-field">
-              <label>Descripción</label>
-              <input type="text" [(ngModel)]="formDesc" placeholder="Ej: Pago cliente Acme" />
-            </div>
-            <div class="form-field">
-              <label>Monto (COP)</label>
-              <input umCurrencyInput [(ngModel)]="formAmount" placeholder="0" />
-            </div>
-            <div class="form-field">
-              <label>Categoría</label>
-              <select [(ngModel)]="formCategory">
-                @for (cat of getCategories(); track cat) {
-                  <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Fecha</label>
-              <input type="date" [(ngModel)]="formDate" />
-            </div>
-            <!-- Optional Product Link -->
-            <div class="form-field">
-              <label>Vincular Producto (Inventario)</label>
-              <select [(ngModel)]="formLinkedProductId" (ngModelChange)="onLinkedProductChange()">
-                <option value="">Ninguno</option>
-                @for (p of productService.products(); track p.id) {
-                  <option [value]="p.id">{{ p.name }} (Stock: {{ p.currentStock }})</option>
-                }
-              </select>
-            </div>
-            @if (formLinkedProductId) {
+            <div class="form-grid">
               <div class="form-field">
-                <label>Cantidad de Unidades</label>
-                <input type="number" [(ngModel)]="formLinkedQty" min="1" (ngModelChange)="onLinkedQtyChange()" />
+                <label>Descripción</label>
+                <input type="text" [(ngModel)]="formDesc" placeholder="Ej: Pago cliente Acme" />
               </div>
-            }
-          </div>
+              <div class="form-field">
+                <label>Monto (COP)</label>
+                <input umCurrencyInput [(ngModel)]="formAmount" placeholder="0" />
+              </div>
+              <div class="form-field">
+                <label>Categoría</label>
+                <select [(ngModel)]="formCategory">
+                  @for (cat of getCategories(); track cat) {
+                    <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Fecha</label>
+                <input type="date" [(ngModel)]="formDate" />
+              </div>
+              <!-- Optional Product Link -->
+              <div class="form-field">
+                <label>Vincular Producto (Inventario)</label>
+                <select [(ngModel)]="formLinkedProductId" (ngModelChange)="onLinkedProductChange()">
+                  <option value="">Ninguno</option>
+                  @for (p of productService.products(); track p.id) {
+                    <option [value]="p.id">{{ p.name }} (Stock: {{ p.currentStock }})</option>
+                  }
+                </select>
+              </div>
+              @if (formLinkedProductId) {
+                <div class="form-field">
+                  <label>Cantidad de Unidades</label>
+                  <input type="number" [(ngModel)]="formLinkedQty" min="1" (ngModelChange)="onLinkedQtyChange()" />
+                </div>
+              }
+            </div>
 
-          <div class="form-field notes-field">
-            <label>Notas (opcional)</label>
-            <textarea [(ngModel)]="formNotes" rows="2" placeholder="Detalle adicional..."></textarea>
-          </div>
+            <div class="form-field notes-field">
+              <label>Notas (opcional)</label>
+              <textarea [(ngModel)]="formNotes" rows="2" placeholder="Detalle adicional..."></textarea>
+            </div>
 
-          <button class="btn-save" [disabled]="!canSave()" (click)="save()">
-            Guardar {{ formType() === 'ingreso' ? 'ingreso' : 'egreso' }}
-          </button>
+            <div class="modal-form-actions">
+              <button type="button" class="btn-ghost" (click)="showForm.set(false)">Cancelar</button>
+              <button type="button" class="btn-save" [disabled]="!canSave()" (click)="save()">
+                Guardar {{ formType() === 'ingreso' ? 'ingreso' : 'egreso' }}
+              </button>
+            </div>
+          </div>
         </div>
       }
 
