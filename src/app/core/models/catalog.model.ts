@@ -6,9 +6,19 @@ export interface CatalogItem {
   id: string;
   name: string;
   description: string;
+  sku?: string;
   price: number;
-  unit: string;           // 'unidad', 'hora', 'mes', 'servicio', 'proyecto'
+  currency?: 'COP' | 'USD';
+  unit: string;           // 'unidad', 'hora', 'mes', 'servicio', 'proyecto', etc.
   category: string;
+  itemType?: string;
+  icon?: string;
+  color?: string;
+  trackInventory?: boolean;
+  currentStock?: number;
+  taxRate?: number;
+  deliveryTime?: string;
+  includesOrDeliverables?: string;
   active: boolean;
   createdAt: string;
   isDeleted?: boolean;
@@ -19,10 +29,36 @@ export interface QuoteLineItem {
   catalogId: string;
   name: string;
   description: string;
+  sku?: string;
+  deliveryTime?: string;
+  includesOrDeliverables?: string;
   unitPrice: number;
   quantity: number;
   unit: string;
 }
+
+export interface QuoteAttachment {
+  id: string;
+  name: string;
+  caption?: string;
+  dataUrl: string;          // Imagen redimensionada y comprimida (WebP / JPEG)
+  mimeType: string;
+  width: number;
+  height: number;
+  originalBytes: number;    // Peso original del archivo cargado por el usuario
+  sizeBytes: number;        // Peso real serializado almacenado en la cotización
+}
+
+export const QUOTE_IMAGE_LIMITS = {
+  maxImagesPerQuote: 4,
+  maxRawFileBytes: 5 * 1024 * 1024,       // 5 MB máximo por archivo original seleccionado
+  targetImageBytes: 90 * 1024,            // ~90 KB objetivo por imagen tras compresión
+  maxSingleCompressedBytes: 115 * 1024,   // 115 KB tope estricto por imagen individual
+  maxQuoteTotalBytes: 360 * 1024,         // 360 KB presupuesto máximo total de imágenes por cotización
+  maxGlobalStorageBytes: 2200 * 1024,     // ~2.2 MB tope acumulado de imágenes en historial local
+  maxDimensionPx: 960,                    // Resolución máxima óptima para PDF A4
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+} as const;
 
 export interface Quote {
   id: string;
@@ -30,6 +66,7 @@ export interface Quote {
   clientPhone: string;
   clientEmail: string;
   items: QuoteLineItem[];
+  attachments?: QuoteAttachment[];
   notes: string;
   validDays: number;
   createdAt: string;
@@ -42,12 +79,22 @@ export interface Quote {
 
 export const UNIT_OPTIONS = [
   { value: 'unidad', label: 'Unidad' },
-  { value: 'hora', label: 'Hora' },
-  { value: 'mes', label: 'Mes' },
+  { value: 'unidades', label: 'Unidades' },
   { value: 'servicio', label: 'Servicio' },
+  { value: 'hora', label: 'Hora' },
+  { value: 'día', label: 'Día' },
+  { value: 'semana', label: 'Semana' },
+  { value: 'mes', label: 'Mes' },
+  { value: 'año', label: 'Año' },
   { value: 'proyecto', label: 'Proyecto' },
-  { value: 'kg', label: 'Kg' },
-  { value: 'm2', label: 'm²' },
+  { value: 'sesión', label: 'Sesión' },
+  { value: 'licencia', label: 'Licencia' },
+  { value: 'paquete', label: 'Paquete' },
+  { value: 'caja', label: 'Caja' },
+  { value: 'kg', label: 'Kilogramo (Kg)' },
+  { value: 'litros', label: 'Litros' },
+  { value: 'metros', label: 'Metros (m)' },
+  { value: 'm2', label: 'Metro cuadrado (m²)' },
 ];
 
 // ─── Quote Template / Format ──────────────

@@ -1,36 +1,46 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UmIconComponent } from '../../../shared/components/um-icon/um-icon';
 
-import { CatalogItem, QuoteLineItem, QuoteTemplate, DEFAULT_QUOTE_TEMPLATE, QUOTE_COLOR_PRESETS, QUOTE_FONT_OPTIONS, UNIT_OPTIONS } from '../../../core/models/catalog.model';
+import {
+  CatalogItem,
+  QuoteLineItem,
+  QuoteAttachment,
+  QUOTE_IMAGE_LIMITS,
+  QuoteTemplate,
+  DEFAULT_QUOTE_TEMPLATE,
+  QUOTE_COLOR_PRESETS,
+  QUOTE_FONT_OPTIONS,
+} from '../../../core/models/catalog.model';
+import { optimizeQuoteImage, formatFileSize } from '../../../core/utils/quote-image-optimizer';
 import { CatalogService } from '../../../core/services/catalog.service';
-import { ProductCatalogService } from '../../../core/services/product-catalog.service';
 import { BusinessAutomationService } from '../../../core/services/business-automation.service';
 
-type Tab = 'catalog' | 'quote' | 'history' | 'format';
+type Tab = 'quote' | 'history' | 'format';
 
 @Component({
   selector: 'um-catalog',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, DatePipe, UmIconComponent],
+  imports: [FormsModule, CurrencyPipe, DatePipe, RouterLink, UmIconComponent],
   template: `
     <div class="catalog-page">
 
       <!-- ═══ Header ═══ -->
       <header class="page-header">
-        <div class="header-top">
+        <div class="header-top header-top-row">
           <div>
-            <h1>Catálogo & Cotizador</h1>
-            <p class="header-subtitle">Tus productos y servicios listos para cotizar en menos de 1 minuto.</p>
+            <h1>Cotizaciones</h1>
+            <p class="header-subtitle">Arma y descarga tus cotizaciones en PDF con tus productos y servicios configurados.</p>
           </div>
+          <a class="btn-manage-products" routerLink="/d/sales/products">
+            📦 Productos y Servicios ({{ cat.activeItems().length }})
+          </a>
         </div>
 
         <!-- Tabs -->
         <div class="tab-bar">
-          <button class="tab" [class.active]="activeTab() === 'catalog'" (click)="activeTab.set('catalog')">
-            📦 Catálogo ({{ cat.items().length }})
-          </button>
           <button class="tab" [class.active]="activeTab() === 'quote'" (click)="activeTab.set('quote')">
             📝 Cotizador
             @if (quoteItems().length > 0) {
@@ -45,128 +55,6 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
           </button>
         </div>
       </header>
-
-      <!-- ═══════════════ TAB: CATÁLOGO ═══════════════ -->
-      @if (activeTab() === 'catalog') {
-        <div class="catalog-section">
-
-          <!-- Search & Filter Bar -->
-          <div class="search-filter-bar">
-            <div class="search-wrap">
-              <span class="search-icon">🔍</span>
-              <input
-                type="text"
-                class="search-input"
-                placeholder="Buscar productos o servicios..."
-                [ngModel]="catalogSearch()"
-                (ngModelChange)="catalogSearch.set($event)"
-              />
-              @if (catalogSearch()) {
-                <button class="clear-search" (click)="catalogSearch.set('')">✕</button>
-              }
-            </div>
-            @if (categories().length > 1) {
-              <div class="filter-chips">
-                <button
-                  class="filter-chip"
-                  [class.active]="!catalogCategory()"
-                  (click)="catalogCategory.set('')">
-                  Todas ({{ cat.items().length }})
-                </button>
-                @for (c of categories(); track c) {
-                  <button
-                    class="filter-chip"
-                    [class.active]="catalogCategory() === c"
-                    (click)="catalogCategory.set(catalogCategory() === c ? '' : c)">
-                    {{ c }} ({{ categoryCount(c) }})
-                  </button>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Add product form -->
-          <div class="add-form-card">
-            <h3>{{ editingId() ? '✏️ Editar producto' : '➕ Agregar producto o servicio' }}</h3>
-            <div class="form-row-3">
-              <div class="form-field">
-                <label>Nombre</label>
-                <input type="text" [(ngModel)]="formName" placeholder="Ej: Consultoría estratégica" />
-              </div>
-              <div class="form-field">
-                <label>Precio</label>
-                <div class="price-wrap">
-                  <span class="prefix">$</span>
-                  <input type="number" [(ngModel)]="formPrice" placeholder="0" min="0" />
-                </div>
-              </div>
-              <div class="form-field">
-                <label>Unidad</label>
-                <select [(ngModel)]="formUnit">
-                  @for (u of unitOptions; track u.value) {
-                    <option [value]="u.value">{{ u.label }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-            <div class="form-row-2">
-              <div class="form-field">
-                <label>Descripción (opcional)</label>
-                <input type="text" [(ngModel)]="formDesc" placeholder="Breve descripción" />
-              </div>
-              <div class="form-field">
-                <label>Categoría</label>
-                <input type="text" [(ngModel)]="formCategory" placeholder="Ej: Consultoría" />
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn-save" [disabled]="!formName.trim() || !formPrice" (click)="saveItem()">
-                {{ editingId() ? 'Actualizar' : 'Agregar al catálogo' }}
-              </button>
-              @if (editingId()) {
-                <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
-              }
-            </div>
-          </div>
-
-          <!-- Product list -->
-          @if (filteredItems().length === 0 && cat.items().length > 0) {
-            <div class="empty-state">
-              <span class="empty-icon">🔍</span>
-              <p>No se encontraron productos para "{{ catalogSearch() }}"</p>
-              <button class="btn-sm" (click)="catalogSearch.set(''); catalogCategory.set('')">Limpiar filtros</button>
-            </div>
-          } @else if (cat.items().length === 0) {
-            <div class="empty-state">
-              <span class="empty-icon">📦</span>
-              <p>Tu catálogo está vacío.</p>
-              <p class="empty-hint">Agrega tu primer producto o servicio arriba.</p>
-            </div>
-          }
-
-          @for (item of filteredItems(); track item.id) {
-            <div class="product-row" [class.inactive]="!item.active">
-              <div class="product-info">
-                <h4>{{ item.name }}</h4>
-                <p class="product-meta">
-                  <span class="meta-tag">{{ item.category }}</span>
-                  @if (item.description) { · {{ item.description }} }
-                  · <span class="stock-badge" [class.low-stock]="getProductStock(item.id) <= 2">Stock: {{ getProductStock(item.id) }} {{ item.unit }}</span>
-                </p>
-              </div>
-              <div class="product-price">
-                {{ item.price | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <span class="price-unit">/ {{ item.unit }}</span>
-              </div>
-              <div class="product-actions">
-                <button class="btn-icon" title="Agregar a cotización" (click)="addToQuote(item)">📝</button>
-                <button class="btn-icon" title="Editar" (click)="editItem(item)">✏️</button>
-                <button class="btn-icon danger" title="Eliminar" (click)="cat.removeItem(item.id)"><um-icon name="trash" [size]="16"></um-icon></button>
-              </div>
-            </div>
-          }
-        </div>
-      }
 
       <!-- ═══════════════ TAB: COTIZADOR ═══════════════ -->
       @if (activeTab() === 'quote') {
@@ -226,19 +114,93 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
             </p>
           </div>
 
-          <!-- Quick-add from catalog -->
+          <!-- Quick-add from unified Productos y Servicios -->
           <div class="quick-add-card">
-            <h3>⚡ Agregar del catálogo</h3>
-            <div class="quick-items">
-              @for (item of cat.activeItems(); track item.id) {
-                <button class="quick-chip" (click)="addToQuote(item)" [class.in-quote]="isInQuote(item.id)">
-                  {{ item.name }} (Stock: {{ getProductStock(item.id) }}) · {{ item.price | currency:'COP':'symbol-narrow':'1.0-0' }}
-                </button>
-              }
-              @if (cat.activeItems().length === 0) {
-                <p class="no-items-hint">No hay productos en el catálogo. Ve a la pestaña Catálogo para agregar.</p>
-              }
+            <div class="quick-add-header">
+              <h3 style="margin: 0;">⚡ Seleccionar Productos y Servicios</h3>
+              <a class="link-manage-inline" routerLink="/d/sales/products">
+                ⚙️ Administrar catálogo →
+              </a>
             </div>
+
+            @if (cat.activeItems().length > 0) {
+              <div class="search-filter-bar" style="margin-top: 12px; margin-bottom: 14px;">
+                <div class="search-wrap">
+                  <span class="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    class="search-input"
+                    placeholder="Buscar producto, servicio, código SKU o categoría..."
+                    [ngModel]="catalogSearch()"
+                    (ngModelChange)="catalogSearch.set($event)"
+                  />
+                  @if (catalogSearch()) {
+                    <button type="button" class="clear-search" (click)="catalogSearch.set('')">✕</button>
+                  }
+                </div>
+
+                @if (categories().length > 1) {
+                  <div class="filter-chips">
+                    <button
+                      type="button"
+                      class="filter-chip"
+                      [class.active]="!catalogCategory()"
+                      (click)="catalogCategory.set('')">
+                      Todos ({{ cat.activeItems().length }})
+                    </button>
+                    @for (c of categories(); track c) {
+                      <button
+                        type="button"
+                        class="filter-chip"
+                        [class.active]="catalogCategory() === c"
+                        (click)="catalogCategory.set(catalogCategory() === c ? '' : c)">
+                        {{ c }} ({{ categoryCount(c) }})
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (filteredActiveItems().length > 0) {
+                <div class="quick-items">
+                  @for (item of filteredActiveItems(); track item.id) {
+                    <button
+                      type="button"
+                      class="quick-chip"
+                      (click)="addToQuote(item)"
+                      [class.in-quote]="isInQuote(item.id)"
+                    >
+                      <span>{{ isInQuote(item.id) ? '✓' : (item.icon || '📦') }}</span>
+                      <span>{{ item.name }}</span>
+                      @if (item.sku) {
+                        <span class="chip-sku">[{{ item.sku }}]</span>
+                      }
+                      <span class="chip-price">
+                        · {{ item.price | currency:(item.currency || 'COP'):'symbol-narrow':'1.0-0' }}/{{ item.unit }}
+                      </span>
+                      @if (item.trackInventory) {
+                        <span class="chip-stock" [class.low]="(item.currentStock ?? 0) <= 2">
+                          (Stock: {{ item.currentStock ?? 0 }})
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="no-items-hint">
+                  No se encontraron productos o servicios activos para "{{ catalogSearch() }}".
+                </p>
+              }
+            } @else {
+              <div class="empty-products-cta">
+                <p class="no-items-hint">
+                  Aún no tienes productos ni servicios activos configurados. Créalos en el módulo de <strong>Productos y Servicios</strong> para cotizarlos aquí.
+                </p>
+                <a class="btn-sm link-cta-btn" routerLink="/d/sales/products">
+                  ➕ Ir a Productos y Servicios
+                </a>
+              </div>
+            }
           </div>
 
           <!-- Quote line items -->
@@ -247,15 +209,33 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
 
             @if (quoteItems().length === 0) {
               <div class="empty-state small">
-                <p>Agrega productos del catálogo para armar tu cotización.</p>
+                <p>Selecciona productos o servicios arriba para armar tu cotización.</p>
               </div>
             }
 
             @for (item of quoteItems(); track item.catalogId; let i = $index) {
               <div class="quote-line">
                 <div class="line-info">
-                  <strong>{{ item.name }}</strong>
+                  <strong>
+                    {{ item.name }}
+                    @if (item.sku) {
+                      <span class="line-sku">({{ item.sku }})</span>
+                    }
+                  </strong>
                   <span class="line-unit">{{ item.unitPrice | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.unit }}</span>
+                  @if (item.description || item.includesOrDeliverables || item.deliveryTime) {
+                    <div class="line-submeta">
+                      @if (item.description) {
+                        <span>{{ item.description }}</span>
+                      }
+                      @if (item.includesOrDeliverables) {
+                        <span>· 📋 {{ item.includesOrDeliverables }}</span>
+                      }
+                      @if (item.deliveryTime) {
+                        <span>· ⏱️ {{ item.deliveryTime }}</span>
+                      }
+                    </div>
+                  }
                 </div>
                 <div class="line-qty">
                   <button class="qty-btn" (click)="changeQty(i, -1)">−</button>
@@ -273,6 +253,118 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
               <div class="quote-total-row">
                 <span>TOTAL</span>
                 <strong>{{ quoteTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+            }
+          </div>
+
+          <!-- Image Attachments with Smart Weight Management -->
+          <div class="attachments-card">
+            <div class="attachments-header">
+              <h3>🖼️ Imágenes adjuntas (opcional)</h3>
+              <div class="attachments-header-right">
+                <span
+                  class="weight-badge"
+                  [class.warning]="attachmentsBudgetPercent() >= 70 && attachmentsBudgetPercent() < 90"
+                  [class.near-limit]="attachmentsBudgetPercent() >= 90"
+                >
+                  {{ quoteAttachments().length }}/{{ imageLimits.maxImagesPerQuote }} imágenes ·
+                  {{ formatBytes(totalAttachmentsBytes()) }} / {{ formatBytes(imageLimits.maxQuoteTotalBytes) }}
+                </span>
+                @if (quoteAttachments().length > 0) {
+                  <button type="button" class="btn-clear-filters" (click)="clearAllAttachments()">
+                    Quitar todas
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="weight-progress-track">
+              <div
+                class="weight-progress-fill"
+                [style.width.%]="attachmentsBudgetPercent()"
+                [class.warning]="attachmentsBudgetPercent() >= 70 && attachmentsBudgetPercent() < 90"
+                [class.near-limit]="attachmentsBudgetPercent() >= 90"
+              ></div>
+            </div>
+
+            <p class="weight-helper-text">
+              Optimización automática activa: puedes adjuntar hasta {{ imageLimits.maxImagesPerQuote }} imágenes (JPG, PNG o WEBP de máx. 5 MB c/u). El sistema reduce dimensiones y comprime su peso automáticamente para mantener la cotización ligera.
+            </p>
+
+            @if (attachmentNotice()) {
+              <div
+                class="attachment-notice"
+                [class.error]="attachmentNoticeType() === 'error'"
+                [class.info]="attachmentNoticeType() === 'info'"
+              >
+                <span>{{ attachmentNotice() }}</span>
+                <button type="button" class="notice-close" (click)="attachmentNotice.set('')">✕</button>
+              </div>
+            }
+
+            @if (canAddMoreAttachments()) {
+              <label
+                class="attachments-dropzone"
+                [class.drag-over]="isDragOverAttachments()"
+                [class.disabled]="isProcessingImages()"
+                (dragover)="onAttachmentDragOver($event)"
+                (dragleave)="isDragOverAttachments.set(false)"
+                (drop)="onAttachmentDrop($event)"
+              >
+                <span class="dropzone-icon">{{ isProcessingImages() ? '⏳' : '📷' }}</span>
+                <span class="dropzone-title">
+                  {{ isProcessingImages() ? 'Optimizando y comprimiendo imágenes...' : 'Haz clic o arrastra imágenes aquí para adjuntarlas' }}
+                </span>
+                <span class="dropzone-sub">
+                  Formatos: JPG, PNG, WEBP · Espacio disponible: {{ formatBytes(remainingAttachmentsBudget()) }}
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hidden-file"
+                  [disabled]="isProcessingImages()"
+                  (change)="onAttachmentInputChange($event)"
+                />
+              </label>
+            }
+
+            @if (quoteAttachments().length > 0) {
+              <div class="attachments-grid">
+                @for (att of quoteAttachments(); track att.id) {
+                  <div class="attachment-item-card">
+                    <div class="attachment-thumb-wrap">
+                      <img [src]="att.dataUrl" [alt]="att.caption || att.name" />
+                      <button
+                        type="button"
+                        class="btn-remove-attachment"
+                        title="Eliminar imagen"
+                        (click)="removeAttachment(att.id)"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div class="attachment-meta-body">
+                      <div class="attachment-file-row">
+                        <span class="attachment-filename" [title]="att.name">{{ att.name }}</span>
+                        <span class="attachment-size-pill" [title]="'Original: ' + formatBytes(att.originalBytes)">
+                          {{ formatBytes(att.sizeBytes) }}
+                          @if (getCompressionSavingsPercent(att) > 0) {
+                            (-{{ getCompressionSavingsPercent(att) }}%)
+                          }
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        class="attachment-caption-input"
+                        maxlength="90"
+                        placeholder="Descripción o pie de imagen (opcional)..."
+                        [ngModel]="att.caption || ''"
+                        (ngModelChange)="updateAttachmentCaption(att.id, $event)"
+                      />
+                    </div>
+                  </div>
+                }
               </div>
             }
           </div>
@@ -296,7 +388,7 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
             <button
               type="button"
               class="btn-save-quote"
-              [disabled]="quoteItems().length === 0 || isDownloadingPdf()"
+              [disabled]="quoteItems().length === 0 || isDownloadingPdf() || isProcessingImages()"
               (click)="downloadQuotePDF()">
               {{ isDownloadingPdf() ? '⏳ Generando PDF...' : '📄 Descargar Cotización en PDF' }}
             </button>
@@ -467,6 +559,9 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
                 </div>
                 <p class="history-meta">
                   {{ (q.updatedAt || q.createdAt) | date:'d MMM yyyy, HH:mm' }} · {{ q.items.length }} ítems
+                  @if ((q.attachments?.length || 0) > 0) {
+                    · <span>🖼️ {{ q.attachments!.length }} {{ q.attachments!.length === 1 ? 'imagen' : 'imágenes' }}</span>
+                  }
                   @if (getQuoteItemsSummary(q)) {
                     · <span>{{ getQuoteItemsSummary(q) }}</span>
                   }
@@ -691,14 +786,14 @@ type Tab = 'catalog' | 'quote' | 'history' | 'format';
 })
 export class CatalogComponent {
   cat = inject(CatalogService);
-  private productService = inject(ProductCatalogService);
   private automationService = inject(BusinessAutomationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  unitOptions = UNIT_OPTIONS;
   colorPresets = QUOTE_COLOR_PRESETS;
   fontOptions = QUOTE_FONT_OPTIONS;
 
-  activeTab = signal<Tab>('catalog');
+  activeTab = signal<Tab>('quote');
 
   // ─── Search & Filter ───────────────────
   catalogSearch = signal('');
@@ -712,25 +807,26 @@ export class CatalogComponent {
   historyProductFilter = signal('');
   historySortBy = signal<'date_desc' | 'date_asc' | 'total_desc' | 'total_asc' | 'client_asc'>('date_desc');
 
-  /** Unique categories from catalog items */
+  /** Unique categories from active products & services */
   categories = computed(() => {
-    const cats = new Set(this.cat.items().map(i => i.category).filter(c => !!c));
+    const cats = new Set(this.cat.activeItems().map(i => i.category).filter(c => !!c));
     return Array.from(cats).sort();
   });
 
-  /** Count items per category */
+  /** Count active items per category */
   categoryCount(cat: string): number {
-    return this.cat.items().filter(i => i.category === cat).length;
+    return this.cat.activeItems().filter(i => i.category === cat).length;
   }
 
-  /** Filtered catalog items */
-  filteredItems = computed(() => {
-    let items = this.cat.items();
+  /** Filtered active products & services for the quote selector */
+  filteredActiveItems = computed(() => {
+    let items = this.cat.activeItems();
     const q = this.catalogSearch().toLowerCase().trim();
     const cat = this.catalogCategory();
     if (q) {
       items = items.filter(i =>
         i.name.toLowerCase().includes(q) ||
+        (i.sku || '').toLowerCase().includes(q) ||
         (i.description || '').toLowerCase().includes(q) ||
         (i.category || '').toLowerCase().includes(q)
       );
@@ -875,6 +971,23 @@ export class CatalogComponent {
       .reduce((sum, q) => sum + this.getTotal(q), 0)
   );
 
+  constructor() {
+    this.route.queryParamMap.subscribe(params => {
+      const addId = params.get('add');
+      if (addId) {
+        const found = this.cat.activeItems().find(it => it.id === addId);
+        if (found) {
+          this.addToQuote(found);
+        }
+        this.router.navigate([], {
+          queryParams: { add: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+    });
+  }
+
   onHistoryPeriodChange(period: 'all' | 'today' | 'week' | 'month' | 'year' | 'custom'): void {
     this.historyPeriodFilter.set(period);
     const now = new Date();
@@ -937,16 +1050,17 @@ export class CatalogComponent {
     return items.length > 2 ? `${names.join(', ')} +${items.length - 2} más` : names.join(', ');
   }
 
-  // ─── Catalog form ───────────────────────
-  formName = '';
-  formDesc = '';
-  formPrice: number | null = null;
-  formUnit = 'unidad';
-  formCategory = '';
-  editingId = signal<string | null>(null);
-
   // ─── Quote builder ──────────────────────
+  readonly imageLimits = QUOTE_IMAGE_LIMITS;
+  readonly formatBytes = formatFileSize;
+
   quoteItems = signal<QuoteLineItem[]>([]);
+  quoteAttachments = signal<QuoteAttachment[]>([]);
+  isProcessingImages = signal(false);
+  isDragOverAttachments = signal(false);
+  attachmentNotice = signal('');
+  attachmentNoticeType = signal<'info' | 'error'>('info');
+
   editingQuoteId = signal<string | null>(null);
   isDownloadingPdf = signal(false);
   clientName = '';
@@ -959,68 +1073,153 @@ export class CatalogComponent {
     this.quoteItems().reduce((sum, i) => sum + i.quantity * i.unitPrice, 0)
   );
 
+  totalAttachmentsBytes = computed(() =>
+    this.quoteAttachments().reduce((acc, att) => acc + (att.sizeBytes || 0), 0)
+  );
+
+  remainingAttachmentsBudget = computed(() =>
+    Math.max(0, this.imageLimits.maxQuoteTotalBytes - this.totalAttachmentsBytes())
+  );
+
+  attachmentsBudgetPercent = computed(() => {
+    const pct = (this.totalAttachmentsBytes() / this.imageLimits.maxQuoteTotalBytes) * 100;
+    return Math.min(100, Math.round(pct));
+  });
+
+  canAddMoreAttachments = computed(() =>
+    this.quoteAttachments().length < this.imageLimits.maxImagesPerQuote &&
+    this.remainingAttachmentsBudget() >= 18 * 1024
+  );
+
   // ─── Quote template ────────────────────
   private readonly TPL_KEY = 'um_quote_template';
   tpl: QuoteTemplate = this.loadTemplate();
-
-  // ─── Catalog actions ────────────────────
-
-  saveItem(): void {
-    if (!this.formName.trim() || !this.formPrice) return;
-
-    if (this.editingId()) {
-      this.cat.updateItem(this.editingId()!, {
-        name: this.formName.trim(),
-        description: this.formDesc.trim(),
-        price: this.formPrice,
-        unit: this.formUnit,
-        category: this.formCategory.trim(),
-      });
-      this.editingId.set(null);
-    } else {
-      this.cat.addItem({
-        name: this.formName.trim(),
-        description: this.formDesc.trim(),
-        price: this.formPrice,
-        unit: this.formUnit,
-        category: this.formCategory.trim(),
-      });
-    }
-    this.resetForm();
-  }
-
-  editItem(item: CatalogItem): void {
-    this.formName = item.name;
-    this.formDesc = item.description;
-    this.formPrice = item.price;
-    this.formUnit = item.unit;
-    this.formCategory = item.category;
-    this.editingId.set(item.id);
-  }
-
-  cancelEdit(): void {
-    this.editingId.set(null);
-    this.resetForm();
-  }
-
-  private resetForm(): void {
-    this.formName = '';
-    this.formDesc = '';
-    this.formPrice = null;
-    this.formUnit = 'unidad';
-    this.formCategory = '';
-  }
 
   // ─── Quote actions ──────────────────────
 
   startNewQuote(): void {
     this.editingQuoteId.set(null);
     this.quoteItems.set([]);
+    this.quoteAttachments.set([]);
+    this.attachmentNotice.set('');
     this.clientName = '';
     this.clientPhone = '';
     this.clientEmail = '';
     this.quoteNotes = '';
     this.validDays = 15;
+  }
+
+  getCompressionSavingsPercent(att: QuoteAttachment): number {
+    if (!att.originalBytes || att.originalBytes <= att.sizeBytes) return 0;
+    return Math.max(0, Math.round(((att.originalBytes - att.sizeBytes) / att.originalBytes) * 100));
+  }
+
+  onAttachmentDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.isProcessingImages() && this.canAddMoreAttachments()) {
+      this.isDragOverAttachments.set(true);
+    }
+  }
+
+  async onAttachmentDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOverAttachments.set(false);
+    if (this.isProcessingImages() || !this.canAddMoreAttachments()) return;
+
+    const files = Array.from(event.dataTransfer?.files || []);
+    await this.processAttachmentFiles(files);
+  }
+
+  async onAttachmentInputChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+    input.value = '';
+    await this.processAttachmentFiles(files);
+  }
+
+  private async processAttachmentFiles(files: File[]): Promise<void> {
+    if (!files.length || this.isProcessingImages()) return;
+
+    this.attachmentNotice.set('');
+    const currentList = [...this.quoteAttachments()];
+    const availableSlots = this.imageLimits.maxImagesPerQuote - currentList.length;
+
+    if (availableSlots <= 0) {
+      this.attachmentNoticeType.set('error');
+      this.attachmentNotice.set(
+        `Solo puedes adjuntar hasta ${this.imageLimits.maxImagesPerQuote} imágenes por cotización.`,
+      );
+      return;
+    }
+
+    const filesToProcess = files.slice(0, availableSlots);
+    const errors: string[] = [];
+    if (files.length > availableSlots) {
+      errors.push(
+        `Se omitieron ${files.length - availableSlots} archivo(s) porque el límite es de ${this.imageLimits.maxImagesPerQuote} imágenes por cotización.`,
+      );
+    }
+
+    this.isProcessingImages.set(true);
+    let addedCount = 0;
+    let totalOriginal = 0;
+    let totalOptimized = 0;
+
+    try {
+      for (const file of filesToProcess) {
+        const usedBytes = currentList.reduce((acc, a) => acc + (a.sizeBytes || 0), 0);
+        const remainingBudget = this.imageLimits.maxQuoteTotalBytes - usedBytes;
+
+        if (remainingBudget < 18 * 1024) {
+          errors.push(
+            `Se alcanzó el presupuesto máximo de peso por cotización (${this.formatBytes(this.imageLimits.maxQuoteTotalBytes)}).`,
+          );
+          break;
+        }
+
+        try {
+          const optimized = await optimizeQuoteImage(file, remainingBudget);
+          currentList.push(optimized);
+          addedCount++;
+          totalOriginal += optimized.originalBytes;
+          totalOptimized += optimized.sizeBytes;
+        } catch (err: any) {
+          errors.push(err?.message || `No se pudo procesar "${file.name}".`);
+        }
+      }
+
+      this.quoteAttachments.set(currentList);
+
+      if (errors.length > 0) {
+        this.attachmentNoticeType.set('error');
+        this.attachmentNotice.set(errors.join(' '));
+      } else if (addedCount > 0) {
+        this.attachmentNoticeType.set('info');
+        this.attachmentNotice.set(
+          `✅ ${addedCount} ${addedCount === 1 ? 'imagen optimizada' : 'imágenes optimizadas'} (${this.formatBytes(totalOriginal)} → ${this.formatBytes(totalOptimized)}).`,
+        );
+      }
+    } finally {
+      this.isProcessingImages.set(false);
+    }
+  }
+
+  updateAttachmentCaption(id: string, caption: string): void {
+    this.quoteAttachments.update(list =>
+      list.map(att => (att.id === id ? { ...att, caption } : att))
+    );
+  }
+
+  removeAttachment(id: string): void {
+    this.quoteAttachments.update(list => list.filter(att => att.id !== id));
+    this.attachmentNotice.set('');
+  }
+
+  clearAllAttachments(): void {
+    this.quoteAttachments.set([]);
+    this.attachmentNotice.set('');
   }
 
   addToQuote(item: CatalogItem): void {
@@ -1030,7 +1229,10 @@ export class CatalogComponent {
       {
         catalogId: item.id,
         name: item.name,
-        description: item.description,
+        description: item.description || '',
+        sku: item.sku || '',
+        deliveryTime: item.deliveryTime || '',
+        includesOrDeliverables: item.includesOrDeliverables || '',
         unitPrice: item.price,
         quantity: 1,
         unit: item.unit,
@@ -1070,12 +1272,14 @@ export class CatalogComponent {
     this.clientEmail = q.clientEmail || '';
     this.quoteNotes = q.notes || '';
     this.validDays = q.validDays || 15;
-    this.quoteItems.set(q.items.map((it: any) => ({ ...it })));
+    this.quoteItems.set((q.items || []).map((it: any) => ({ ...it })));
+    this.quoteAttachments.set((q.attachments || []).map((att: any) => ({ ...att })));
+    this.attachmentNotice.set('');
     this.activeTab.set('quote');
   }
 
   async downloadQuotePDF(): Promise<void> {
-    if (this.quoteItems().length === 0 || this.isDownloadingPdf()) return;
+    if (this.quoteItems().length === 0 || this.isDownloadingPdf() || this.isProcessingImages()) return;
 
     const now = new Date();
     const clientLabel = this.clientName.trim() || 'Cliente';
@@ -1094,6 +1298,7 @@ export class CatalogComponent {
       this.quoteNotes.trim(),
       this.validDays,
       now,
+      this.quoteAttachments(),
     );
   }
 
@@ -1109,6 +1314,7 @@ export class CatalogComponent {
       q.notes || '',
       q.validDays || 15,
       new Date(q.createdAt || new Date()),
+      q.attachments || [],
     );
   }
 
@@ -1121,6 +1327,7 @@ export class CatalogComponent {
     notes: string,
     validDays: number,
     date: Date,
+    attachments: QuoteAttachment[] = [],
   ): Promise<boolean> {
     const safeClient = (clientName || 'Cliente')
       .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s_-]/g, '')
@@ -1162,6 +1369,7 @@ export class CatalogComponent {
         notes,
         validDays,
         date,
+        attachments,
       );
 
       if (fileHandle) {
@@ -1197,6 +1405,7 @@ export class CatalogComponent {
     notes: string,
     validDays: number,
     date: Date,
+    attachments: QuoteAttachment[] = [],
   ): Promise<Blob> {
     const container = document.createElement('div');
     container.style.position = 'fixed';
@@ -1216,6 +1425,7 @@ export class CatalogComponent {
       notes,
       validDays,
       date,
+      attachments,
     );
 
     document.body.appendChild(container);
@@ -1282,20 +1492,20 @@ export class CatalogComponent {
   }
 
   private buildQuote() {
+    const attachments = this.quoteAttachments().map(att => ({
+      ...att,
+      caption: (att.caption || '').trim(),
+    }));
     return {
       clientName: this.clientName.trim() || 'Cliente',
       clientPhone: this.clientPhone.trim(),
       clientEmail: this.clientEmail.trim(),
       items: this.quoteItems(),
+      attachments: attachments.length > 0 ? attachments : undefined,
       notes: this.quoteNotes.trim(),
       validDays: this.validDays,
       status: 'draft' as any,
     };
-  }
-
-  getProductStock(id: string): number {
-    const prod = this.productService.getProductById(id);
-    return prod ? prod.currentStock : 0;
   }
 
   markAsSold(quoteId: string): void {
@@ -1402,6 +1612,15 @@ export class CatalogComponent {
     return '$' + value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
+  private escapeHtml(value: string): string {
+    return (value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   private generateQuoteDocBodyHTML(
     clientName: string,
     clientEmail: string,
@@ -1411,6 +1630,7 @@ export class CatalogComponent {
     notes: string,
     validDays: number,
     date: Date,
+    attachments: QuoteAttachment[] = [],
   ): string {
     const t = this.tpl;
     const accent = t.primaryColor || '#6c5ce7';
@@ -1460,16 +1680,32 @@ export class CatalogComponent {
         </div>
       </div>`;
 
-    const rowsHtml = items.map((item, i) => `
+    const rowsHtml = items.map((item, i) => {
+      const details: string[] = [];
+      if (item.description) details.push(`<div>${item.description}</div>`);
+      if (item.includesOrDeliverables) details.push(`<div><strong>Incluye:</strong> ${item.includesOrDeliverables}</div>`);
+      if (item.deliveryTime) details.push(`<div><strong>Entrega:</strong> ${item.deliveryTime}</div>`);
+      const skuBadge = item.sku
+        ? `<span style="font-size:11px; font-weight:600; color:#64748b; margin-left:6px;">(${item.sku})</span>`
+        : '';
+      const detailsHtml = details.length > 0
+        ? `<div style="font-size:12px; font-weight:400; color:#64748b; margin-top:4px; line-height:1.45;">${details.join('')}</div>`
+        : '';
+
+      return `
       <tr style="border-bottom:1px solid #e2e8f0;">
-        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center;">${i + 1}</td>
-        <td style="padding:16px 12px; font-size:14px; font-weight:700; color:#1e293b;">${item.name}</td>
-        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center;">${item.quantity}</td>
-        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center;">${item.unit}</td>
-        <td style="padding:16px 12px; font-size:14px; color:#475569; text-align:right;">${this.fmtCurrency(item.unitPrice)}</td>
-        <td style="padding:16px 12px; font-size:14px; font-weight:800; color:#1e293b; text-align:right;">${this.fmtCurrency(item.quantity * item.unitPrice)}</td>
+        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center; vertical-align:top;">${i + 1}</td>
+        <td style="padding:16px 12px; font-size:14px; font-weight:700; color:#1e293b; vertical-align:top;">
+          <div>${item.name}${skuBadge}</div>
+          ${detailsHtml}
+        </td>
+        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center; vertical-align:top;">${item.quantity}</td>
+        <td style="padding:16px 12px; font-size:14px; color:#64748b; text-align:center; vertical-align:top;">${item.unit}</td>
+        <td style="padding:16px 12px; font-size:14px; color:#475569; text-align:right; vertical-align:top;">${this.fmtCurrency(item.unitPrice)}</td>
+        <td style="padding:16px 12px; font-size:14px; font-weight:800; color:#1e293b; text-align:right; vertical-align:top;">${this.fmtCurrency(item.quantity * item.unitPrice)}</td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
 
     const tableHtml = `
       <div style="padding:0 48px;">
@@ -1488,6 +1724,35 @@ export class CatalogComponent {
         </table>
         ${this.buildTotalBlock(t, total)}
       </div>`;
+
+    const validAttachments = (attachments || []).filter(
+      att => att?.dataUrl && att.dataUrl.startsWith('data:image/')
+    );
+    let attachmentsHtml = '';
+    if (validAttachments.length > 0) {
+      const isSingle = validAttachments.length === 1;
+      const boxHeight = isSingle ? '240px' : '185px';
+      const imgMaxHeight = isSingle ? '216px' : '161px';
+      const cardsHtml = validAttachments.map(att => {
+        const captionText = (att.caption || '').trim();
+        const safeAlt = this.escapeHtml(captionText || att.name || 'Imagen adjunta');
+        return `
+          <div style="border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#ffffff;">
+            <div style="background:#f8fafc; padding:12px; height:${boxHeight}; display:flex; align-items:center; justify-content:center;">
+              <img src="${att.dataUrl}" alt="${safeAlt}" style="max-width:100%; max-height:${imgMaxHeight}; width:auto; height:auto; object-fit:contain; border-radius:6px; display:block;" />
+            </div>
+            ${captionText ? `<div style="padding:8px 12px; font-size:12px; color:#475569; border-top:1px solid #f1f5f9; line-height:1.4;">${this.escapeHtml(captionText)}</div>` : ''}
+          </div>`;
+      }).join('');
+
+      attachmentsHtml = `
+        <div style="padding:24px 48px 10px;">
+          <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; font-weight:800; margin-bottom:12px;">IMÁGENES ADJUNTAS / REFERENCIA VISUAL</div>
+          <div style="display:grid; grid-template-columns:${isSingle ? '1fr' : 'repeat(2, 1fr)'}; gap:16px;">
+            ${cardsHtml}
+          </div>
+        </div>`;
+    }
 
     let notesHtml = '';
     if (notes || validDays) {
@@ -1514,6 +1779,7 @@ export class CatalogComponent {
         ${contactHtml}
         ${clientHtml}
         ${tableHtml}
+        ${attachmentsHtml}
         ${notesHtml}
         ${quoterHtml}
         ${footerHtml}
@@ -1529,6 +1795,7 @@ export class CatalogComponent {
     notes: string,
     validDays: number,
     date: Date,
+    attachments: QuoteAttachment[] = [],
   ): string {
     const t = this.tpl;
     const bodyContent = this.generateQuoteDocBodyHTML(
@@ -1540,6 +1807,7 @@ export class CatalogComponent {
       notes,
       validDays,
       date,
+      attachments,
     );
 
     return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" />

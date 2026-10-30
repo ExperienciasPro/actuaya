@@ -1,7 +1,7 @@
-import { Injectable, inject, signal, computed, Injector } from '@angular/core';
+import { Injectable, inject, signal, computed, Injector, effect, untracked } from '@angular/core';
 import { StorageService } from './storage.service';
 import { DataSyncService } from './data-sync.service';
-import { Product, StockMovement, MovementType } from '../models/product.model';
+import { Product, ProductOfferType, StockMovement, MovementType } from '../models/product.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +10,7 @@ export class ProductCatalogService {
   private storage = inject(StorageService);
   private injector = inject(Injector);
   private _dataSync: DataSyncService | null = null;
+  private lastSelfSaveToken = -1;
 
   private get dataSync(): DataSyncService {
     if (!this._dataSync) {
@@ -19,6 +20,7 @@ export class ProductCatalogService {
   }
 
   private readonly STORAGE_KEY = 'um_products';
+  private readonly LEGACY_SALES_PRODUCTS_KEY = 'um_sales_products';
   private readonly MOVEMENTS_KEY = 'um_inventory_movements';
 
   // Signals reactivos
@@ -35,29 +37,123 @@ export class ProductCatalogService {
   );
 
   categories = computed(() => {
-    const cats = this.products().map(p => p.category.trim());
+    const cats = this.products().map(p => (p.category || '').trim());
     return Array.from(new Set(cats)).filter(Boolean).sort();
   });
 
   totalInventoryValue = computed(() => {
-    return this.products().reduce((acc, p) => acc + (p.currentStock * p.costPrice), 0);
+    return this.products().reduce((acc, p) => acc + ((p.trackInventory ? p.currentStock : 0) * p.costPrice), 0);
   });
 
   constructor() {
     this.loadData();
+    effect(() => {
+      const token = this.storage.updateToken();
+      if (token >= 0 && token !== this.lastSelfSaveToken) {
+        untracked(() => {
+          this.loadData();
+        });
+      }
+    });
   }
 
   private loadData(): void {
-    // 1. Migración si es necesario
+    // 1. Migración legacy (um_catalog / um_inventory_products) si es necesario
     this.checkAndMigrateLegacyData();
 
-    // 2. Cargar productos
-    const storedProducts = this.storage.get<Product[]>(this.STORAGE_KEY) || [];
+    // 2. Cargar productos unificados y fusionar um_sales_products si existen registros previos
+    let storedProducts = this.storage.get<Product[]>(this.STORAGE_KEY) || [];
+    const { products: unifiedProducts, changed } = this.mergeSalesProductsIfNeeded(storedProducts);
+    if (changed) {
+      storedProducts = unifiedProducts;
+      this.storage.set(this.STORAGE_KEY, storedProducts);
+      this.lastSelfSaveToken = this.storage.updateToken();
+      this.dataSync.trackLocalModification(this.STORAGE_KEY);
+      this.dataSync.saveToServerDebounced();
+    }
     this.productsSignal.set(storedProducts);
 
     // 3. Cargar movimientos
     const storedMovements = this.storage.get<StockMovement[]>(this.MOVEMENTS_KEY) || [];
     this.movementsSignal.set(storedMovements);
+  }
+
+  /**
+   * Unifica cualquier producto o servicio creado previamente en "Productos y Servicios" (um_sales_products)
+   * dentro del almacén canónico um_products preservando su ID original (para no romper embudos ni deals).
+   */
+  private mergeSalesProductsIfNeeded(currentProducts: Product[]): { products: Product[]; changed: boolean } {
+    const legacySalesProducts = this.storage.get<any[]>(this.LEGACY_SALES_PRODUCTS_KEY);
+    if (!Array.isArray(legacySalesProducts) || legacySalesProducts.length === 0) {
+      return { products: currentProducts, changed: false };
+    }
+
+    const existingIds = new Set(currentProducts.map(p => p.id));
+    const merged = [...currentProducts];
+    let changed = false;
+
+    for (const sp of legacySalesProducts) {
+      if (!sp || !sp.id || existingIds.has(sp.id) || sp.isDeleted) {
+        continue;
+      }
+
+      const itemType: ProductOfferType = sp.category || 'servicio';
+      const isPhysical = itemType === 'producto';
+      const trackInventory = sp.trackInventory !== undefined ? Boolean(sp.trackInventory) : false;
+
+      merged.push({
+        id: sp.id,
+        name: (sp.name || 'Sin nombre').trim(),
+        description: (sp.description || '').trim(),
+        sku: (sp.sku || '').trim(),
+        salePrice: Number(sp.price) || 0,
+        costPrice: Number(sp.costPrice) || 0,
+        unit: sp.unit || (isPhysical ? 'unidad' : itemType === 'suscripcion' ? 'mes' : 'servicio'),
+        category: sp.commercialCategory || this.getDefaultCategoryLabel(itemType),
+        itemType,
+        currency: sp.currency || 'COP',
+        icon: sp.icon || this.getDefaultOfferIcon(itemType),
+        color: sp.color || '#6366f1',
+        taxRate: sp.taxRate !== undefined ? Number(sp.taxRate) : undefined,
+        deliveryTime: sp.deliveryTime || '',
+        includesOrDeliverables: sp.includesOrDeliverables || '',
+        currentStock: trackInventory ? (Number(sp.currentStock) || 0) : 0,
+        minStock: trackInventory ? (Number(sp.minStock) || 0) : 0,
+        active: sp.isActive !== false,
+        trackInventory,
+        createdAt: sp.createdAt || new Date().toISOString(),
+        updatedAt: sp.updatedAt || new Date().toISOString(),
+      });
+
+      existingIds.add(sp.id);
+      changed = true;
+    }
+
+    return { products: merged, changed };
+  }
+
+  private getDefaultCategoryLabel(itemType?: ProductOfferType): string {
+    const labels: Record<string, string> = {
+      producto: 'Productos',
+      servicio: 'Servicios',
+      curso: 'Cursos y Digital',
+      suscripcion: 'Suscripciones',
+      consultoria: 'Consultoría',
+      otro: 'General',
+    };
+    return (itemType && labels[itemType]) || 'General';
+  }
+
+  private getDefaultOfferIcon(itemType?: ProductOfferType): string {
+    const icons: Record<string, string> = {
+      producto: '📦',
+      servicio: '✨',
+      curso: '🎓',
+      suscripcion: '🔄',
+      consultoria: '💼',
+      otro: '🏷️',
+    };
+    return (itemType && icons[itemType]) || '📦';
   }
 
   private checkAndMigrateLegacyData(): void {
@@ -69,6 +165,7 @@ export class ProductCatalogService {
 
     if (legacyCatalog.length === 0 && legacyInventory.length === 0) {
       this.storage.set(migratedKey, true);
+      this.lastSelfSaveToken = this.storage.updateToken();
       return;
     }
 
@@ -88,6 +185,10 @@ export class ProductCatalogService {
         costPrice: item.costPerUnit || 0,
         unit: item.unit || 'unidades',
         category: item.category || 'General',
+        itemType: 'producto',
+        currency: 'COP',
+        icon: '📦',
+        color: '#3b82f6',
         currentStock: item.currentStock || 0,
         minStock: item.minStock || 0,
         active: true,
@@ -112,6 +213,10 @@ export class ProductCatalogService {
           costPrice: 0,
           unit: item.unit || 'unidad',
           category: item.category || 'General',
+          itemType: 'servicio',
+          currency: 'COP',
+          icon: '✨',
+          color: '#6366f1',
           currentStock: 0,
           minStock: 0,
           active: item.active !== false,
@@ -124,6 +229,7 @@ export class ProductCatalogService {
 
     this.storage.set(this.STORAGE_KEY, mergedProducts);
     this.storage.set(migratedKey, true);
+    this.lastSelfSaveToken = this.storage.updateToken();
 
     console.log(`[ProductMigration] Migrados exitosamente ${mergedProducts.length} productos.`);
   }
@@ -137,20 +243,32 @@ export class ProductCatalogService {
   }
 
   addProduct(product: Partial<Product>): Product {
+    const itemType: ProductOfferType =
+      product.itemType || (product.trackInventory === false ? 'servicio' : 'producto');
+    const trackInventory =
+      product.trackInventory !== undefined ? Boolean(product.trackInventory) : itemType === 'producto';
+
     const newProduct: Product = {
-      id: this.generateId(),
-      name: product.name || 'Sin nombre',
-      description: product.description || '',
-      sku: product.sku || '',
-      salePrice: product.salePrice || 0,
-      costPrice: product.costPrice || 0,
-      unit: product.unit || 'unidades',
-      category: product.category || 'General',
-      currentStock: product.currentStock || 0,
-      minStock: product.minStock || 0,
+      id: product.id || this.generateId(),
+      name: (product.name || 'Sin nombre').trim(),
+      description: (product.description || '').trim(),
+      sku: (product.sku || '').trim(),
+      salePrice: Number(product.salePrice) || 0,
+      costPrice: Number(product.costPrice) || 0,
+      unit: product.unit || (trackInventory ? 'unidad' : itemType === 'suscripcion' ? 'mes' : 'servicio'),
+      category: (product.category || this.getDefaultCategoryLabel(itemType)).trim(),
+      itemType,
+      currency: product.currency || 'COP',
+      icon: product.icon || this.getDefaultOfferIcon(itemType),
+      color: product.color || '#6366f1',
+      taxRate: product.taxRate !== undefined ? Number(product.taxRate) : undefined,
+      deliveryTime: (product.deliveryTime || '').trim(),
+      includesOrDeliverables: (product.includesOrDeliverables || '').trim(),
+      currentStock: trackInventory ? (Number(product.currentStock) || 0) : 0,
+      minStock: trackInventory ? (Number(product.minStock) || 0) : 0,
       active: product.active !== false,
-      trackInventory: product.trackInventory !== false,
-      createdAt: new Date().toISOString(),
+      trackInventory,
+      createdAt: product.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
@@ -182,7 +300,11 @@ export class ProductCatalogService {
     const oldProduct = list[index];
     const updatedProduct = { ...oldProduct, ...changes, updatedAt: new Date().toISOString() };
 
-    if (changes.currentStock !== undefined && changes.currentStock !== oldProduct.currentStock) {
+    if (
+      changes.currentStock !== undefined &&
+      changes.currentStock !== oldProduct.currentStock &&
+      updatedProduct.trackInventory
+    ) {
       const diff = changes.currentStock - oldProduct.currentStock;
       const type: MovementType = diff > 0 ? 'entrada' : 'salida';
       this.registerMovementInternal(
@@ -191,7 +313,10 @@ export class ProductCatalogService {
         Math.abs(diff),
         'Ajuste manual por edición',
         updatedProduct.name,
-        false
+        false,
+        undefined,
+        undefined,
+        true
       );
     }
 
@@ -292,6 +417,7 @@ export class ProductCatalogService {
   private saveProducts(list: Product[]): void {
     this.productsSignal.set(list);
     this.storage.set(this.STORAGE_KEY, list);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.STORAGE_KEY);
     this.dataSync.saveToServerDebounced();
   }
@@ -299,6 +425,7 @@ export class ProductCatalogService {
   private saveMovements(list: StockMovement[]): void {
     this.movementsSignal.set(list);
     this.storage.set(this.MOVEMENTS_KEY, list);
+    this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.MOVEMENTS_KEY);
     this.dataSync.saveToServerDebounced();
   }

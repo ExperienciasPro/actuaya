@@ -528,10 +528,10 @@ export class DesktopLayoutComponent implements OnInit {
         title: 'Comercial & Ventas',
         items: [
           { label: 'El Radar', icon: '📡', iconKey: 'radar', route: '/d/radar', moduleId: 'radar' },
-          { label: 'Productos', icon: '📦', iconKey: 'inventory', route: '/d/sales/products', moduleId: 'sales' },
+          { label: 'Productos y Servicios', icon: '📦', iconKey: 'inventory', route: '/d/sales/products', moduleId: ['sales', 'catalog'] },
           { label: 'Embudos de Venta', icon: '🌪️', iconKey: 'sales', route: '/d/sales', moduleId: 'sales' },
           { label: 'Oportunidades', icon: '🤝', iconKey: 'deals', route: '/d/sales/deals', moduleId: 'sales' },
-          { label: 'Catálogo / Cotizador', icon: '🏷️', iconKey: 'catalog', route: '/d/catalog', moduleId: 'catalog' },
+          { label: 'Cotizaciones', icon: '🏷️', iconKey: 'catalog', route: '/d/catalog', moduleId: 'catalog' },
           { label: 'Analítica Comercial', icon: '📊', iconKey: 'analytics', route: '/d/sales/analytics', moduleId: ['radar', 'sales', 'catalog'] },
         ],
       },

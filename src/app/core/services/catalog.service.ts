@@ -1,5 +1,5 @@
 import { Injectable, signal, inject, computed, Injector, effect, untracked } from '@angular/core';
-import { CatalogItem, Quote } from '../models/catalog.model';
+import { CatalogItem, Quote, QUOTE_IMAGE_LIMITS } from '../models/catalog.model';
 import { StorageService } from './storage.service';
 import { ProductCatalogService } from './product-catalog.service';
 import { DataSyncService } from './data-sync.service';
@@ -21,17 +21,28 @@ export class CatalogService {
     return this._dataSync;
   }
 
-  // Sincronizar catálogo desde ProductService
+  // Sincronizar catálogo desde ProductCatalogService (Productos y Servicios unificados)
   items = computed<CatalogItem[]>(() => {
     return this.productService.products().map(p => ({
       id: p.id,
       name: p.name,
       description: p.description || '',
+      sku: p.sku || '',
       price: p.salePrice,
-      unit: p.unit,
-      category: p.category,
+      currency: p.currency || 'COP',
+      unit: p.unit || 'unidad',
+      category: p.category || 'General',
+      itemType: p.itemType || (p.trackInventory ? 'producto' : 'servicio'),
+      icon: p.icon || (p.trackInventory ? '📦' : '✨'),
+      color: p.color || '#6366f1',
+      trackInventory: p.trackInventory,
+      currentStock: p.currentStock,
+      taxRate: p.taxRate,
+      deliveryTime: p.deliveryTime || '',
+      includesOrDeliverables: p.includesOrDeliverables || '',
       active: p.active,
       createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
     }));
   });
 
@@ -121,17 +132,20 @@ export class CatalogService {
         isDeleted: false,
       };
 
-      const nextList = [
-        updatedQuote,
-        ...currentList
-          .filter(q => q.id !== targetQuote.id)
-          .map(q => {
-            if (!q.isDeleted && q.status !== 'sold' && this.normalizeClientName(q.clientName) === normClient) {
-              return { ...q, isDeleted: true, updatedAt: now };
-            }
-            return q;
-          }),
-      ];
+      const nextList = this.enforceGlobalImageBudget(
+        [
+          updatedQuote,
+          ...currentList
+            .filter(q => q.id !== targetQuote.id)
+            .map(q => {
+              if (!q.isDeleted && q.status !== 'sold' && this.normalizeClientName(q.clientName) === normClient) {
+                return { ...q, attachments: undefined, isDeleted: true, updatedAt: now };
+              }
+              return q;
+            }),
+        ],
+        updatedQuote.id,
+      );
 
       this._quotesSignal.set(nextList);
       this.persistQuotes();
@@ -145,14 +159,17 @@ export class CatalogService {
       updatedAt: now,
       status: quote.status || 'draft',
     };
-    this._quotesSignal.update(list => [newQuote, ...list]);
+    this._quotesSignal.update(list => this.enforceGlobalImageBudget([newQuote, ...list], newQuote.id));
     this.persistQuotes();
     return newQuote;
   }
 
   removeQuote(id: string): void {
     const now = new Date().toISOString();
-    this._quotesSignal.update(list => list.map(q => q.id === id ? { ...q, isDeleted: true, updatedAt: now } : q));
+    // Liberar las imágenes en Base64 al eliminar para no desperdiciar cuota de localStorage ni ancho de banda
+    this._quotesSignal.update(list =>
+      list.map(q => (q.id === id ? { ...q, attachments: undefined, isDeleted: true, updatedAt: now } : q))
+    );
     this.storage.set(this.QUOTES_KEY, this._quotesSignal());
     this.lastSelfSaveToken = this.storage.updateToken();
     this.dataSync.trackLocalModification(this.QUOTES_KEY);
@@ -168,6 +185,7 @@ export class CatalogService {
         clientPhone: quote.clientPhone ?? existing.clientPhone,
         clientEmail: quote.clientEmail ?? existing.clientEmail,
         items: quote.items ?? existing.items,
+        attachments: quote.attachments ?? existing.attachments,
         notes: quote.notes ?? existing.notes,
         validDays: quote.validDays ?? existing.validDays,
         status: (quote.status ?? existing.status) as any,
@@ -223,7 +241,66 @@ export class CatalogService {
     return `mailto:${quote.clientEmail}?subject=${subject}&body=${body}`;
   }
 
-  // ─── Persistence & Deduplication ────────
+  // ─── Persistence, Deduplication & Storage Hygiene ────────
+
+  private getQuoteAttachmentsBytes(quote: Quote): number {
+    if (!quote.attachments || quote.attachments.length === 0) return 0;
+    return quote.attachments.reduce(
+      (acc, att) => acc + (att.sizeBytes || att.dataUrl?.length || 0),
+      0,
+    );
+  }
+
+  /**
+   * Mantiene el peso total acumulado de imágenes en historial por debajo del límite seguro
+   * de localStorage (~2.2 MB), liberando primero adjuntos de cotizaciones eliminadas
+   * y, si llegara a excederse, de las cotizaciones históricas más antiguas.
+   */
+  private enforceGlobalImageBudget(quotes: Quote[], protectedQuoteId?: string): Quote[] {
+    let usedBytes = 0;
+
+    // 1. Limpiar adjuntos en cualquier registro soft-deleted y contabilizar la cotización protegida primero
+    const cleaned = quotes.map(q => {
+      if (q.isDeleted && q.attachments && q.attachments.length > 0) {
+        return { ...q, attachments: undefined };
+      }
+      return q;
+    });
+
+    if (protectedQuoteId) {
+      const protectedQuote = cleaned.find(q => q.id === protectedQuoteId && !q.isDeleted);
+      if (protectedQuote) {
+        usedBytes += this.getQuoteAttachmentsBytes(protectedQuote);
+      }
+    }
+
+    // 2. Ordenar índices de las demás cotizaciones activas de más reciente a más antigua
+    const rankedIndices = cleaned
+      .map((q, idx) => ({
+        idx,
+        id: q.id,
+        isDeleted: Boolean(q.isDeleted),
+        time: new Date(q.updatedAt || q.createdAt || 0).getTime(),
+        bytes: this.getQuoteAttachmentsBytes(q),
+      }))
+      .filter(entry => !entry.isDeleted && entry.id !== protectedQuoteId && entry.bytes > 0)
+      .sort((a, b) => b.time - a.time);
+
+    const trimIndices = new Set<number>();
+    for (const entry of rankedIndices) {
+      if (usedBytes + entry.bytes <= QUOTE_IMAGE_LIMITS.maxGlobalStorageBytes) {
+        usedBytes += entry.bytes;
+      } else {
+        trimIndices.add(entry.idx);
+      }
+    }
+
+    if (trimIndices.size === 0) return cleaned;
+
+    return cleaned.map((q, idx) =>
+      trimIndices.has(idx) ? { ...q, attachments: undefined } : q
+    );
+  }
 
   private deduplicatePendingQuotes(quotes: Quote[]): { list: Quote[]; changed: boolean } {
     const sorted = [...quotes].sort((a, b) => {
@@ -237,19 +314,31 @@ export class CatalogService {
     const now = new Date().toISOString();
 
     const deduplicated = sorted.map(q => {
-      if (q.isDeleted || q.status === 'sold') {
+      if (q.isDeleted) {
+        if (q.attachments && q.attachments.length > 0) {
+          changed = true;
+          return { ...q, attachments: undefined };
+        }
+        return q;
+      }
+      if (q.status === 'sold') {
         return q;
       }
       const normClient = this.normalizeClientName(q.clientName);
       if (seenPendingClients.has(normClient)) {
         changed = true;
-        return { ...q, isDeleted: true, updatedAt: now };
+        return { ...q, attachments: undefined, isDeleted: true, updatedAt: now };
       }
       seenPendingClients.add(normClient);
       return q;
     });
 
-    return { list: deduplicated, changed };
+    const budgeted = this.enforceGlobalImageBudget(deduplicated);
+    if (budgeted !== deduplicated) {
+      changed = true;
+    }
+
+    return { list: budgeted, changed };
   }
 
   private load(): void {

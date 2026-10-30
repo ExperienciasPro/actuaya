@@ -2,18 +2,33 @@
 // Producto Unificado — Modelos
 // ═══════════════════════════════════════════
 
+export type ProductOfferType =
+  | 'producto'
+  | 'servicio'
+  | 'curso'
+  | 'suscripcion'
+  | 'consultoria'
+  | 'otro';
+
 export interface Product {
   id: string;
   name: string;
   description: string;       // Descripción detallada para cotizaciones
-  sku: string;               // Código/SKU único para inventario
+  sku: string;               // Código/SKU único para inventario y referencia comercial
   salePrice: number;         // Precio de venta al público (antes "price" en catálogo)
   costPrice: number;         // Costo unitario de adquisición (antes "costPerUnit" en inventario)
-  unit: string;              // 'unidades', 'kg', 'litros', 'cajas', 'metros', 'rollos', 'paquetes', etc.
-  category: string;
+  unit: string;              // 'unidad', 'hora', 'mes', 'servicio', 'proyecto', 'kg', 'litros', etc.
+  category: string;          // Categoría o línea comercial (ej. 'Consultoría', 'Software', 'Equipos')
+  itemType?: ProductOfferType; // Tipo de oferta ('producto' | 'servicio' | 'curso' | 'suscripcion' | 'consultoria' | 'otro')
+  currency?: 'COP' | 'USD';  // Moneda del precio de venta
+  icon?: string;             // Emoji o ícono visual para tarjetas y embudos
+  color?: string;            // Color identificador hex para tarjetas y embudos
+  taxRate?: number;          // % IVA referencial del ítem (ej. 19, 5, 0)
+  deliveryTime?: string;     // Tiempo estimado de entrega o ejecución (ej. 'Inmediato', '5 días hábiles')
+  includesOrDeliverables?: string; // Alcance, entregables, garantía o condiciones comerciales del ítem
   currentStock: number;      // Stock actual físico disponible
   minStock: number;          // Umbral de alerta "Stock Crítico"
-  active: boolean;           // Si está visible en el catálogo de ventas
+  active: boolean;           // Si está visible en el catálogo de ventas y cotizador
   trackInventory: boolean;   // Si afecta o no el inventario al venderse
   createdAt: string;
   updatedAt?: string;
